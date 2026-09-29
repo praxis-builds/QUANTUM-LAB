@@ -64,7 +64,7 @@ Haar reference: Var ≈ 4^−q, slope −1.39. The full table is in the JSON.
 | C-P1 | L = 1 kernel = k₀^⌈q/2⌉ k₁^⌊q/2⌋ to 1e-12; not for L = 2 | max error ≤ 6.7e-15 for all q and α; L = 2 differs by > 1e-3 (tested) | Confirmed |
 | C-P2 | L=1, α=1: mean falls; Var 0.05–0.12 → 0.005–0.03; requested shots < 100; relative shots grow ≥ 100× | mean 0.66 → 0.17 ✓; Var 0.089 → **0.064** ✗; shots 0.4–2.7 ✓; relative shots 0.37 → 34 = **91×** ✗ (just short) | **Mostly wrong on variance** |
 | C-P3 | L=4, α=1: Var(q=8) < 1e-3; slope −1.0 to −1.6; requested shots ≥ 100 at q=8; L=2 between L=1 and L=4 | Var **0.0115**; slope **−0.18**; shots **0.3**; ordering L1 > L2 > L4 ✓ | **Wrong** except the ordering |
-| C-P4 | α=0.1: mean ≥ 0.9 at q=8 for every L; Var does not decrease with q; α=0.3 in between | mean 0.96 / 0.93 / **0.85** (L=4 fails); Var rises 28–72× from q=1 to 8 ✓; α=0.3 in between ✓ | Mostly confirmed |
+| C-P4 | α=0.1: mean ≥ 0.9 at q=8 for every L; Var does not decrease with q; α=0.3 in between | mean 0.96 / 0.93 / **0.85** (L=4 fails); Var rises 20–72× from q=1 to 8 ✓; α=0.3 in between ✓ | Mostly confirmed |
 | C-P5 | no config above 10⁴ shots (requested metric); largest L=4, α=1 at 10²–10³ | max is **100** (L=1, α=0.1, q=2); L=4, α=1 needs 0.3–3.6 | First part ✓, second **wrong** |
 
 ## Explanation: no Haar-like concentration here, but the median collapses
