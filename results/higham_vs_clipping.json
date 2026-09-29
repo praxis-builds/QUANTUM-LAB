@@ -1,0 +1,331 @@
+{
+  "description": "Clipping vs Higham nearest-correlation repair of saved raw finite-shot kernels.",
+  "settings": {
+    "source": "results/finite_shot_kernel_psd_repair.json (read only)",
+    "sample_size": 40,
+    "seed": 20260928,
+    "test_fraction": 0.3,
+    "norm": "Frobenius, full 40x40 matrix",
+    "repairs_change_the_data": true,
+    "evaluation_scope": "transductive: repairs use the full subset kernel including test inputs, never test labels",
+    "higham": "Dykstra-corrected alternating projections, PSD cone and unit diagonal, tolerance 1e-10",
+    "clipping": "existing repair_kernel_psd: clip negative eigenvalues, rescale to unit diagonal"
+  },
+  "rows": [
+    {
+      "shots": 128,
+      "replicate": 0,
+      "shot_seed": 20260929,
+      "raw": {
+        "distance_to_exact": 1.3872050112897498,
+        "lambda_min": -0.3451396429499403
+      },
+      "clipped": {
+        "distance_to_raw": 1.6229514033764512,
+        "distance_to_exact": 1.7150068877021498,
+        "lambda_min": -2.4206198165523413e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.9749068569997541,
+        "distance_to_exact": 0.9135231902438143,
+        "lambda_min": -7.462155705967597e-11,
+        "iterations": 60
+      }
+    },
+    {
+      "shots": 128,
+      "replicate": 1,
+      "shot_seed": 20260930,
+      "raw": {
+        "distance_to_exact": 1.484176127863457,
+        "lambda_min": -0.37658413524020307
+      },
+      "clipped": {
+        "distance_to_raw": 1.687325630542771,
+        "distance_to_exact": 1.8768575140563935,
+        "lambda_min": -2.251523944547852e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 1.031420254865557,
+        "distance_to_exact": 0.9971616845647036,
+        "lambda_min": -9.11639458164194e-11,
+        "iterations": 52
+      }
+    },
+    {
+      "shots": 128,
+      "replicate": 2,
+      "shot_seed": 20260931,
+      "raw": {
+        "distance_to_exact": 1.369593145505756,
+        "lambda_min": -0.3562230274687649
+      },
+      "clipped": {
+        "distance_to_raw": 1.5799602342074406,
+        "distance_to_exact": 1.6896102310841485,
+        "lambda_min": -1.858730154183538e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.9735438375637727,
+        "distance_to_exact": 0.8904601578265837,
+        "lambda_min": -9.659735102119879e-11,
+        "iterations": 58
+      }
+    },
+    {
+      "shots": 128,
+      "replicate": 3,
+      "shot_seed": 20260932,
+      "raw": {
+        "distance_to_exact": 1.3726100115962108,
+        "lambda_min": -0.34767453646796864
+      },
+      "clipped": {
+        "distance_to_raw": 1.5542065100330562,
+        "distance_to_exact": 1.729477773544163,
+        "lambda_min": -1.7241391659172719e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.9509075556174781,
+        "distance_to_exact": 0.9155150600706707,
+        "lambda_min": -7.605963964647548e-11,
+        "iterations": 60
+      }
+    },
+    {
+      "shots": 128,
+      "replicate": 4,
+      "shot_seed": 20260933,
+      "raw": {
+        "distance_to_exact": 1.3360824749047842,
+        "lambda_min": -0.3599333183431298
+      },
+      "clipped": {
+        "distance_to_raw": 1.4747008454816235,
+        "distance_to_exact": 1.556304810286995,
+        "lambda_min": -2.9174252652393102e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.9010495697194537,
+        "distance_to_exact": 0.9071271660400338,
+        "lambda_min": -8.916521414588005e-11,
+        "iterations": 66
+      }
+    },
+    {
+      "shots": 512,
+      "replicate": 0,
+      "shot_seed": 20260929,
+      "raw": {
+        "distance_to_exact": 0.7116086188009813,
+        "lambda_min": -0.17938978789792864
+      },
+      "clipped": {
+        "distance_to_raw": 0.790837951210927,
+        "distance_to_exact": 0.912821529513621,
+        "lambda_min": -2.6304421188468974e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.4714314284657035,
+        "distance_to_exact": 0.49903227754192564,
+        "lambda_min": -7.770050137584698e-11,
+        "iterations": 49
+      }
+    },
+    {
+      "shots": 512,
+      "replicate": 1,
+      "shot_seed": 20260930,
+      "raw": {
+        "distance_to_exact": 0.7235179630896209,
+        "lambda_min": -0.16874887978684766
+      },
+      "clipped": {
+        "distance_to_raw": 0.8079563784399949,
+        "distance_to_exact": 0.93108092498656,
+        "lambda_min": -2.1367854776478726e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.4816705216988025,
+        "distance_to_exact": 0.5089335430210848,
+        "lambda_min": -9.79860581889768e-11,
+        "iterations": 51
+      }
+    },
+    {
+      "shots": 512,
+      "replicate": 2,
+      "shot_seed": 20260931,
+      "raw": {
+        "distance_to_exact": 0.7052415540834076,
+        "lambda_min": -0.1961025284840846
+      },
+      "clipped": {
+        "distance_to_raw": 0.7991112507534917,
+        "distance_to_exact": 0.8865071412294364,
+        "lambda_min": -2.103840651438588e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.4826150727641344,
+        "distance_to_exact": 0.47760505404840364,
+        "lambda_min": -7.936922463404684e-11,
+        "iterations": 58
+      }
+    },
+    {
+      "shots": 512,
+      "replicate": 3,
+      "shot_seed": 20260932,
+      "raw": {
+        "distance_to_exact": 0.6854421202664333,
+        "lambda_min": -0.17265820790965644
+      },
+      "clipped": {
+        "distance_to_raw": 0.8002416011230037,
+        "distance_to_exact": 0.8930367994874364,
+        "lambda_min": -2.0476706648120676e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.4753954272943659,
+        "distance_to_exact": 0.46010603423689395,
+        "lambda_min": -9.757432711021069e-11,
+        "iterations": 50
+      }
+    },
+    {
+      "shots": 512,
+      "replicate": 4,
+      "shot_seed": 20260933,
+      "raw": {
+        "distance_to_exact": 0.7015121412396227,
+        "lambda_min": -0.17530790719901357
+      },
+      "clipped": {
+        "distance_to_raw": 0.7596364813875082,
+        "distance_to_exact": 0.8301766052161552,
+        "lambda_min": -3.9419877531134245e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.4552432813956658,
+        "distance_to_exact": 0.5014640357673174,
+        "lambda_min": -8.22338706691915e-11,
+        "iterations": 52
+      }
+    },
+    {
+      "shots": 2048,
+      "replicate": 0,
+      "shot_seed": 20260929,
+      "raw": {
+        "distance_to_exact": 0.34295536538477517,
+        "lambda_min": -0.0843913065547004
+      },
+      "clipped": {
+        "distance_to_raw": 0.35831790245404654,
+        "distance_to_exact": 0.4452957871401379,
+        "lambda_min": -2.586846152154227e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.21060435430737762,
+        "distance_to_exact": 0.2602412440781147,
+        "lambda_min": -8.528107926725916e-11,
+        "iterations": 45
+      }
+    },
+    {
+      "shots": 2048,
+      "replicate": 1,
+      "shot_seed": 20260930,
+      "raw": {
+        "distance_to_exact": 0.3264687802443799,
+        "lambda_min": -0.08204071510873036
+      },
+      "clipped": {
+        "distance_to_raw": 0.3564153522136085,
+        "distance_to_exact": 0.4128504675857315,
+        "lambda_min": -2.5251758170695124e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.21121832493104906,
+        "distance_to_exact": 0.23695723901714838,
+        "lambda_min": -9.356020150050054e-11,
+        "iterations": 47
+      }
+    },
+    {
+      "shots": 2048,
+      "replicate": 2,
+      "shot_seed": 20260931,
+      "raw": {
+        "distance_to_exact": 0.34323552517521394,
+        "lambda_min": -0.09120897835080419
+      },
+      "clipped": {
+        "distance_to_raw": 0.387237150980093,
+        "distance_to_exact": 0.4326849928128802,
+        "lambda_min": -2.4642259590503946e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.22884773978515213,
+        "distance_to_exact": 0.2402713428626738,
+        "lambda_min": -7.012943113174998e-11,
+        "iterations": 47
+      }
+    },
+    {
+      "shots": 2048,
+      "replicate": 3,
+      "shot_seed": 20260932,
+      "raw": {
+        "distance_to_exact": 0.3566437924939457,
+        "lambda_min": -0.09928284332053665
+      },
+      "clipped": {
+        "distance_to_raw": 0.39402072461666005,
+        "distance_to_exact": 0.45423508433260223,
+        "lambda_min": -1.8803795393129184e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.23321750602425562,
+        "distance_to_exact": 0.2568763149526346,
+        "lambda_min": -7.123804832293361e-11,
+        "iterations": 48
+      }
+    },
+    {
+      "shots": 2048,
+      "replicate": 4,
+      "shot_seed": 20260933,
+      "raw": {
+        "distance_to_exact": 0.3436670353341482,
+        "lambda_min": -0.0890627128855246
+      },
+      "clipped": {
+        "distance_to_raw": 0.3585907415036516,
+        "distance_to_exact": 0.4075175384495053,
+        "lambda_min": -2.787030917910362e-15,
+        "iterations": 1
+      },
+      "higham": {
+        "distance_to_raw": 0.21346548196551304,
+        "distance_to_exact": 0.2555416314010545,
+        "lambda_min": -9.119219531105683e-11,
+        "iterations": 45
+      }
+    }
+  ]
+}
