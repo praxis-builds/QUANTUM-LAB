@@ -161,3 +161,41 @@ def write_artifacts(results_dir: Path) -> dict[str, Any]:
     (results_dir / RESULT_FILENAME).write_text(json.dumps(report, indent=2) + "\n")
     save_distance_plot(report, results_dir / PLOT_FILENAME)
     return report
+
+
+CLIPPING_STEP_RESULT_FILENAME = "clipping_step_diagnostic.json"
+
+
+def clipping_step_distances(raw: np.ndarray, exact: np.ndarray) -> dict[str, float]:
+    """Split clipping into its PSD projection and its unit-diagonal rescale (milestone 2, B-P3)."""
+    from praxis_quantum_lab.nearest_correlation import project_psd
+
+    projected = project_psd(raw)
+    clipped = repair_kernel_psd(raw)
+    upper = np.triu_indices(raw.shape[0], k=1)
+    frob = lambda a: float(np.linalg.norm(a - exact, ord="fro"))  # noqa: E731
+    return {
+        "raw_to_exact": frob(raw),
+        "projection_only_to_exact": frob(projected),
+        "projection_plus_rescale_to_exact": frob(clipped),
+        "projection_mean_diagonal": float(np.diag(projected).mean()),
+        "exact_mean_offdiagonal": float(exact[upper].mean()),
+        "raw_mean_offdiagonal": float(raw[upper].mean()),
+        "clipped_mean_offdiagonal": float(clipped[upper].mean()),
+    }
+
+
+def write_clipping_step_diagnostic(results_dir: Path) -> dict[str, Any]:
+    exact = fixed_split_data()["exact_full"]
+    rows = [
+        {"shots": item["shots"], "replicate": item["replicate"], **clipping_step_distances(item["raw"], exact)}
+        for item in load_saved_raw_kernels(results_dir / PSD_REPAIR_RESULT_FILENAME)
+    ]
+    report = {
+        "description": "Clipping split into PSD projection and unit-diagonal rescale; distances to the exact kernel.",
+        "source": f"results/{PSD_REPAIR_RESULT_FILENAME} (read only)",
+        "repairs_change_the_data": True,
+        "rows": rows,
+    }
+    (results_dir / CLIPPING_STEP_RESULT_FILENAME).write_text(json.dumps(report, indent=2) + "\n")
+    return report
