@@ -1,0 +1,172 @@
+{
+  "description": "Clipping split into PSD projection and unit-diagonal rescale; distances to the exact kernel.",
+  "source": "results/finite_shot_kernel_psd_repair.json (read only)",
+  "repairs_change_the_data": true,
+  "rows": [
+    {
+      "shots": 128,
+      "replicate": 0,
+      "raw_to_exact": 1.3872050112897498,
+      "projection_only_to_exact": 1.1189054015998343,
+      "projection_plus_rescale_to_exact": 1.7150068877021498,
+      "projection_mean_diagonal": 1.0666753705939571,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.43795072115384615,
+      "clipped_mean_offdiagonal": 0.40833981267240776
+    },
+    {
+      "shots": 128,
+      "replicate": 1,
+      "raw_to_exact": 1.484176127863457,
+      "projection_only_to_exact": 1.1991223004062788,
+      "projection_plus_rescale_to_exact": 1.8768575140563935,
+      "projection_mean_diagonal": 1.0688244041959483,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4348858173076923,
+      "clipped_mean_offdiagonal": 0.40451638581274163
+    },
+    {
+      "shots": 128,
+      "replicate": 2,
+      "raw_to_exact": 1.369593145505756,
+      "projection_only_to_exact": 1.0960348419897925,
+      "projection_plus_rescale_to_exact": 1.6896102310841485,
+      "projection_mean_diagonal": 1.0647235715136292,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4370392628205128,
+      "clipped_mean_offdiagonal": 0.40849378988138674
+    },
+    {
+      "shots": 128,
+      "replicate": 3,
+      "raw_to_exact": 1.3726100115962108,
+      "projection_only_to_exact": 1.1145404724433472,
+      "projection_plus_rescale_to_exact": 1.729477773544163,
+      "projection_mean_diagonal": 1.063742621862054,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4355969551282051,
+      "clipped_mean_offdiagonal": 0.4075197503595278
+    },
+    {
+      "shots": 128,
+      "replicate": 4,
+      "raw_to_exact": 1.3360824749047842,
+      "projection_only_to_exact": 1.0925310992353507,
+      "projection_plus_rescale_to_exact": 1.556304810286995,
+      "projection_mean_diagonal": 1.0606113955751852,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4383613782051282,
+      "clipped_mean_offdiagonal": 0.4116287685581874
+    },
+    {
+      "shots": 512,
+      "replicate": 0,
+      "raw_to_exact": 0.7116086188009813,
+      "projection_only_to_exact": 0.5850707059854016,
+      "projection_plus_rescale_to_exact": 0.912821529513621,
+      "projection_mean_diagonal": 1.0313971891749747,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4355168269230769,
+      "clipped_mean_offdiagonal": 0.4211928524041787
+    },
+    {
+      "shots": 512,
+      "replicate": 1,
+      "raw_to_exact": 0.7235179630896209,
+      "projection_only_to_exact": 0.594781194123164,
+      "projection_plus_rescale_to_exact": 0.93108092498656,
+      "projection_mean_diagonal": 1.0320356521419556,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4352363782051282,
+      "clipped_mean_offdiagonal": 0.42060947443651
+    },
+    {
+      "shots": 512,
+      "replicate": 2,
+      "raw_to_exact": 0.7052415540834076,
+      "projection_only_to_exact": 0.5718533104104634,
+      "projection_plus_rescale_to_exact": 0.8865071412294364,
+      "projection_mean_diagonal": 1.0316777715250738,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4357296674679487,
+      "clipped_mean_offdiagonal": 0.42132672482898276
+    },
+    {
+      "shots": 512,
+      "replicate": 3,
+      "raw_to_exact": 0.6854421202664333,
+      "projection_only_to_exact": 0.5509284788602379,
+      "projection_plus_rescale_to_exact": 0.8930367994874364,
+      "projection_mean_diagonal": 1.0318921155814547,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4359299879807692,
+      "clipped_mean_offdiagonal": 0.4213834818662664
+    },
+    {
+      "shots": 512,
+      "replicate": 4,
+      "raw_to_exact": 0.7015121412396227,
+      "projection_only_to_exact": 0.5822743999584187,
+      "projection_plus_rescale_to_exact": 0.8301766052161552,
+      "projection_mean_diagonal": 1.0301800944294404,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.43765775240384613,
+      "clipped_mean_offdiagonal": 0.42388129948443726
+    },
+    {
+      "shots": 2048,
+      "replicate": 0,
+      "raw_to_exact": 0.34295536538477517,
+      "projection_only_to_exact": 0.29083469001461293,
+      "projection_plus_rescale_to_exact": 0.4452957871401379,
+      "projection_mean_diagonal": 1.0139008136471488,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4355224609375,
+      "clipped_mean_offdiagonal": 0.42905733833993026
+    },
+    {
+      "shots": 2048,
+      "replicate": 1,
+      "raw_to_exact": 0.3264687802443799,
+      "projection_only_to_exact": 0.2714273217617319,
+      "projection_plus_rescale_to_exact": 0.4128504675857315,
+      "projection_mean_diagonal": 1.0138375525931387,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4360745943509615,
+      "clipped_mean_offdiagonal": 0.42962426837949635
+    },
+    {
+      "shots": 2048,
+      "replicate": 2,
+      "raw_to_exact": 0.34323552517521394,
+      "projection_only_to_exact": 0.2809839326756305,
+      "projection_plus_rescale_to_exact": 0.4326849928128802,
+      "projection_mean_diagonal": 1.0149735574628136,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.43619979467147435,
+      "clipped_mean_offdiagonal": 0.4292187410828951
+    },
+    {
+      "shots": 2048,
+      "replicate": 3,
+      "raw_to_exact": 0.3566437924939457,
+      "projection_only_to_exact": 0.296004508321876,
+      "projection_plus_rescale_to_exact": 0.45423508433260223,
+      "projection_mean_diagonal": 1.0150722900908267,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.43622233072916666,
+      "clipped_mean_offdiagonal": 0.4291544202646592
+    },
+    {
+      "shots": 2048,
+      "replicate": 4,
+      "raw_to_exact": 0.3436670353341482,
+      "projection_only_to_exact": 0.2903074890608269,
+      "projection_plus_rescale_to_exact": 0.4075175384495053,
+      "projection_mean_diagonal": 1.0137009352014754,
+      "exact_mean_offdiagonal": 0.43627703771181375,
+      "raw_mean_offdiagonal": 0.4368107722355769,
+      "clipped_mean_offdiagonal": 0.4303661080236478
+    }
+  ]
+}

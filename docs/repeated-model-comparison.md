@@ -35,3 +35,55 @@ The extended 5×10 study reported exact-quantum minus RBF accuracy on these same
 - **B-P4 (alignment vs exact, training block).** 1 − alignment has a CI excluding 0 for every finite-shot variant, with raw < clipped < Higham-trans (CIs of the paired differences excluding 0). Higham-ind and Higham-trans training blocks differ by < 2e-4 in alignment. RBF alignment to exact is clearly lowest (≈ 0.96, as on the single split).
 - **B-P5 (transductive vs inductive Higham).** Accuracy difference: CI **contains 0**. Decision r: Higham-trans − Higham-ind is **positive with a CI excluding 0**, of size 0.0005–0.003, because the transductive repair also denoises the test-to-train block that the inductive version leaves raw.
 - **B-P6 (the saved clipping-step diagnostic).** For the 15 saved matrices, the new `clipping_step_distances` reproduces the Part B explanation in [higham-vs-clipping.md](higham-vs-clipping.md). The projection alone is closer to exact than raw in 15/15, and projection plus rescale is further than raw in 15/15. The numbers match that doc to 3 decimals where they were quoted (e.g. 128 shots, replicate 0: 1.387 → 1.119 → 1.715).
+
+---
+
+# Results (added after running; everything above is unchanged)
+
+Artifacts: `results/repeated_model_comparison.json`, `results/repeated_model_comparison.png` (forest plot), `results/clipping_step_diagnostic.json`. Runners: `experiments/run_repeated_model_comparison.py` (~28 s; rerun byte-identical), `experiments/run_clipping_step_diagnostic.py` (~2 s). The source `results/finite_shot_kernel_psd_repair.json` is read only (md5 unchanged).
+
+Mean over 50 splits:
+
+| model | accuracy | r vs exact | r vs RBF | alignment vs exact | alignment vs RBF |
+|---|---|---|---|---|---|
+| exact | 0.849 | 1 | 0.936 | 1 | 0.974 |
+| raw (512 shots) | 0.845 | 0.99575 | 0.932 | 0.99949 | 0.974 |
+| clipped (trans.) | 0.846 | 0.99841 | 0.935 | 0.99965 | 0.974 |
+| Higham-trans | 0.848 | 0.99919 | 0.935 | 0.99984 | 0.973 |
+| Higham-ind | 0.846 | 0.99640 | 0.932 | 0.99982 | 0.973 |
+| **RBF (classical)** | **0.909** | 0.936 | 1 | 0.974 | 1 |
+
+Paired differences, mean [cluster-bootstrap 95% CI]. **Bold** marks a CI that excludes 0.
+
+| contrast | accuracy | decision r vs exact | alignment vs exact |
+|---|---|---|---|
+| raw − exact | −0.004 [−0.010, +0.003] | **−4.3e-3** [−4.7e-3, −3.8e-3] | **−5.1e-4** |
+| clipped − exact | −0.003 [−0.011, +0.004] | **−1.6e-3** | **−3.5e-4** |
+| Higham-trans − exact | −0.001 [−0.005, +0.003] | **−8.1e-4** | **−1.6e-4** |
+| Higham-ind − exact | −0.003 [−0.008, +0.003] | **−3.6e-3** | **−1.9e-4** |
+| exact − RBF | **−0.060** [−0.069, −0.053] | | |
+| raw / clipped / H-trans / H-ind − RBF | **−0.064 / −0.063 / −0.061 / −0.063** (all CIs exclude 0) | | |
+| clipped − raw | +0.001 [−0.006, +0.008] | **+2.7e-3** | **+1.6e-4** |
+| Higham-trans − clipped | +0.001 [−0.004, +0.008] | **+7.8e-4** | **+1.9e-4** |
+| Higham-ind − raw | +0.001 [−0.003, +0.005] | **+6.5e-4** [3.4e-4, 1.0e-3] | **+3.3e-4** |
+| Higham-trans − Higham-ind | +0.001 [−0.004, +0.006] | **+2.8e-3** [2.5e-3, 3.1e-3] | **+2.5e-5** |
+
+(For the "− exact" rows, the r and alignment entries are the model's value minus 1.)
+
+## Prediction vs observed
+
+| # | Prediction | Observed | Verdict |
+|---|---|---|---|
+| B-P1 | finite-shot − exact accuracy within ±0.02, CI contains 0 | −0.001 to −0.004, all CIs contain 0 | Confirmed |
+| B-P2 | exact − RBF ≈ −0.06, CI excludes 0; every finite-shot − RBF negative, CI excludes 0 | −0.060 [−0.069, −0.053]; −0.061 to −0.064, all exclude 0 | Confirmed (exact − RBF was known) |
+| B-P3 | 1 − r > 0 (CI) for all; mean r in [0.99, 0.9995]; Higham-trans > clipped > raw; Higham-ind between raw and Higham-trans | all exclude 0; r 0.9958–0.9992; ordering holds with every contrast CI excluding 0; Higham-ind 0.9964 is between them, but only just above raw | Confirmed |
+| B-P4 | 1 − alignment > 0; raw < clipped < Higham-trans; \|Higham-trans − Higham-ind\| < 2e-4; RBF clearly lowest (≈ 0.96) | all confirmed; Higham difference 2.5e-5; RBF 0.974 (lowest, but above my ≈ 0.96) | Confirmed; RBF value slightly off |
+| B-P5 | trans vs ind Higham: accuracy CI contains 0; r difference > 0, CI excludes 0, size 0.0005–0.003 | accuracy +0.001 [−0.004, +0.006]; r +0.0028 [0.0025, 0.0031] | Confirmed (upper CI slightly above 0.003) |
+| B-P6 | clipping-step diagnostic reproduces 15/15 both ways; 1.387 → 1.119 → 1.715 | 15/15 projection-only closer than raw; 15/15 projection + rescale farther; numbers match | Confirmed |
+
+## Interpretation
+
+- **Accuracy separates only the classical baseline.** RBF beats every quantum-kernel variant by about 6 points on these splits. Among the quantum variants, 512-shot noise and both repairs change accuracy by less than 0.5 point, and no CI excludes 0. **No quantum advantage:** on this data the classical baseline is better.
+- **Decision correlation and alignment separate everything else**, with narrow CIs. The ordering Higham-trans > clipped > raw from the single milestone-2 split holds across 50 splits.
+- **Where the decision error comes from.** Higham-ind repairs the training block almost as well as Higham-trans (alignment differs by only 2.5e-5), yet its decision r (0.9964) is close to raw (0.9958). So most of the decision disagreement at 512 shots comes from the **raw test-to-train block**, not the training block. Transductive repairs gain mainly by denoising test similarities using test inputs. That is exactly the scope caveat: the gain is not available to an inductive model.
+- The CIs describe split-to-split variability on one 80-point data set with one binomial draw per split. They are descriptive, not tests, and don't show generalisation to new data.
