@@ -20,7 +20,7 @@ def amplitudes_after(marked: str, layer_count: int) -> np.ndarray:
 
 
 def show(label: str, amplitudes: np.ndarray, marked: str) -> None:
-    text = "  ".join(f"|{item}>:{(amplitudes[int(item, 2)] + 0.0):+.2f}" for item in ITEMS)
+    text = "  ".join(f"|{item}>:{(round(float(amplitudes[int(item, 2)]), 9) + 0.0):+.2f}" for item in ITEMS)
     print(f"{label:<28} {text}   P(marked {marked}) = {amplitudes[int(marked, 2)] ** 2:.2f}")
 
 
