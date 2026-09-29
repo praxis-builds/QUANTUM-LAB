@@ -1,0 +1,40 @@
+# CLAUDE.md
+
+## Purpose
+Local, simulator-only Qiskit/Aer **learning lab**. Workflow for every experiment:
+theory → written prediction → code → result → explain any mismatch.
+The repo (code, tests, `results/`) is the source of truth; `docs/history/` is background only.
+
+## Hard rules
+- Local simulators only. No cloud, no QPU, no provider tokens.
+- Never claim quantum advantage.
+- Every quantum result needs a fair classical baseline.
+- Never hide raw pathologies (e.g. indefinite kernels); report them unrepaired.
+- Any repair (PSD projection etc.) must state that it changes the data.
+- Seeds, shots and splits must be explicit.
+- Don't regenerate existing `results/` files unless asked.
+- No new dependencies without asking.
+- Commit predictions before running the experiment that tests them.
+
+## Repo map (`src/praxis_quantum_lab/`)
+- `state_vectors.py` – NumPy state-vector foundations (no SDK)
+- `complex_math.py` – minimal complex ops for those lessons
+- `qiskit_experiments.py` – Qiskit/Aer equivalents of the hand-built lessons
+- `density_matrices.py` – density matrices and Kraus channels
+- `density_matrix_noise.py` – Bell-state Kraus sweeps vs Aer
+- `bell_noise_analytics.py` – analytical Bell-noise references
+- `kernel_experiment.py` – feature map, exact fidelity kernel, classical-vs-quantum comparison
+- `finite_shot_kernel.py` – compute–uncompute shot-noise kernel estimates
+- `finite_shot_psd.py` – PSD diagnostics and transductive repair
+- `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Bell Lab, Kernel Observatory)
+
+## Commands (from repo root; use `.venv/bin/python`)
+- Setup: `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'`
+- Tests: `.venv/bin/python -m pytest`
+- Verify same-seed reproducibility: `experiments/verify_reproducibility.py`, `verify_repeated_classification.py`, `verify_extended_kernel_evaluation.py`
+- Dashboard: `.venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765` (http://127.0.0.1:8765)
+
+## Conventions
+- Basis ordering is `|q1 q0>` (Qiskit little-endian).
+- Results are JSON + PNG in `results/`.
+- Each experiment has a runner in `experiments/`, a test in `tests/`, and a doc in `docs/`.
