@@ -53,6 +53,14 @@ the assignment of seeded draws relative to that earlier run. All results are
 small classical simulations and do not demonstrate quantum advantage. The
 visualizations show mathematical representations, not literal particle motion.
 
+**Caveat on "repaired" kernels:** the Observatory's repaired matrices use
+eigenvalue clipping followed by a unit-diagonal rescale. That repair lands
+*further* from the exact kernel than the raw finite-shot matrix, in all 15
+saved matrices: the rescale shrinks every off-diagonal entry. A Higham
+nearest-correlation repair moves closer instead. See
+[higham-vs-clipping.md](higham-vs-clipping.md). The dashboard still shows the
+saved clipping results unchanged.
+
 ## Local server boundaries
 
 The only GET routes are `/`, `/app.js`, `/style.css`, and `/api/kernel-results`.
