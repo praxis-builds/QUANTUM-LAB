@@ -71,3 +71,41 @@ Each cell: mean N̂ [min–max over 5 subsets] / mean P(PSD) [min–max].
 
 - Milestone 1 already sampled subsets 0–4 at n = 8 and 16 (one draw each; same subsets, different RNG stream). There, (q=2, n=8) was PSD in 5/5 draws at 8192 (this table predicts 0.94), (q=3, n=8) 5/5 at 2048 and 8192 (0.98, 1.00), and n = 16 was never PSD (0.11 or below). Its negative counts at q=2, n=16 were 4.0 (128) and 2.6 (8192) against N̂ 3.09 and 1.69 here: under-prediction, as in A-P1. So A-P1 and A-P4 are informed by those rows, not blind.
 - n = 9–15 have not been sampled at all.
+
+---
+
+# Results (added after sampling; everything above is unchanged)
+
+Artifacts: `results/eigenvalue_negativity_prediction.json`, `results/eigenvalue_negativity_calibration.png`. Runner: `experiments/run_eigenvalue_negativity.py` (~5 s; rerun gives a byte-identical JSON). 360 kernel × shots rows, 200 binomial draws each, raw kernels only, no repair. The module reproduces the pre-registered table (e.g. q=2 n=8 128 shots: 0.51 / 0.57; q=2 n=16 8192: 1.69 / 0.11).
+
+## Prediction vs observed
+
+| # | Prediction | Observed | Verdict |
+|---|---|---|---|
+| A-P1 | first order under-predicts negatives and over-predicts P(PSD) | Aggregate: observed mean negatives 1.46 vs N̂ 0.88; PSD rate 0.24 vs predicted 0.48. Observed ≥ N̂ in **211/211** kernels with N̂ ≥ 0.5; observed PSD ≤ predicted in 341/360 rows. | Confirmed (informed by milestone 1, see disclosure) |
+| A-P2 | well separated (spacing/s ≥ 2, ≤ 1 eigenvalue within 3s of 0): ≥ 70% inside Wilson 95%, mean \|N gap\| ≤ 0.15 | 59 rows qualify. Mean \|N gap\| **0.067** (pass). Only **30/59 = 51%** inside the Wilson interval (fail). | Partly wrong |
+| A-P3 | gap grows as spacing/s shrinks; spacing/s < 1 has gap ≥ 0.3 | spacing/s < 1: mean gap **0.78** (217 rows). By bin: [0,0.5) 0.86, [0.5,1) 0.56, [1,2) 0.40, [2,4) 0.27, ≥4 0.10. | Confirmed |
+| A-P4 | q=2, n=15–16: N_obs/N̂ in 1.2–1.8 | 1.39–1.55 at every shot count | Confirmed |
+
+Gap by bottom spacing (λ₂ − λ₁)/s₁, first order vs the post-hoc second-order model below:
+
+| spacing/s | rows | N gap (obs − pred), 1st | PSD gap, 1st | inside Wilson, 1st | N gap, 2nd | PSD gap, 2nd | inside Wilson, 2nd |
+|---|---|---|---|---|---|---|---|
+| [0, 0.5) | 156 | +0.86 | −0.19 | 2% | +0.67 | +0.01 | 83% |
+| [0.5, 1) | 61 | +0.56 | −0.35 | 0% | −0.08 | +0.06 | 48% |
+| [1, 2) | 53 | +0.40 | −0.32 | 2% | −0.15 | +0.04 | 47% |
+| [2, 4) | 43 | +0.27 | −0.26 | 16% | −0.12 | +0.04 | 60% |
+| ≥ 4 | 47 | +0.10 | −0.10 | 49% | −0.05 | +0.04 | 74% |
+| all | 360 | +0.58 | | 9% | +0.23 | | 68% |
+
+## Where first order works, where it breaks, and why
+
+- **Works:** negative *counts* for well-separated bottoms (mean |gap| 0.07), and the qualitative ordering across n and shots. It is an improvement on milestone 1's P4 threshold, which could only say PSD or not.
+- **Breaks, even when well separated:** P(PSD) is over-predicted by 0.10 in the widest-spacing bin and by 0.26–0.35 at moderate spacing. The cause is a **systematic downward shift** that first order sets to zero. At second order, the lowest eigenvalue moves by Σ_j Var(u_jᵀEu_k)/(λ_k − λ_j), and every term is negative. This is the same order as s²/gap, so it is small compared with s, but P(PSD) is evaluated where λ_min/s is 1–3, where Φ is steep, and the product over eigenvalues compounds it. Spacing to the *next* eigenvalue alone doesn't capture it, because all the couplings add.
+- **Post-hoc check (not pre-registered):** adding the expected second-order shift to λ_k (`second_order_shifts`, verified against a 20,000-draw Monte Carlo in the tests) cuts the mean |P(PSD) gap| from **0.231 to 0.036**, and raises the share inside Wilson 95% from 9% to 68%. This is an explanation fitted after seeing the data. It needs its own pre-registered test before being trusted.
+- **Where second order also breaks:**
+  1. Crowded bottoms (spacing < 0.5 s). The count gap stays +0.67. Here eigenvalues mix strongly and perturbation theory is not valid. The PSD rate looks calibrated only because both predicted and observed are near 0.
+  2. Ten rows (mostly q=3, subsets 1–2) where some eigenvalue pair is nearly degenerate. The 1/(λ_k − λ_j) terms blow up and predict P(PSD) ≈ 0 where 0.4–0.97 is observed. These are visible as the upper-left outliers in panel 3. A degenerate-perturbation treatment would be needed there.
+- **Independence assumption** in P(PSD) was not tested separately. The residual scatter after the second-order correction bounds its effect only loosely.
+
+Scope: binomial sampling model, one data family, one feature-map family, n ≤ 16, 5 subsets. No classifier and no repair is involved, so nothing here changes the data.
