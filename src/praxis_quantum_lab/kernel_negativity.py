@@ -85,6 +85,41 @@ def predict_negativity(kernel: np.ndarray, shots: int) -> dict[str, Any]:
     }
 
 
+def second_order_shifts(kernel: np.ndarray, shots: int) -> np.ndarray:
+    """Expected second-order eigenvalue shifts E[sum_{j!=k} (u_j^T E u_k)^2 / (lambda_k - lambda_j)].
+
+    Post-hoc diagnostic (not part of the pre-registered first-order model).
+    Exactly degenerate pairs are skipped.
+    """
+    if not isinstance(shots, int) or shots < 1:
+        raise ValueError("shots must be a positive integer.")
+    matrix = np.asarray(kernel, dtype=np.float64)
+    eigenvalues, eigenvectors = np.linalg.eigh(matrix)
+    variances = np.clip(matrix * (1.0 - matrix), 0.0, None) / shots
+    np.fill_diagonal(variances, 0.0)
+    squared = eigenvectors**2
+    products = eigenvectors[:, :, np.newaxis] * eigenvectors[:, np.newaxis, :]
+    # Var(u_j^T E u_k) for every pair (j, k); the diagonal equals s_k^2.
+    coupling = squared.T @ variances @ squared + np.einsum("ajk,ab,bjk->jk", products, variances, products)
+    gaps = eigenvalues[:, np.newaxis] - eigenvalues[np.newaxis, :]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        terms = np.where(gaps != 0.0, coupling / gaps, 0.0)
+    return terms.sum(axis=1)
+
+
+def predict_negativity_second_order(kernel: np.ndarray, shots: int) -> dict[str, float]:
+    """Post-hoc: first-order Gaussian around lambda_k + second-order mean shift."""
+    eigenvalues, scales = eigenvalue_noise_scales(kernel, shots)
+    shifted = eigenvalues + second_order_shifts(kernel, shots)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        z = np.where(scales > 0, shifted / scales, np.where(shifted < -PSD_TOLERANCE, -np.inf, np.inf))
+    p_negative = normal_cdf(-z)
+    return {
+        "predicted_negative_count": float(p_negative.sum()),
+        "predicted_psd_probability": float(np.prod(1.0 - p_negative)),
+    }
+
+
 def sample_kernels_binomial(
     kernel: np.ndarray, shots: int, draws: int, rng: np.random.Generator
 ) -> np.ndarray:
@@ -134,6 +169,7 @@ def run_negativity_sweep(
                 kernel = exact_kernel(make_subset_features(n, subset), q)
                 for shots in shot_budgets:
                     prediction = predict_negativity(kernel, shots)
+                    post_hoc = predict_negativity_second_order(kernel, shots)
                     observed = observe_negativity(kernel, shots, draws, negativity_rng(q, n, shots, subset))
                     low, high = observed["observed_psd_wilson95"]
                     rows.append(
@@ -152,6 +188,8 @@ def run_negativity_sweep(
                             "psd_prediction_inside_wilson95": bool(
                                 low <= prediction["predicted_psd_probability"] <= high
                             ),
+                            "post_hoc_second_order_negative_count": post_hoc["predicted_negative_count"],
+                            "post_hoc_second_order_psd_probability": post_hoc["predicted_psd_probability"],
                         }
                     )
     return rows
@@ -193,6 +231,8 @@ def summarize_by_spacing(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
             continue
         gap = [r["observed_mean_negative_count"] - r["predicted_negative_count"] for r in group]
         psd_gap = [r["observed_psd_rate"] - r["predicted_psd_probability"] for r in group]
+        gap_2 = [r["observed_mean_negative_count"] - r["post_hoc_second_order_negative_count"] for r in group]
+        psd_gap_2 = [r["observed_psd_rate"] - r["post_hoc_second_order_psd_probability"] for r in group]
         out.append(
             {
                 "spacing_over_s_range": [low, high if math.isfinite(high) else None],
@@ -203,13 +243,25 @@ def summarize_by_spacing(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "fraction_psd_prediction_inside_wilson95": float(
                     np.mean([r["psd_prediction_inside_wilson95"] for r in group])
                 ),
+                "post_hoc_second_order_mean_negative_gap": float(np.mean(gap_2)),
+                "post_hoc_second_order_mean_psd_gap": float(np.mean(psd_gap_2)),
+                "post_hoc_second_order_fraction_inside_wilson95": float(
+                    np.mean(
+                        [
+                            r["observed_psd_wilson95"][0]
+                            <= r["post_hoc_second_order_psd_probability"]
+                            <= r["observed_psd_wilson95"][1]
+                            for r in group
+                        ]
+                    )
+                ),
             }
         )
     return out
 
 
 def save_calibration_plot(rows: list[dict[str, Any]], path: Path) -> None:
-    figure, (left, right) = plt.subplots(1, 2, figsize=(12, 5.2))
+    figure, (left, right, extra) = plt.subplots(1, 3, figsize=(17, 5.2))
     colors = {2: "#1f77b4", 3: "#d62728"}
     for q in sorted({r["qubits"] for r in rows}):
         group = [r for r in rows if r["qubits"] == q]
@@ -225,6 +277,11 @@ def save_calibration_plot(rows: list[dict[str, Any]], path: Path) -> None:
             [r["observed_mean_negative_count"] for r in group],
             s=8, alpha=0.6, color=colors.get(q), label=f"q={q}",
         )
+        extra.errorbar(
+            [r["post_hoc_second_order_psd_probability"] for r in group], observed,
+            yerr=[observed - bounds[:, 0], bounds[:, 1] - observed],
+            fmt="o", ms=2.5, elinewidth=0.6, alpha=0.6, color=colors.get(q), label=f"q={q}",
+        )
     left.plot([0, 1], [0, 1], "k--", lw=1, label="y = x")
     left.set_xlabel("predicted P(PSD) (first order, independence)")
     left.set_ylabel("observed PSD rate (200 draws, Wilson 95%)")
@@ -234,7 +291,11 @@ def save_calibration_plot(rows: list[dict[str, Any]], path: Path) -> None:
     right.set_xlabel("predicted negative count N̂")
     right.set_ylabel("observed mean negative count")
     right.set_title("Negative eigenvalue count")
-    for axis in (left, right):
+    extra.plot([0, 1], [0, 1], "k--", lw=1, label="y = x")
+    extra.set_xlabel("P(PSD) with second-order mean shift (post hoc)")
+    extra.set_ylabel("observed PSD rate (200 draws, Wilson 95%)")
+    extra.set_title("Post-hoc second-order calibration")
+    for axis in (left, right, extra):
         axis.legend(fontsize=8)
     figure.suptitle("Binomial finite-shot model, n = 8–16, q ∈ {2, 3}; raw kernels, no repair", fontsize=10)
     figure.tight_layout()

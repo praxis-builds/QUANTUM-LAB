@@ -76,3 +76,24 @@ def test_observe_negativity_is_deterministic_and_consistent():
     low, high = first["observed_psd_wilson95"]
     assert low <= first["observed_psd_rate"] <= high
     assert first["observed_mean_negative_count"] > 0
+
+
+def test_second_order_shift_matches_monte_carlo_mean():
+    from praxis_quantum_lab.kernel_negativity import second_order_shifts
+
+    kernel = exact_kernel(make_subset_features(8, 0), 3)
+    shots = 2048
+    shifts = second_order_shifts(kernel, shots)
+    eigenvalues, scales = eigenvalue_noise_scales(kernel, shots)
+    draws = 20000
+    sampled = np.linalg.eigvalsh(sample_kernels_binomial(kernel, shots, draws, np.random.default_rng(11)))
+    observed_shift = sampled.mean(axis=0) - eigenvalues
+    np.testing.assert_allclose(observed_shift, shifts, atol=4 * scales.max() / math.sqrt(draws) + 1e-12, rtol=0.3)
+    assert shifts[0] < 0  # the lowest eigenvalue is pushed down
+
+
+def test_second_order_prediction_reduces_to_first_order_without_noise():
+    from praxis_quantum_lab.kernel_negativity import predict_negativity_second_order, second_order_shifts
+
+    np.testing.assert_array_equal(second_order_shifts(np.eye(4), 128), np.zeros(4))
+    assert predict_negativity_second_order(np.eye(4), 128)["predicted_psd_probability"] == 1.0
