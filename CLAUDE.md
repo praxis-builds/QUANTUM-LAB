@@ -27,6 +27,7 @@ The repo (code, tests, `results/`) is the source of truth; `docs/history/` is ba
 - `finite_shot_kernel.py` – compute–uncompute shot-noise kernel estimates
 - `finite_shot_psd.py` – PSD diagnostics and transductive repair
 - `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Bell Lab, Kernel Observatory)
+- `lessons/` (outside `src/`) – six beginner lessons (script + .md + test each); see `lessons/README.md`
 
 ## Commands (from repo root; use `.venv/bin/python`)
 - Setup: `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'`
