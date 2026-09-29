@@ -1,0 +1,108 @@
+{
+  "classical_rbf_svc": {
+    "accuracy": 0.9583333333333334,
+    "confusion_matrix": [
+      [
+        12,
+        0
+      ],
+      [
+        1,
+        11
+      ]
+    ],
+    "f1": 0.9565217391304348,
+    "inference_time_seconds": 0.0014081950002946542,
+    "precision": 1.0,
+    "predictions": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "recall": 0.9166666666666666,
+    "training_time_seconds": 0.010205135999967752
+  },
+  "metadata": {
+    "circuit_depth": 4,
+    "class_balance": {
+      "class_0": 40,
+      "class_1": 40
+    },
+    "classical_model": "StandardScaler + SVC(kernel='rbf', C=1.0, gamma='scale')",
+    "dataset": "sklearn.datasets.make_moons",
+    "dataset_size": 80,
+    "feature_map": "H, RZ(x), RY(x\u00b2) on each qubit, followed by CZ(0, 1)",
+    "number_of_qubits": 2,
+    "quantum_model": "SVC(kernel='precomputed', C=1.0) with statevector fidelity kernel",
+    "seed": 20260928,
+    "simulator_type": "qiskit.quantum_info.Statevector (exact local simulation)",
+    "test_fraction": 0.3,
+    "test_size": 24,
+    "train_size": 56
+  },
+  "quantum_kernel_svc": {
+    "accuracy": 0.9583333333333334,
+    "confusion_matrix": [
+      [
+        12,
+        0
+      ],
+      [
+        1,
+        11
+      ]
+    ],
+    "f1": 0.9565217391304348,
+    "inference_time_seconds": 0.00023206300011224812,
+    "precision": 1.0,
+    "predictions": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "recall": 0.9166666666666666,
+    "training_time_seconds": 0.0544584159997612
+  }
+}

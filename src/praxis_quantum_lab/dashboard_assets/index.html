@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Praxis Quantum Lab · Research Bench</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to lab</a>
+  <header class="masthead">
+    <div class="brand"><span class="brand-symbol" aria-hidden="true">Ψ</span><div><p class="eyebrow">PRAXIS / QUANTUM LAB 01</p><h1>Research bench</h1></div></div>
+    <div class="local-badge"><span aria-hidden="true"></span>LOCAL SIMULATION</div>
+  </header>
+  <main id="workspace">
+    <div class="intro"><p>Explore quantum states. Inspect the evidence.</p><span>Two qubits · classical simulation · reproducible inputs</span></div>
+    <nav class="tabs" aria-label="Lab areas">
+      <button type="button" id="bell-tab" class="tab active" aria-pressed="true" aria-controls="bell-area"><span class="tab-number">01</span> Bell Lab <span class="tab-kind">LIVE</span></button>
+      <button type="button" id="kernel-tab" class="tab" aria-pressed="false" aria-controls="kernel-area"><span class="tab-number">02</span> Kernel Observatory <span class="tab-kind">SAVED</span></button>
+    </nav>
+
+    <section id="bell-area" aria-labelledby="bell-heading">
+      <div class="section-heading"><div><p class="eyebrow">STATE PREPARATION & NOISE</p><h2 id="bell-heading">Bell Lab</h2></div><p>Step through preparation, then apply a local noise channel.</p></div>
+      <div class="bell-layout">
+        <section class="panel controls-panel" aria-labelledby="controls-heading">
+          <div class="panel-heading"><h3 id="controls-heading">Simulation controls</h3><span class="small-label">AER + NUMPY</span></div>
+          <form id="bell-form">
+            <label for="channel">Noise channel</label>
+            <select id="channel" name="channel"><option value="bit_flip">Bit flip</option><option value="amplitude_damping">Amplitude damping</option><option value="depolarizing">Depolarizing</option></select>
+            <label for="strength">Noise strength <output id="strength-output" for="strength">0.20</output></label>
+            <input id="strength" name="strength" type="range" min="0" max="1" step="0.01" value="0.2">
+            <div class="range-labels" aria-hidden="true"><span>0 · none</span><span>1 · channel limit</span></div>
+            <p class="field-note" id="channel-help">E(ρ) = (1 − p)ρ + pXρX. Strength p is the bit-flip probability.</p>
+            <div class="field-pair"><div><label for="shots">Measurement shots</label><input id="shots" name="shots" type="number" min="1" max="8192" step="1" value="2048" required inputmode="numeric"><p class="field-note">1–8,192</p></div><div><label for="seed">Random seed</label><input id="seed" name="seed" type="number" min="0" max="2147483647" step="1" value="20260928" required inputmode="numeric"><p class="field-note">0–2,147,483,647</p></div></div>
+            <button class="primary full-width" type="submit" id="run-bell">Run full circuit <span aria-hidden="true">→</span></button>
+            <div class="button-row"><button type="button" id="step-bell">Step next gate</button><button type="button" id="reset-bell">Reset to |00⟩</button></div>
+          </form>
+          <p class="status" id="bell-status" role="status" aria-live="polite">Ready. Run or step to produce a simulated state.</p>
+          <p class="error" id="bell-error" role="alert" hidden></p>
+          <div class="footnote">Noise acts on q0, the rightmost bit in |q1 q0⟩. Counts are sampled; density matrices and probabilities are exact for this local channel.</div>
+        </section>
+
+        <div class="bell-output">
+          <section class="panel circuit-panel" aria-labelledby="circuit-heading">
+            <div class="panel-heading"><h3 id="circuit-heading">Circuit progression</h3><span class="stage-badge" id="circuit-stage">AWAITING RUN</span></div>
+            <svg id="bell-circuit" viewBox="0 0 640 180" role="img" aria-labelledby="circuit-title circuit-description">
+              <title id="circuit-title">Bell preparation and a local noise channel</title><desc id="circuit-description">Initialize q0 and q1 in zero. Apply H on q0, controlled X from q0 to q1, then noise on q0. Gates highlight only after a successful simulator response.</desc>
+              <text class="wire-label" x="20" y="64">q0 |0⟩</text><text class="wire-label" x="20" y="128">q1 |0⟩</text>
+              <path class="wire" d="M100 60 H610 M100 124 H610"/>
+              <g id="gate-h" class="gate"><rect x="153" y="37" width="46" height="46" rx="5"/><text x="176" y="67" text-anchor="middle">H</text><text class="gate-caption" x="176" y="165" text-anchor="middle">01 · SUPERPOSE</text></g>
+              <g id="gate-cx" class="gate"><path d="M310 60 V124"/><circle class="control-dot" cx="310" cy="60" r="6"/><circle cx="310" cy="124" r="18"/><path d="M298 124 H322 M310 112 V136"/><text class="gate-caption" x="310" y="165" text-anchor="middle">02 · ENTANGLE</text></g>
+              <g id="gate-noise" class="gate"><rect x="426" y="37" width="94" height="46" rx="5"/><text x="473" y="67" text-anchor="middle">E(ρ)</text><text class="gate-caption" x="473" y="165" text-anchor="middle">03 · NOISE q0</text></g>
+              <text class="wire-label" x="572" y="49">ρ</text>
+            </svg>
+            <p id="stage-description" class="field-note">The circuit is a mathematical representation, not a picture of particle motion.</p>
+          </section>
+          <div class="result-grid">
+            <section class="panel" aria-labelledby="density-heading">
+              <div class="panel-heading"><h3 id="density-heading">Density matrix ρ</h3><span class="small-label">|q1 q0⟩</span></div>
+              <div class="compact-controls"><label>Source<select id="density-source"><option value="aer">Qiskit Aer</option><option value="custom">Project calculation</option></select></label><label>Component<select id="density-component"><option value="real">Real</option><option value="imaginary">Imaginary</option></select></label></div>
+              <div class="canvas-wrap"><canvas id="density-canvas" width="520" height="420" role="img" aria-label="Density matrix awaiting simulation"></canvas></div>
+              <p id="density-caption" class="field-note">Rows and columns follow 00, 01, 10, 11.</p>
+              <details id="density-values" hidden><summary>Read matrix values</summary><div class="table-scroll"><table id="density-table"><caption>Density matrix values</caption></table></div></details>
+            </section>
+            <section class="panel" aria-labelledby="measurement-heading">
+              <div class="panel-heading"><h3 id="measurement-heading">Measurement</h3><span class="small-label">COMPUTATIONAL BASIS</span></div>
+              <div id="probability-empty" class="empty-state">Run the circuit to compare probabilities and sampled counts.</div>
+              <div id="probability-results" hidden><table class="probability-table"><caption class="visually-hidden">Exact probabilities and Aer shot counts</caption><thead><tr><th scope="col">|q1 q0⟩</th><th scope="col">Probability</th><th scope="col">Count</th></tr></thead><tbody id="probability-body"></tbody></table><p class="field-note" id="counts-caption"></p></div>
+              <div class="metric-pair"><div class="metric"><span>Fidelity to |Φ+⟩ · Aer</span><strong id="aer-fidelity">—</strong></div><div class="metric"><span>Fidelity · project</span><strong id="custom-fidelity">—</strong></div></div>
+              <p class="field-note">|Φ+⟩ = (|00⟩ + |11⟩)/√2. Fidelity refers to this target even before Bell preparation is complete.</p>
+              <div class="agreement"><span>Custom ↔ Aer Frobenius error</span><strong id="bell-error-norm">—</strong></div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="kernel-area" aria-labelledby="kernel-heading" hidden>
+      <div class="section-heading"><div><p class="eyebrow">FINITE-SHOT FIDELITY KERNELS</p><h2 id="kernel-heading">Kernel Observatory</h2></div><p>Explore saved evidence from the PSD repair study.</p></div>
+      <section class="panel kernel-controls" aria-label="Saved result selectors">
+        <label for="kernel-budget">Shot budget<select id="kernel-budget" disabled><option>Loading…</option></select></label>
+        <label for="kernel-seed">Simulator seed<select id="kernel-seed" disabled><option>Loading…</option></select></label>
+        <label for="kernel-kind">Matrix<select id="kernel-kind"><option value="raw">Raw sampled kernel</option><option value="repaired">PSD repaired · transductive</option></select></label>
+        <div class="saved-badge"><span class="small-label">SOURCE</span><span>Saved local experiment</span></div>
+      </section>
+      <p class="status" id="kernel-status" role="status" aria-live="polite">Open this area to load saved results.</p>
+      <p class="error" id="kernel-error" role="alert" hidden></p><button type="button" id="retry-kernel" hidden>Retry loading saved results</button>
+      <div id="kernel-results" hidden>
+        <p class="scope-note" id="kernel-scope"></p>
+        <div class="kernel-layout">
+          <section class="panel" aria-labelledby="kernel-matrix-heading">
+            <div class="panel-heading"><h3 id="kernel-matrix-heading">Kernel similarity matrix</h3><span id="kernel-size" class="small-label"></span></div>
+            <div class="canvas-wrap kernel-canvas-wrap"><canvas id="kernel-canvas" width="680" height="610" role="img" aria-label="Saved kernel heatmap"></canvas></div>
+            <p class="field-note" id="kernel-ordering"></p>
+            <div class="cell-inspector"><span>Inspect K(i, j)</span><label for="kernel-row">Row<input id="kernel-row" type="number" min="0" value="0" step="1"></label><label for="kernel-col">Column<input id="kernel-col" type="number" min="0" value="0" step="1"></label><output id="kernel-cell-value" aria-live="polite">—</output></div>
+          </section>
+          <div class="kernel-readings">
+            <section class="panel" aria-labelledby="diagnostics-heading">
+              <div class="panel-heading"><h3 id="diagnostics-heading">Matrix diagnostics</h3><span id="psd-badge" class="stage-badge"></span></div>
+              <dl class="readings"><div><dt>Minimum eigenvalue</dt><dd id="kernel-min-eigenvalue">—</dd></div><div><dt>PSD tolerance</dt><dd id="kernel-tolerance">—</dd></div><div><dt>Symmetry max error</dt><dd id="kernel-symmetry">—</dd></div><div><dt>Diagonal range</dt><dd id="kernel-diagonal">—</dd></div><div><dt>Distance from raw · Frobenius</dt><dd id="kernel-distance">—</dd></div></dl>
+              <p class="field-note" id="kernel-repair-note"></p>
+            </section>
+            <section class="panel" aria-labelledby="classifier-heading">
+              <div class="panel-heading"><h3 id="classifier-heading">Recorded classifier metrics</h3><span class="small-label">SVC</span></div>
+              <table class="metrics-table"><caption class="visually-hidden">Fixed-split accuracy and F1</caption><thead><tr><th scope="col">Evaluation</th><th scope="col">Accuracy</th><th scope="col">F1</th></tr></thead><tbody id="classifier-body"></tbody></table>
+              <p class="field-note" id="kernel-split"></p>
+              <p class="field-note">This fixed split measures sampling sensitivity. It does not estimate generalization performance. The repaired evaluation uses test inputs and is transductive.</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+    <footer><span>PRAXIS QUANTUM LAB / LOCAL RESEARCH</span><p>These visualizations represent mathematical states and matrices, not literal particle motion. Small classical simulations do not demonstrate quantum advantage.</p></footer>
+  </main>
+</body>
+</html>

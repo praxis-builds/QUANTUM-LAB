@@ -1,0 +1,1850 @@
+{
+  "channels": {
+    "amplitude_damping": {
+      "cases": [
+        {
+          "aer_initial_bell_fidelity": 0.9999999999999998,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.4999999999999999
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 1.0,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.5
+          },
+          "analytical_to_aer_frobenius_error": 2.7194799110210365e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 0.0,
+          "custom_initial_bell_fidelity": 0.9999999999999997,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.5
+          },
+          "strength": 0.0
+        },
+        {
+          "aer_initial_bell_fidelity": 0.9748397172404479,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.02499999999999999,
+            "11": 0.4749999999999998
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.48733971724044806,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.025,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.48733971724044806,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4749999999999998,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.974839717240448,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.025,
+            "11": 0.475
+          },
+          "analytical_to_aer_frobenius_error": 2.7214709887088936e-16,
+          "analytical_to_custom_frobenius_error": 1.0408340855860843e-17,
+          "analytical_to_custom_probability_max_error": 5.551115123125783e-17,
+          "custom_initial_bell_fidelity": 0.9748397172404477,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.024999999999999998,
+            "11": 0.4749999999999999
+          },
+          "strength": 0.05
+        },
+        {
+          "aer_initial_bell_fidelity": 0.9234772228646443,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.075,
+            "11": 0.42499999999999993
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4609772228646443,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.075,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4609772228646443,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.425,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.9234772228646444,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.075,
+            "11": 0.425
+          },
+          "analytical_to_aer_frobenius_error": 2.4196749845665633e-16,
+          "analytical_to_custom_frobenius_error": 9.71445146547012e-17,
+          "analytical_to_custom_probability_max_error": 5.551115123125783e-17,
+          "custom_initial_bell_fidelity": 0.923477222864644,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.075,
+            "11": 0.42500000000000004
+          },
+          "strength": 0.15
+        },
+        {
+          "aer_initial_bell_fidelity": 0.8433300132670377,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.14999999999999994,
+            "11": 0.35
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4183300132670377,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.15,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4183300132670377,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.35,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.8433300132670378,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.15,
+            "11": 0.35
+          },
+          "analytical_to_aer_frobenius_error": 2.4196749845665633e-16,
+          "analytical_to_custom_frobenius_error": 1.1102230246251565e-16,
+          "analytical_to_custom_probability_max_error": 2.7755575615628914e-17,
+          "custom_initial_bell_fidelity": 0.8433300132670374,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.14999999999999997,
+            "11": 0.35
+          },
+          "strength": 0.3
+        },
+        {
+          "aer_initial_bell_fidelity": 0.6662277660168379,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.3,
+            "11": 0.19999999999999996
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.3162277660168379,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.3,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.3162277660168379,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.19999999999999998,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.6662277660168381,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.3,
+            "11": 0.2
+          },
+          "analytical_to_aer_frobenius_error": 2.3714374201337736e-16,
+          "analytical_to_custom_frobenius_error": 5.551115123125783e-17,
+          "analytical_to_custom_probability_max_error": 2.7755575615628914e-17,
+          "custom_initial_bell_fidelity": 0.6662277660168376,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.3,
+            "11": 0.20000000000000004
+          },
+          "strength": 0.6
+        },
+        {
+          "aer_initial_bell_fidelity": 0.25,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.4999999999999999,
+            "11": 0.0
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.5,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.25,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.5,
+            "11": 0.0
+          },
+          "analytical_to_aer_frobenius_error": 2.482534153247273e-16,
+          "analytical_to_custom_frobenius_error": 1.1102230246251565e-16,
+          "analytical_to_custom_probability_max_error": 0.0,
+          "custom_initial_bell_fidelity": 0.24999999999999992,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.5,
+            "11": 0.0
+          },
+          "strength": 1.0
+        }
+      ],
+      "parameter_convention": "gamma in [0, 1]: gamma is the |1> -> |0> decay probability."
+    },
+    "bit_flip": {
+      "cases": [
+        {
+          "aer_initial_bell_fidelity": 0.9999999999999998,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.4999999999999999
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 1.0,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.5
+          },
+          "analytical_to_aer_frobenius_error": 2.7194799110210365e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 0.0,
+          "custom_initial_bell_fidelity": 0.9999999999999997,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.5
+          },
+          "strength": 0.0
+        },
+        {
+          "aer_initial_bell_fidelity": 0.9499999999999997,
+          "aer_measurement_probabilities": {
+            "00": 0.47500000000000014,
+            "01": 0.025000000000000012,
+            "10": 0.024999999999999998,
+            "11": 0.4749999999999999
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.47499999999999987,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.47499999999999987,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.024999999999999994,
+                0.0
+              ],
+              [
+                0.024999999999999994,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.024999999999999994,
+                0.0
+              ],
+              [
+                0.024999999999999994,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.47499999999999987,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.47499999999999987,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.95,
+          "analytical_measurement_probabilities": {
+            "00": 0.475,
+            "01": 0.025,
+            "10": 0.025,
+            "11": 0.475
+          },
+          "analytical_to_aer_frobenius_error": 1.9267148122663087e-16,
+          "analytical_to_custom_frobenius_error": 1.1123893155135927e-16,
+          "analytical_to_custom_probability_max_error": 5.551115123125783e-17,
+          "custom_initial_bell_fidelity": 0.9499999999999994,
+          "custom_measurement_probabilities": {
+            "00": 0.47500000000000003,
+            "01": 0.025,
+            "10": 0.025,
+            "11": 0.47500000000000003
+          },
+          "strength": 0.05
+        },
+        {
+          "aer_initial_bell_fidelity": 0.85,
+          "aer_measurement_probabilities": {
+            "00": 0.42500000000000016,
+            "01": 0.07500000000000002,
+            "10": 0.075,
+            "11": 0.42499999999999993
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4249999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4249999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.07499999999999998,
+                0.0
+              ],
+              [
+                0.07499999999999998,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.07499999999999998,
+                0.0
+              ],
+              [
+                0.07499999999999998,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4249999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4249999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.85,
+          "analytical_measurement_probabilities": {
+            "00": 0.425,
+            "01": 0.075,
+            "10": 0.075,
+            "11": 0.425
+          },
+          "analytical_to_aer_frobenius_error": 3.728969589373966e-16,
+          "analytical_to_custom_frobenius_error": 1.1102230246251565e-16,
+          "analytical_to_custom_probability_max_error": 5.551115123125783e-17,
+          "custom_initial_bell_fidelity": 0.8499999999999996,
+          "custom_measurement_probabilities": {
+            "00": 0.42500000000000004,
+            "01": 0.075,
+            "10": 0.075,
+            "11": 0.42500000000000004
+          },
+          "strength": 0.15
+        },
+        {
+          "aer_initial_bell_fidelity": 0.7,
+          "aer_measurement_probabilities": {
+            "00": 0.3500000000000001,
+            "01": 0.15,
+            "10": 0.14999999999999994,
+            "11": 0.35
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.3499999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.3499999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.14999999999999997,
+                0.0
+              ],
+              [
+                0.14999999999999997,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.14999999999999997,
+                0.0
+              ],
+              [
+                0.14999999999999997,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.3499999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.3499999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.7,
+          "analytical_measurement_probabilities": {
+            "00": 0.35,
+            "01": 0.15,
+            "10": 0.15,
+            "11": 0.35
+          },
+          "analytical_to_aer_frobenius_error": 2.387624894196368e-16,
+          "analytical_to_custom_frobenius_error": 5.551115123125783e-17,
+          "analytical_to_custom_probability_max_error": 2.7755575615628914e-17,
+          "custom_initial_bell_fidelity": 0.6999999999999997,
+          "custom_measurement_probabilities": {
+            "00": 0.35,
+            "01": 0.14999999999999997,
+            "10": 0.14999999999999997,
+            "11": 0.35
+          },
+          "strength": 0.3
+        },
+        {
+          "aer_initial_bell_fidelity": 0.3999999999999999,
+          "aer_measurement_probabilities": {
+            "00": 0.2,
+            "01": 0.30000000000000004,
+            "10": 0.29999999999999993,
+            "11": 0.1999999999999999
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.19999999999999996,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.19999999999999996,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.29999999999999993,
+                0.0
+              ],
+              [
+                0.29999999999999993,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.29999999999999993,
+                0.0
+              ],
+              [
+                0.29999999999999993,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.19999999999999996,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.19999999999999996,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.4,
+          "analytical_measurement_probabilities": {
+            "00": 0.2,
+            "01": 0.3,
+            "10": 0.3,
+            "11": 0.2
+          },
+          "analytical_to_aer_frobenius_error": 2.7194799110210365e-16,
+          "analytical_to_custom_frobenius_error": 5.551115123125783e-17,
+          "analytical_to_custom_probability_max_error": 2.7755575615628914e-17,
+          "custom_initial_bell_fidelity": 0.39999999999999986,
+          "custom_measurement_probabilities": {
+            "00": 0.20000000000000004,
+            "01": 0.3,
+            "10": 0.3,
+            "11": 0.20000000000000004
+          },
+          "strength": 0.6
+        },
+        {
+          "aer_initial_bell_fidelity": 0.0,
+          "aer_measurement_probabilities": {
+            "00": 0.0,
+            "01": 0.5000000000000001,
+            "10": 0.4999999999999999,
+            "11": 0.0
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.0,
+          "analytical_measurement_probabilities": {
+            "00": 0.0,
+            "01": 0.5,
+            "10": 0.5,
+            "11": 0.0
+          },
+          "analytical_to_aer_frobenius_error": 2.7194799110210365e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 0.0,
+          "custom_initial_bell_fidelity": 0.0,
+          "custom_measurement_probabilities": {
+            "00": 0.0,
+            "01": 0.5,
+            "10": 0.5,
+            "11": 0.0
+          },
+          "strength": 1.0
+        }
+      ],
+      "parameter_convention": "p in [0, 1]: E(rho) = (1-p)rho + p X rho X."
+    },
+    "depolarizing": {
+      "cases": [
+        {
+          "aer_initial_bell_fidelity": 0.9999999999999998,
+          "aer_measurement_probabilities": {
+            "00": 0.5000000000000001,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.4999999999999999
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4999999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4999999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 1.0,
+          "analytical_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.5
+          },
+          "analytical_to_aer_frobenius_error": 2.7194799110210365e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 0.0,
+          "custom_initial_bell_fidelity": 0.9999999999999997,
+          "custom_measurement_probabilities": {
+            "00": 0.5,
+            "01": 0.0,
+            "10": 0.0,
+            "11": 0.5
+          },
+          "strength": 0.0
+        },
+        {
+          "aer_initial_bell_fidelity": 0.9625000000000001,
+          "aer_measurement_probabilities": {
+            "00": 0.48750000000000016,
+            "01": 0.012500000000000002,
+            "10": 0.012499999999999995,
+            "11": 0.48749999999999993
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4874999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4749999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.012499999999999997,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.012499999999999997,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4749999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4874999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.9625,
+          "analytical_measurement_probabilities": {
+            "00": 0.4875,
+            "01": 0.0125,
+            "10": 0.0125,
+            "11": 0.4875
+          },
+          "analytical_to_aer_frobenius_error": 3.6826018076930673e-16,
+          "analytical_to_custom_frobenius_error": 1.110494042089129e-16,
+          "analytical_to_custom_probability_max_error": 3.469446951953614e-18,
+          "custom_initial_bell_fidelity": 0.9624999999999997,
+          "custom_measurement_probabilities": {
+            "00": 0.4875,
+            "01": 0.012499999999999997,
+            "10": 0.012499999999999997,
+            "11": 0.4875
+          },
+          "strength": 0.05
+        },
+        {
+          "aer_initial_bell_fidelity": 0.8874999999999997,
+          "aer_measurement_probabilities": {
+            "00": 0.4625000000000001,
+            "01": 0.03750000000000001,
+            "10": 0.0375,
+            "11": 0.46249999999999986
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.46249999999999986,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4249999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.03749999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.03749999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.4249999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.46249999999999986,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.8875,
+          "analytical_measurement_probabilities": {
+            "00": 0.4625,
+            "01": 0.0375,
+            "10": 0.0375,
+            "11": 0.4625
+          },
+          "analytical_to_aer_frobenius_error": 2.72831802307881e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 5.551115123125783e-17,
+          "custom_initial_bell_fidelity": 0.8874999999999996,
+          "custom_measurement_probabilities": {
+            "00": 0.46249999999999997,
+            "01": 0.0375,
+            "10": 0.0375,
+            "11": 0.46249999999999997
+          },
+          "strength": 0.15
+        },
+        {
+          "aer_initial_bell_fidelity": 0.7749999999999999,
+          "aer_measurement_probabilities": {
+            "00": 0.4250000000000001,
+            "01": 0.075,
+            "10": 0.07499999999999997,
+            "11": 0.4249999999999999
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.4249999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.3499999999999999,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.07499999999999998,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.07499999999999998,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.3499999999999999,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.4249999999999999,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.775,
+          "analytical_measurement_probabilities": {
+            "00": 0.425,
+            "01": 0.075,
+            "10": 0.075,
+            "11": 0.425
+          },
+          "analytical_to_aer_frobenius_error": 2.7265526925652344e-16,
+          "analytical_to_custom_frobenius_error": 1.962615573354719e-17,
+          "analytical_to_custom_probability_max_error": 1.3877787807814457e-17,
+          "custom_initial_bell_fidelity": 0.7749999999999997,
+          "custom_measurement_probabilities": {
+            "00": 0.425,
+            "01": 0.07499999999999998,
+            "10": 0.07499999999999998,
+            "11": 0.425
+          },
+          "strength": 0.3
+        },
+        {
+          "aer_initial_bell_fidelity": 0.5499999999999999,
+          "aer_measurement_probabilities": {
+            "00": 0.3500000000000001,
+            "01": 0.15000000000000005,
+            "10": 0.15,
+            "11": 0.35
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.35,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.19999999999999998,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.14999999999999997,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.14999999999999997,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.19999999999999998,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.35,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.55,
+          "analytical_measurement_probabilities": {
+            "00": 0.35,
+            "01": 0.15,
+            "10": 0.15,
+            "11": 0.35
+          },
+          "analytical_to_aer_frobenius_error": 1.4686870114880517e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 5.551115123125783e-17,
+          "custom_initial_bell_fidelity": 0.5499999999999998,
+          "custom_measurement_probabilities": {
+            "00": 0.35000000000000003,
+            "01": 0.15,
+            "10": 0.15,
+            "11": 0.35000000000000003
+          },
+          "strength": 0.6
+        },
+        {
+          "aer_initial_bell_fidelity": 0.24999999999999994,
+          "aer_measurement_probabilities": {
+            "00": 0.25000000000000006,
+            "01": 0.25000000000000006,
+            "10": 0.24999999999999994,
+            "11": 0.24999999999999994
+          },
+          "analytical_density_matrix": [
+            [
+              [
+                0.24999999999999994,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.24999999999999994,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.24999999999999994,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ]
+            ],
+            [
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0
+              ],
+              [
+                0.24999999999999994,
+                0.0
+              ]
+            ]
+          ],
+          "analytical_initial_bell_fidelity": 0.25,
+          "analytical_measurement_probabilities": {
+            "00": 0.25,
+            "01": 0.25,
+            "10": 0.25,
+            "11": 0.25
+          },
+          "analytical_to_aer_frobenius_error": 1.5700924586837752e-16,
+          "analytical_to_custom_frobenius_error": 0.0,
+          "analytical_to_custom_probability_max_error": 0.0,
+          "custom_initial_bell_fidelity": 0.24999999999999992,
+          "custom_measurement_probabilities": {
+            "00": 0.25,
+            "01": 0.25,
+            "10": 0.25,
+            "11": 0.25
+          },
+          "strength": 1.0
+        }
+      ],
+      "parameter_convention": "p in [0, 1]: E(rho) = (1-p)rho + p I/2 on the targeted qubit."
+    }
+  },
+  "metadata": {
+    "aer_method": "AerSimulator(method='density_matrix') with the same Kraus instruction",
+    "analytical_reference": "Closed forms derived from this project's Kraus operators for Bell state noise on Qiskit qubit 0; no custom-channel implementation is called.",
+    "basis_convention": "Qiskit little-endian: basis index is |q1 q0>; target qubit 0 is the rightmost displayed bit, so X on q0 maps |00> to |01>.",
+    "comparison_metric": "Frobenius norm ||rho_custom - rho_aer||_F",
+    "comparison_tolerance": 1e-10,
+    "custom_method": "rho_prime = sum_i K_i rho K_i^dagger",
+    "fidelity_definition": "F(Phi+, rho) = <Phi+|rho|Phi+> because Phi+ is pure.",
+    "initial_state": "(|00> + |11>)/sqrt(2)",
+    "num_qubits": 2,
+    "seed": 20260928,
+    "target_qubit": 0
+  }
+}

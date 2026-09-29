@@ -1,0 +1,1570 @@
+{
+  "baselines": {
+    "classical_rbf_svc": {
+      "accuracy": 0.8333333333333334,
+      "f1": 0.8333333333333334,
+      "fit_seconds": 0.0023296389990719035,
+      "prediction_seconds": 0.0004691440008173231,
+      "predictions": [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "exact_quantum_kernel_svc": {
+      "accuracy": 0.8333333333333334,
+      "f1": 0.8333333333333334,
+      "fit_seconds": 0.012997503999940818,
+      "prediction_seconds": 0.002021880998654524,
+      "predictions": [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "compute_uncompute_checks": [
+    {
+      "compute_uncompute_exact_probability": 0.9999999999999996,
+      "statevector_kernel": 0.9999999999999998,
+      "train_pair_indices": [
+        0,
+        0
+      ]
+    },
+    {
+      "compute_uncompute_exact_probability": 0.49496204105780683,
+      "statevector_kernel": 0.494962041057807,
+      "train_pair_indices": [
+        0,
+        1
+      ]
+    },
+    {
+      "compute_uncompute_exact_probability": 0.49496204105780683,
+      "statevector_kernel": 0.494962041057807,
+      "train_pair_indices": [
+        1,
+        0
+      ]
+    },
+    {
+      "compute_uncompute_exact_probability": 0.9999999999999996,
+      "statevector_kernel": 0.9999999999999996,
+      "train_pair_indices": [
+        27,
+        27
+      ]
+    }
+  ],
+  "metadata": {
+    "circuit_compilation_seconds": 0.9663628850030364,
+    "circuit_order": "feature_map(x) followed by inverse(feature_map(z))",
+    "classical_baseline": "SVC(kernel='rbf', C=1.0, gamma='scale') on the same training-only-scaled split",
+    "classical_rbf_gamma_value": 0.5000000000000001,
+    "count_bit_order": "Qiskit displays |q1 q0>; all-zero string is order invariant",
+    "dataset": "sklearn.datasets.make_moons",
+    "experiment": "finite-shot compute-uncompute fidelity-kernel sampling sensitivity",
+    "feature_map": "H, RZ(x), RY(x^2) per qubit, followed by CZ(0,1)",
+    "interpretation": "Fixed-split sampling sensitivity only; not a generalization estimate or quantum-advantage claim.",
+    "kernel": "P(all-zero | U(z)^dagger U(x)|00>)",
+    "psd_policy": "No PSD projection; minimum eigenvalues are reported as observed.",
+    "psd_tolerance": 1e-10,
+    "quantum_baseline": "SVC(kernel='precomputed', C=1.0) with exact statevector fidelity kernel",
+    "sample_size": 40,
+    "seed": 20260928,
+    "shot_budgets": [
+      128,
+      512,
+      2048
+    ],
+    "shot_seeds": [
+      20260929,
+      20260930,
+      20260931,
+      20260932,
+      20260933
+    ],
+    "simulator": "qiskit_aer.AerSimulator(method='statevector'), local exact simulation with finite-shot measurement sampling",
+    "source_dataset_size": 80,
+    "stratified_subset_source_indices_in_train_then_test_order": [
+      67,
+      54,
+      0,
+      19,
+      50,
+      66,
+      23,
+      9,
+      26,
+      22,
+      60,
+      24,
+      47,
+      33,
+      14,
+      39,
+      77,
+      56,
+      31,
+      28,
+      38,
+      1,
+      62,
+      4,
+      11,
+      30,
+      16,
+      74,
+      59,
+      10,
+      35,
+      69,
+      78,
+      8,
+      6,
+      76,
+      37,
+      34,
+      61,
+      20
+    ],
+    "svc_indefinite_kernel_behavior": "The sampled-kernel SVC fit is attempted without PSD correction. Successful per-seed metrics indicate sklearn SVC accepted that matrix; this does not make an indefinite similarity matrix a valid Mercer kernel.",
+    "test_fraction": 0.3,
+    "test_size": 12,
+    "train_size": 28
+  },
+  "shot_budgets": [
+    {
+      "replicates": [
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0024827910019666888,
+            "prediction_seconds": 0.0004844490031246096,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.025483480193430462,
+              "rmse": 0.03384260536065498
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.025563958901337336,
+              "rmse": 0.03298506069177335
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.02541194356417991,
+              "rmse": 0.03458702246737736
+            }
+          },
+          "replicate": 0,
+          "shot_seed": 20260929,
+          "timing": {
+            "classifier_fit_seconds": 0.0024827910019666888,
+            "classifier_prediction_seconds": 0.0004844490031246096,
+            "kernel_circuit_execution_seconds": 0.71371044800253
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.2975602830844425,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.003119218999927398,
+            "prediction_seconds": 0.000537588002771372,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.026607774604864017,
+              "rmse": 0.03557418283541078
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.026262191776188482,
+              "rmse": 0.034667313212563354
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.02691495934146449,
+              "rmse": 0.03636130634479343
+            }
+          },
+          "replicate": 1,
+          "shot_seed": 20260930,
+          "timing": {
+            "classifier_fit_seconds": 0.003119218999927398,
+            "classifier_prediction_seconds": 0.000537588002771372,
+            "kernel_circuit_execution_seconds": 0.8029736770004092
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.33421637856872866,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.002318643000762677,
+            "prediction_seconds": 0.0004418819989950862,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.026625312219886326,
+              "rmse": 0.03528445671545145
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.02541535756504388,
+              "rmse": 0.03478411206983582
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.02770082746863517,
+              "rmse": 0.03572332483761283
+            }
+          },
+          "replicate": 2,
+          "shot_seed": 20260931,
+          "timing": {
+            "classifier_fit_seconds": 0.002318643000762677,
+            "classifier_prediction_seconds": 0.0004418819989950862,
+            "kernel_circuit_execution_seconds": 0.775134142000752
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.24889512844596381,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0033329420002701227,
+            "prediction_seconds": 0.0005307220017130021,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.02607195901754722,
+              "rmse": 0.03425621243755861
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.02502736665821701,
+              "rmse": 0.03310712922514798
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.02700048555917408,
+              "rmse": 0.03524618418337616
+            }
+          },
+          "replicate": 3,
+          "shot_seed": 20260932,
+          "timing": {
+            "classifier_fit_seconds": 0.0033329420002701227,
+            "classifier_prediction_seconds": 0.0005307220017130021,
+            "kernel_circuit_execution_seconds": 0.7170391480030958
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.3032702743876062,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.75,
+            "f1": 0.7692307692307693,
+            "fit_seconds": 0.0025359999999636784,
+            "prediction_seconds": 0.00042603100155247375,
+            "predictions": [
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.026696953105249447,
+              "rmse": 0.03518680260021152
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.02444991099880222,
+              "rmse": 0.03158230619744567
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.02869432386653586,
+              "rmse": 0.03810563066420699
+            }
+          },
+          "replicate": 4,
+          "shot_seed": 20260933,
+          "timing": {
+            "classifier_fit_seconds": 0.0025359999999636784,
+            "classifier_prediction_seconds": 0.00042603100155247375,
+            "kernel_circuit_execution_seconds": 0.8783314709980914
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.27659647569028756,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        }
+      ],
+      "shots": 128,
+      "summary": {
+        "classifier": {
+          "accuracy": {
+            "mean": 0.8166666666666668,
+            "standard_deviation": 0.03726779962499651
+          },
+          "f1": {
+            "mean": 0.8205128205128206,
+            "standard_deviation": 0.028667538173074224
+          }
+        },
+        "kernel_error_mean_by_scope": {
+          "all_estimated_entries": {
+            "mae": 0.026297095828195494,
+            "rmse": 0.03482885198985747
+          },
+          "test_to_training": {
+            "mae": 0.025343757179917787,
+            "rmse": 0.03342518427935324
+          },
+          "training_unique_off_diagonal": {
+            "mae": 0.027144507959997906,
+            "rmse": 0.03600469369947336
+          }
+        },
+        "kernel_error_standard_deviation_by_scope": {
+          "all_estimated_entries": {
+            "mae": 0.0005188424926465605,
+            "rmse": 0.0007402399687330992
+          },
+          "test_to_training": {
+            "mae": 0.0006701122067628348,
+            "rmse": 0.0013304732655232672
+          },
+          "training_unique_off_diagonal": {
+            "mae": 0.0012027712943151645,
+            "rmse": 0.0013421443247033477
+          }
+        },
+        "minimum_training_eigenvalue": {
+          "mean": -0.2921077080354057,
+          "minimum": -0.33421637856872866
+        },
+        "positive_semidefinite_replicates_within_tolerance": 0,
+        "replicate_count": 5,
+        "timing_seconds_median": {
+          "classifier_fit_seconds": 0.0025359999999636784,
+          "classifier_prediction_seconds": 0.0004844490031246096,
+          "kernel_circuit_execution_seconds": 0.775134142000752
+        }
+      }
+    },
+    {
+      "replicates": [
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.002427876999718137,
+            "prediction_seconds": 0.00042976700206054375,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.013800756657467278,
+              "rmse": 0.01844048559133133
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.013823590407504895,
+              "rmse": 0.018181291173920186
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.013780459990767175,
+              "rmse": 0.018667859665278327
+            }
+          },
+          "replicate": 0,
+          "shot_seed": 20260929,
+          "timing": {
+            "classifier_fit_seconds": 0.002427876999718137,
+            "classifier_prediction_seconds": 0.00042976700206054375,
+            "kernel_circuit_execution_seconds": 0.9773012930018012
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.13977932270817703,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0023533560015494004,
+            "prediction_seconds": 0.0004265409988875035,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.013471547614238421,
+              "rmse": 0.01795025941129938
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.013061830159466355,
+              "rmse": 0.016970484628550424
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.013835740907369146,
+              "rmse": 0.01877830317632288
+            }
+          },
+          "replicate": 1,
+          "shot_seed": 20260930,
+          "timing": {
+            "classifier_fit_seconds": 0.0023533560015494004,
+            "classifier_prediction_seconds": 0.0004265409988875035,
+            "kernel_circuit_execution_seconds": 0.973767626001063
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.14989452925611876,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.00228077000065241,
+            "prediction_seconds": 0.0003775059994950425,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.012943533758380714,
+              "rmse": 0.01673469157173149
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.012457839306116322,
+              "rmse": 0.016312104675854495
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.013375262160393503,
+              "rmse": 0.017101560235410634
+            }
+          },
+          "replicate": 2,
+          "shot_seed": 20260931,
+          "timing": {
+            "classifier_fit_seconds": 0.00228077000065241,
+            "classifier_prediction_seconds": 0.0003775059994950425,
+            "kernel_circuit_execution_seconds": 0.9934669969989045
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.1351905942985478,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0023978539975360036,
+            "prediction_seconds": 0.00046128999747452326,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.012964992304017021,
+              "rmse": 0.01746220922019976
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.013099237314607892,
+              "rmse": 0.017513538382189272
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.01284566340571402,
+              "rmse": 0.01741645630219103
+            }
+          },
+          "replicate": 3,
+          "shot_seed": 20260932,
+          "timing": {
+            "classifier_fit_seconds": 0.0023978539975360036,
+            "classifier_prediction_seconds": 0.00046128999747452326,
+            "kernel_circuit_execution_seconds": 0.9572448409999197
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.14419674640629054,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0022589870022784453,
+            "prediction_seconds": 0.00043909099986194633,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.013084294743439603,
+              "rmse": 0.01751001252909719
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.01296614882583202,
+              "rmse": 0.01701074038208676
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.013189313336868567,
+              "rmse": 0.017942150410884827
+            }
+          },
+          "replicate": 4,
+          "shot_seed": 20260933,
+          "timing": {
+            "classifier_fit_seconds": 0.0022589870022784453,
+            "classifier_prediction_seconds": 0.00043909099986194633,
+            "kernel_circuit_execution_seconds": 1.4437794189980195
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.11873431773147834,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        }
+      ],
+      "shots": 512,
+      "summary": {
+        "classifier": {
+          "accuracy": {
+            "mean": 0.8333333333333334,
+            "standard_deviation": 0.0
+          },
+          "f1": {
+            "mean": 0.8333333333333334,
+            "standard_deviation": 0.0
+          }
+        },
+        "kernel_error_mean_by_scope": {
+          "all_estimated_entries": {
+            "mae": 0.013253025015508606,
+            "rmse": 0.01761953166473183
+          },
+          "test_to_training": {
+            "mae": 0.013081729202705497,
+            "rmse": 0.017197631848520228
+          },
+          "training_unique_off_diagonal": {
+            "mae": 0.013405287960222481,
+            "rmse": 0.017981265958017544
+          }
+        },
+        "kernel_error_standard_deviation_by_scope": {
+          "all_estimated_entries": {
+            "mae": 0.0003724847861318134,
+            "rmse": 0.0006330546924937331
+          },
+          "test_to_training": {
+            "mae": 0.00048827706777886386,
+            "rmse": 0.00069607206159925
+          },
+          "training_unique_off_diagonal": {
+            "mae": 0.0004143579433313988,
+            "rmse": 0.000741805462696204
+          }
+        },
+        "minimum_training_eigenvalue": {
+          "mean": -0.1375591020801225,
+          "minimum": -0.14989452925611876
+        },
+        "positive_semidefinite_replicates_within_tolerance": 0,
+        "replicate_count": 5,
+        "timing_seconds_median": {
+          "classifier_fit_seconds": 0.0023533560015494004,
+          "classifier_prediction_seconds": 0.00042976700206054375,
+          "kernel_circuit_execution_seconds": 0.9773012930018012
+        }
+      }
+    },
+    {
+      "replicates": [
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0023681849997956306,
+            "prediction_seconds": 0.00040115800220519304,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.0064757691693287,
+              "rmse": 0.008731377477631886
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.006456330777981295,
+              "rmse": 0.008786623969484533
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.006493047739415282,
+              "rmse": 0.00868197435890589
+            }
+          },
+          "replicate": 0,
+          "shot_seed": 20260929,
+          "timing": {
+            "classifier_fit_seconds": 0.0023681849997956306,
+            "classifier_prediction_seconds": 0.00040115800220519304,
+            "kernel_circuit_execution_seconds": 1.8749622299983457
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.06638959442169244,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0031790629982424434,
+            "prediction_seconds": 0.0005933120010013226,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.006296574880929792,
+              "rmse": 0.008339134339469085
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.006410631208542235,
+              "rmse": 0.008585317384130299
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.006195191478607621,
+              "rmse": 0.008114036872736262
+            }
+          },
+          "replicate": 1,
+          "shot_seed": 20260930,
+          "timing": {
+            "classifier_fit_seconds": 0.0031790629982424434,
+            "classifier_prediction_seconds": 0.0005933120010013226,
+            "kernel_circuit_execution_seconds": 2.161192696999933
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.06295452970140593,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0037734210018243175,
+            "prediction_seconds": 0.0007534680007665884,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.00629616061409558,
+              "rmse": 0.008395622163406235
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.0062098298946841445,
+              "rmse": 0.008234649168702098
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.0063728990313501885,
+              "rmse": 0.00853616125165741
+            }
+          },
+          "replicate": 2,
+          "shot_seed": 20260931,
+          "timing": {
+            "classifier_fit_seconds": 0.0037734210018243175,
+            "classifier_prediction_seconds": 0.0007534680007665884,
+            "kernel_circuit_execution_seconds": 2.124224160997983
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.05697755009737821,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.0020291780019761063,
+            "prediction_seconds": 0.00038674399911542423,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.006959338281366246,
+              "rmse": 0.009187244480739517
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.006939932569507838,
+              "rmse": 0.00927654214412076
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.006976587803018164,
+              "rmse": 0.009107133750330926
+            }
+          },
+          "replicate": 3,
+          "shot_seed": 20260932,
+          "timing": {
+            "classifier_fit_seconds": 0.0020291780019761063,
+            "classifier_prediction_seconds": 0.00038674399911542423,
+            "kernel_circuit_execution_seconds": 3.349235592999321
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.07113057620923227,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        },
+        {
+          "classifier": {
+            "accuracy": 0.8333333333333334,
+            "f1": 0.8333333333333334,
+            "fit_seconds": 0.010206538001511944,
+            "prediction_seconds": 0.0024257570003101137,
+            "predictions": [
+              0,
+              0,
+              1,
+              1,
+              1,
+              1,
+              1,
+              1,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          "kernel_errors": {
+            "all_estimated_entries": {
+              "entries_compared": 714,
+              "mae": 0.006260668931013262,
+              "rmse": 0.008284975514824034
+            },
+            "test_to_training": {
+              "entries_compared": 336,
+              "mae": 0.0062059002073562115,
+              "rmse": 0.008206443194413875
+            },
+            "training_unique_off_diagonal": {
+              "entries_compared": 378,
+              "mae": 0.0063093522409306425,
+              "rmse": 0.008354162292972023
+            }
+          },
+          "replicate": 4,
+          "shot_seed": 20260933,
+          "timing": {
+            "classifier_fit_seconds": 0.010206538001511944,
+            "classifier_prediction_seconds": 0.0024257570003101137,
+            "kernel_circuit_execution_seconds": 4.288108765002107
+          },
+          "training_kernel_diagnostics": {
+            "diagonal_values": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ],
+            "eigenvalue_note": "Computed from the symmetric part for numerical stability; the stored kernel is unchanged and no PSD projection is applied.",
+            "minimum_eigenvalue": -0.053805006340061814,
+            "positive_semidefinite_within_tolerance": false,
+            "psd_tolerance": 1e-10,
+            "symmetry_max_abs_error": 0.0
+          }
+        }
+      ],
+      "shots": 2048,
+      "summary": {
+        "classifier": {
+          "accuracy": {
+            "mean": 0.8333333333333334,
+            "standard_deviation": 0.0
+          },
+          "f1": {
+            "mean": 0.8333333333333334,
+            "standard_deviation": 0.0
+          }
+        },
+        "kernel_error_mean_by_scope": {
+          "all_estimated_entries": {
+            "mae": 0.0064577023753467164,
+            "rmse": 0.00858767079521415
+          },
+          "test_to_training": {
+            "mae": 0.006444524931614344,
+            "rmse": 0.008617915172170313
+          },
+          "training_unique_off_diagonal": {
+            "mae": 0.006469415658664379,
+            "rmse": 0.008558693705320503
+          }
+        },
+        "kernel_error_standard_deviation_by_scope": {
+          "all_estimated_entries": {
+            "mae": 0.00029276482862697215,
+            "rmse": 0.00037763000891416357
+          },
+          "test_to_training": {
+            "mae": 0.00029947471076130846,
+            "rmse": 0.0004414512374402803
+          },
+          "training_unique_off_diagonal": {
+            "mae": 0.00030328069392130227,
+            "rmse": 0.00037284216211041235
+          }
+        },
+        "minimum_training_eigenvalue": {
+          "mean": -0.062251451353954136,
+          "minimum": -0.07113057620923227
+        },
+        "positive_semidefinite_replicates_within_tolerance": 0,
+        "replicate_count": 5,
+        "timing_seconds_median": {
+          "classifier_fit_seconds": 0.0031790629982424434,
+          "classifier_prediction_seconds": 0.0005933120010013226,
+          "kernel_circuit_execution_seconds": 2.161192696999933
+        }
+      }
+    }
+  ]
+}

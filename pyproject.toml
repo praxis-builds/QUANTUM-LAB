@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=80.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "praxis-quantum-lab"
+version = "0.1.0"
+description = "A local, simulator-only learning lab for classical and quantum-kernel classification."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Praxis Quantum Lab" }]
+dependencies = [
+    "numpy==2.5.3",
+    "scikit-learn==1.9.1",
+    "qiskit==2.5.2",
+    "qiskit-aer==0.17.2",
+    "matplotlib==3.11.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
+[project.scripts]
+praxis-qiskit-experiments = "praxis_quantum_lab.qiskit_experiments:main"
+praxis-kernel-experiment = "praxis_quantum_lab.kernel_experiment:main"
+praxis-density-matrix-sweep = "praxis_quantum_lab.density_matrix_noise:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+praxis_quantum_lab = ["dashboard_assets/*.html", "dashboard_assets/*.css", "dashboard_assets/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"

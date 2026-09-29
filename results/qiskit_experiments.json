@@ -1,0 +1,60 @@
+{
+  "bell_state_measurement": {
+    "circuit": "H(0), CX(0, 1), measure both qubits",
+    "depth": 3,
+    "expected": "Only '00' and '11' occur on an ideal simulator.",
+    "noise_explanation": "Depolarizing errors applied after H and CX can disturb the Bell state, so noisy runs can produce '01' and '10' and shift the ideal balance.",
+    "observed_ideal_counts": {
+      "00": 1015,
+      "11": 1033
+    },
+    "observed_noisy_counts": {
+      "00": 981,
+      "01": 34,
+      "10": 18,
+      "11": 1015
+    }
+  },
+  "metadata": {
+    "seed": 20260928,
+    "shots": 2048,
+    "simulators": {
+      "exact": "qiskit.quantum_info.Statevector (local, exact)",
+      "ideal_samples": "qiskit_aer.AerSimulator(method='statevector')",
+      "noisy_samples": "qiskit_aer.AerSimulator(method='density_matrix')"
+    }
+  },
+  "one_qubit_measurement": {
+    "circuit": "H on |0>, then a computational-basis measurement",
+    "depth": 2,
+    "expected": "Approximately equal '0' and '1' counts over many shots.",
+    "observed_counts": {
+      "0": 1015,
+      "1": 1033
+    }
+  },
+  "one_qubit_superposition": {
+    "circuit": "H on |0> (unmeasured)",
+    "depth": 1,
+    "expected": {
+      "0": 0.5,
+      "1": 0.5
+    },
+    "observed_exact": {
+      "0": 0.4999999999999999,
+      "1": 0.4999999999999999
+    }
+  },
+  "two_qubit_entanglement": {
+    "circuit": "H on qubit 0 followed by CX(0, 1)",
+    "depth": 2,
+    "expected": {
+      "00": 0.5,
+      "11": 0.5
+    },
+    "observed_exact": {
+      "00": 0.4999999999999999,
+      "11": 0.4999999999999999
+    }
+  }
+}

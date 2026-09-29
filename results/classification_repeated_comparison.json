@@ -1,0 +1,773 @@
+{
+  "aggregate": {
+    "classical_rbf_svc": {
+      "local_simulator_timing_seconds": {
+        "prediction": {
+          "mean": 0.00029769850031395134,
+          "standard_deviation": 0.00021850184096393425
+        },
+        "svc_fit": {
+          "mean": 0.0014750949997808978,
+          "standard_deviation": 0.0013392675911930052
+        },
+        "test_kernel_construction": {
+          "mean": 0.0006090661663620267,
+          "standard_deviation": 0.00023365727657920267
+        },
+        "train_kernel_construction": {
+          "mean": 0.00047091500042976503,
+          "standard_deviation": 0.00012971336093251244
+        }
+      },
+      "metrics": {
+        "accuracy": {
+          "mean": 0.9311490978157645,
+          "standard_deviation": 0.04939275958937327
+        },
+        "f1": {
+          "mean": 0.9270940170940172,
+          "standard_deviation": 0.05134782107262606
+        },
+        "precision": {
+          "mean": 0.9861111111111112,
+          "standard_deviation": 0.0340206908719886
+        },
+        "recall": {
+          "mean": 0.8763736263736264,
+          "standard_deviation": 0.0746727352465691
+        }
+      }
+    },
+    "paired_accuracy_difference_quantum_minus_classical": {
+      "mean": -0.10018993352326688,
+      "standard_deviation": 0.020319336520101438,
+      "values": [
+        -0.07407407407407407,
+        -0.11111111111111116,
+        -0.11538461538461542,
+        -0.07407407407407407,
+        -0.11111111111111116,
+        -0.11538461538461542
+      ]
+    },
+    "quantum_kernel_svc": {
+      "local_simulator_timing_seconds": {
+        "prediction": {
+          "mean": 0.0002828023337618409,
+          "standard_deviation": 1.7255832865158045e-05
+        },
+        "svc_fit": {
+          "mean": 0.001200996166820308,
+          "standard_deviation": 0.00015259168016901997
+        },
+        "test_kernel_construction": {
+          "mean": 0.01289054499981527,
+          "standard_deviation": 0.0001831261983520366
+        },
+        "train_kernel_construction": {
+          "mean": 0.0261359553329991,
+          "standard_deviation": 0.0006157242670179206
+        }
+      },
+      "metrics": {
+        "accuracy": {
+          "mean": 0.8309591642924977,
+          "standard_deviation": 0.06611692068946268
+        },
+        "f1": {
+          "mean": 0.8255325328788597,
+          "standard_deviation": 0.06504215085966335
+        },
+        "precision": {
+          "mean": 0.8593295593295593,
+          "standard_deviation": 0.07035572109918309
+        },
+        "recall": {
+          "mean": 0.8012820512820512,
+          "standard_deviation": 0.1003806706110444
+        }
+      }
+    }
+  },
+  "metadata": {
+    "circuit_depth": 4,
+    "classical_model": "Precomputed RBF kernel + SVC(kernel='precomputed', C=1.0)",
+    "dataset": "sklearn.datasets.make_moons",
+    "dataset_size": 80,
+    "feature_map": "H, RZ(x), RY(x\u00b2) on each qubit, followed by CZ(0, 1)",
+    "n_repeats": 2,
+    "n_splits": 3,
+    "number_of_qubits": 2,
+    "preprocessing": "StandardScaler is fit separately inside each training split.",
+    "quantum_model": "Exact statevector fidelity kernel + SVC(kernel='precomputed', C=1.0)",
+    "seed": 20260928,
+    "simulator_type": "qiskit.quantum_info.Statevector (exact local simulation)",
+    "timing_method": "Median local wall-clock time across timing_repetitions after one unmeasured warm-up. These are classical simulator timings, not QPU timings.",
+    "timing_repetitions": 1,
+    "total_evaluated_splits": 6
+  },
+  "per_split": [
+    {
+      "classical_rbf_svc": {
+        "accuracy": 0.9629629629629629,
+        "confusion_matrix": [
+          [
+            14,
+            0
+          ],
+          [
+            1,
+            12
+          ]
+        ],
+        "f1": 0.96,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.000733674000002793,
+          "svc_fit": 0.004207468000458903,
+          "test_kernel_construction": 0.0006347609996737447,
+          "train_kernel_construction": 0.000710165000782581
+        },
+        "precision": 1.0,
+        "predictions": [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "recall": 0.9230769230769231
+      },
+      "fold_index": 0,
+      "paired_accuracy_difference_quantum_minus_classical": -0.07407407407407407,
+      "quantum_kernel_svc": {
+        "accuracy": 0.8888888888888888,
+        "confusion_matrix": [
+          [
+            12,
+            2
+          ],
+          [
+            1,
+            12
+          ]
+        ],
+        "f1": 0.8888888888888888,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00027669900009641424,
+          "svc_fit": 0.0014258539995353203,
+          "test_kernel_construction": 0.012829549999878509,
+          "train_kernel_construction": 0.027001315998859354
+        },
+        "precision": 0.8571428571428571,
+        "predictions": [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "recall": 0.9230769230769231
+      },
+      "repeat_index": 0,
+      "shared_train_split_preprocessing_seconds": 0.001384360000884044,
+      "split_index": 0,
+      "test_size": 27,
+      "train_size": 53
+    },
+    {
+      "classical_rbf_svc": {
+        "accuracy": 0.9259259259259259,
+        "confusion_matrix": [
+          [
+            13,
+            0
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "f1": 0.9230769230769231,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00028677500085905194,
+          "svc_fit": 0.0009686630000942387,
+          "test_kernel_construction": 0.0005491719985002419,
+          "train_kernel_construction": 0.00037496200093301013
+        },
+        "precision": 1.0,
+        "predictions": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "recall": 0.8571428571428571
+      },
+      "fold_index": 1,
+      "paired_accuracy_difference_quantum_minus_classical": -0.11111111111111116,
+      "quantum_kernel_svc": {
+        "accuracy": 0.8148148148148148,
+        "confusion_matrix": [
+          [
+            12,
+            1
+          ],
+          [
+            4,
+            10
+          ]
+        ],
+        "f1": 0.8,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.0002740990003076149,
+          "svc_fit": 0.0012329020009929081,
+          "test_kernel_construction": 0.013034310999501031,
+          "train_kernel_construction": 0.026099824000993976
+        },
+        "precision": 0.9090909090909091,
+        "predictions": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "recall": 0.7142857142857143
+      },
+      "repeat_index": 0,
+      "shared_train_split_preprocessing_seconds": 0.0008001949991012225,
+      "split_index": 1,
+      "test_size": 27,
+      "train_size": 53
+    },
+    {
+      "classical_rbf_svc": {
+        "accuracy": 0.9230769230769231,
+        "confusion_matrix": [
+          [
+            13,
+            0
+          ],
+          [
+            2,
+            11
+          ]
+        ],
+        "f1": 0.9166666666666666,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00016879300164873712,
+          "svc_fit": 0.0009192599991365569,
+          "test_kernel_construction": 0.0004582759993354557,
+          "train_kernel_construction": 0.000498794999657548
+        },
+        "precision": 1.0,
+        "predictions": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        "recall": 0.8461538461538461
+      },
+      "fold_index": 2,
+      "paired_accuracy_difference_quantum_minus_classical": -0.11538461538461542,
+      "quantum_kernel_svc": {
+        "accuracy": 0.8076923076923077,
+        "confusion_matrix": [
+          [
+            11,
+            2
+          ],
+          [
+            3,
+            10
+          ]
+        ],
+        "f1": 0.8,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.000288508001176524,
+          "svc_fit": 0.0010176320010941708,
+          "test_kernel_construction": 0.012724569000056363,
+          "train_kernel_construction": 0.026307078000172623
+        },
+        "precision": 0.8333333333333334,
+        "predictions": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "recall": 0.7692307692307693
+      },
+      "repeat_index": 0,
+      "shared_train_split_preprocessing_seconds": 0.0010741850001068087,
+      "split_index": 2,
+      "test_size": 26,
+      "train_size": 54
+    },
+    {
+      "classical_rbf_svc": {
+        "accuracy": 1.0,
+        "confusion_matrix": [
+          [
+            14,
+            0
+          ],
+          [
+            0,
+            13
+          ]
+        ],
+        "f1": 1.0,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00017225900046469178,
+          "svc_fit": 0.0008823159987514373,
+          "test_kernel_construction": 0.00047680200077593327,
+          "train_kernel_construction": 0.00038373799907276407
+        },
+        "precision": 1.0,
+        "predictions": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "recall": 1.0
+      },
+      "fold_index": 0,
+      "paired_accuracy_difference_quantum_minus_classical": -0.07407407407407407,
+      "quantum_kernel_svc": {
+        "accuracy": 0.9259259259259259,
+        "confusion_matrix": [
+          [
+            13,
+            1
+          ],
+          [
+            1,
+            12
+          ]
+        ],
+        "f1": 0.9230769230769231,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.000264239999523852,
+          "svc_fit": 0.0013158900001144502,
+          "test_kernel_construction": 0.013100615000439575,
+          "train_kernel_construction": 0.025094868000451243
+        },
+        "precision": 0.9230769230769231,
+        "predictions": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1
+        ],
+        "recall": 0.9230769230769231
+      },
+      "repeat_index": 1,
+      "shared_train_split_preprocessing_seconds": 0.000765417000366142,
+      "split_index": 3,
+      "test_size": 27,
+      "train_size": 53
+    },
+    {
+      "classical_rbf_svc": {
+        "accuracy": 0.8518518518518519,
+        "confusion_matrix": [
+          [
+            12,
+            1
+          ],
+          [
+            3,
+            11
+          ]
+        ],
+        "f1": 0.8461538461538461,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00018406799972581211,
+          "svc_fit": 0.0008854580009938218,
+          "test_kernel_construction": 0.00046921800094423816,
+          "train_kernel_construction": 0.00048265100122080185
+        },
+        "precision": 0.9166666666666666,
+        "predictions": [
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0
+        ],
+        "recall": 0.7857142857142857
+      },
+      "fold_index": 1,
+      "paired_accuracy_difference_quantum_minus_classical": -0.11111111111111116,
+      "quantum_kernel_svc": {
+        "accuracy": 0.7407407407407407,
+        "confusion_matrix": [
+          [
+            9,
+            4
+          ],
+          [
+            3,
+            11
+          ]
+        ],
+        "f1": 0.7586206896551724,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.0002790830003505107,
+          "svc_fit": 0.0011189300003024982,
+          "test_kernel_construction": 0.013005384998905356,
+          "train_kernel_construction": 0.02628172599906975
+        },
+        "precision": 0.7333333333333333,
+        "predictions": [
+          1,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          1,
+          0,
+          1
+        ],
+        "recall": 0.7857142857142857
+      },
+      "repeat_index": 1,
+      "shared_train_split_preprocessing_seconds": 0.0008179619999282295,
+      "split_index": 4,
+      "test_size": 27,
+      "train_size": 53
+    },
+    {
+      "classical_rbf_svc": {
+        "accuracy": 0.9230769230769231,
+        "confusion_matrix": [
+          [
+            13,
+            0
+          ],
+          [
+            2,
+            11
+          ]
+        ],
+        "f1": 0.9166666666666666,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00024062199918262195,
+          "svc_fit": 0.0009874049992504297,
+          "test_kernel_construction": 0.0010661679989425465,
+          "train_kernel_construction": 0.00037517900091188494
+        },
+        "precision": 1.0,
+        "predictions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          0
+        ],
+        "recall": 0.8461538461538461
+      },
+      "fold_index": 2,
+      "paired_accuracy_difference_quantum_minus_classical": -0.11538461538461542,
+      "quantum_kernel_svc": {
+        "accuracy": 0.8076923076923077,
+        "confusion_matrix": [
+          [
+            12,
+            1
+          ],
+          [
+            4,
+            9
+          ]
+        ],
+        "f1": 0.782608695652174,
+        "local_simulator_timing_seconds": {
+          "prediction": 0.00031418500111612957,
+          "svc_fit": 0.0010947689988825005,
+          "test_kernel_construction": 0.012648840000110795,
+          "train_kernel_construction": 0.026030919998447644
+        },
+        "precision": 0.9,
+        "predictions": [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          1,
+          0,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        "recall": 0.6923076923076923
+      },
+      "repeat_index": 1,
+      "shared_train_split_preprocessing_seconds": 0.0007343239994952455,
+      "split_index": 5,
+      "test_size": 26,
+      "train_size": 54
+    }
+  ]
+}
