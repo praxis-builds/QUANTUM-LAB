@@ -97,3 +97,32 @@ def test_second_order_prediction_reduces_to_first_order_without_noise():
 
     np.testing.assert_array_equal(second_order_shifts(np.eye(4), 128), np.zeros(4))
     assert predict_negativity_second_order(np.eye(4), 128)["predicted_psd_probability"] == 1.0
+
+
+def test_degeneracy_flag_on_hand_made_matrices():
+    from praxis_quantum_lab.kernel_negativity import degeneracy_flag
+
+    separated = np.array([[1.0, 0.5, 0.2], [0.5, 1.0, 0.5], [0.2, 0.5, 1.0]])
+    assert not degeneracy_flag(separated, 10**6)
+    # q=2, n=16 has a crowded near-zero bottom spectrum; at 128 shots pairs sit within 0.5 s
+    crowded = exact_kernel(make_subset_features(16, 0), 2)
+    assert degeneracy_flag(crowded, 128)
+    assert not degeneracy_flag(np.eye(3), 128)  # no noise, no flag
+
+
+def test_out_of_sample_sweep_is_deterministic_and_complete():
+    from praxis_quantum_lab.kernel_negativity import run_out_of_sample_sweep, summarize_out_of_sample
+
+    kwargs = dict(qubit_sample_sizes=((3, (8,)),), shot_budgets=(256, 4096), subsets=(5, 6), draws=20)
+    first = run_out_of_sample_sweep(**kwargs)
+    assert first == run_out_of_sample_sweep(**kwargs)
+    assert len(first) == 4
+    for row in first:
+        assert row["target_set"] == (not row["flagged_near_degenerate"] and row["bottom_spacing_over_s"] >= 0.5)
+    summary = summarize_out_of_sample(first)
+    assert set(summary["targets"]) == {
+        "T1_second_order_mean_abs_psd_gap_le_0.08",
+        "T2_second_order_inside_wilson_ge_0.54",
+        "T3_first_over_second_psd_gap_ratio_ge_2",
+        "T4_second_order_mean_abs_negative_gap_le_0.12",
+    }

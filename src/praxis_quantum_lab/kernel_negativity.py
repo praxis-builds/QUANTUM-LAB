@@ -327,3 +327,160 @@ def write_artifacts(results_dir: Path) -> dict[str, Any]:
     (results_dir / RESULT_FILENAME).write_text(json.dumps(report, indent=2) + "\n")
     save_calibration_plot(rows, results_dir / PLOT_FILENAME)
     return report
+
+
+# --- Milestone 3: frozen second-order model on unseen configurations ---------
+
+OOS_QUBIT_SAMPLE_SIZES = ((2, tuple(range(8, 15))), (3, tuple(range(8, 21))))
+OOS_SHOT_BUDGETS = (256, 1024, 4096)
+OOS_SUBSETS = tuple(range(5, 15))
+OOS_RESULT_FILENAME = "second_order_negativity_test.json"
+OOS_PLOT_FILENAME = "second_order_negativity_test.png"
+DEGENERACY_RATIO = 0.5
+
+
+def degeneracy_flag(kernel: np.ndarray, shots: int, *, ratio: float = DEGENERACY_RATIO) -> bool:
+    """True if some pair k != j has |lambda_k - lambda_j| < ratio * s_k."""
+    eigenvalues, scales = eigenvalue_noise_scales(kernel, shots)
+    gaps = np.abs(eigenvalues[:, np.newaxis] - eigenvalues[np.newaxis, :])
+    np.fill_diagonal(gaps, np.inf)
+    return bool(np.any(gaps < ratio * scales[:, np.newaxis]))
+
+
+def out_of_sample_rng(q: int, n: int, shots: int, subset: int) -> np.random.Generator:
+    return np.random.default_rng([DEFAULT_SEED, q, n, shots, subset, 2])
+
+
+def run_out_of_sample_sweep(
+    *,
+    qubit_sample_sizes: tuple[tuple[int, tuple[int, ...]], ...] = OOS_QUBIT_SAMPLE_SIZES,
+    shot_budgets: tuple[int, ...] = OOS_SHOT_BUDGETS,
+    subsets: tuple[int, ...] = OOS_SUBSETS,
+    draws: int = DRAWS_PER_KERNEL,
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for q, sample_sizes in qubit_sample_sizes:
+        for n in sample_sizes:
+            for subset in subsets:
+                kernel = exact_kernel(make_subset_features(n, subset), q)
+                for shots in shot_budgets:
+                    first = predict_negativity(kernel, shots)
+                    second = predict_negativity_second_order(kernel, shots)
+                    observed = observe_negativity(kernel, shots, draws, out_of_sample_rng(q, n, shots, subset))
+                    flagged = degeneracy_flag(kernel, shots)
+                    rows.append(
+                        {
+                            "qubits": q,
+                            "n": n,
+                            "shots": shots,
+                            "subset": subset,
+                            "flagged_near_degenerate": flagged,
+                            "bottom_spacing_over_s": first["bottom_spacing_over_s"],
+                            "target_set": bool(not flagged and first["bottom_spacing_over_s"] >= 0.5),
+                            "first_order_negative_count": first["predicted_negative_count"],
+                            "first_order_psd_probability": first["predicted_psd_probability"],
+                            "second_order_negative_count": second["predicted_negative_count"],
+                            "second_order_psd_probability": second["predicted_psd_probability"],
+                            **observed,
+                        }
+                    )
+    return rows
+
+
+def _inside(row: dict[str, Any], probability: float) -> bool:
+    low, high = row["observed_psd_wilson95"]
+    return bool(low <= probability <= high)
+
+
+def summarize_out_of_sample(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    def block(group: list[dict[str, Any]]) -> dict[str, Any]:
+        if not group:
+            return {"rows": 0}
+        out: dict[str, Any] = {"rows": len(group)}
+        for order in ("first_order", "second_order"):
+            out[f"{order}_mean_abs_psd_gap"] = float(
+                np.mean([abs(r["observed_psd_rate"] - r[f"{order}_psd_probability"]) for r in group])
+            )
+            out[f"{order}_inside_wilson95_share"] = float(
+                np.mean([_inside(r, r[f"{order}_psd_probability"]) for r in group])
+            )
+            out[f"{order}_mean_abs_negative_gap"] = float(
+                np.mean([abs(r["observed_mean_negative_count"] - r[f"{order}_negative_count"]) for r in group])
+            )
+        with_negatives = [r for r in group if r["first_order_negative_count"] >= 0.5]
+        out["first_order_underpredicts_share_where_nhat_ge_half"] = (
+            float(np.mean([r["observed_mean_negative_count"] >= r["first_order_negative_count"] for r in with_negatives]))
+            if with_negatives
+            else None
+        )
+        return out
+
+    target = block([r for r in rows if r["target_set"]])
+    ratio = target["first_order_mean_abs_psd_gap"] / target["second_order_mean_abs_psd_gap"] if target["rows"] else None
+    targets = {
+        "T1_second_order_mean_abs_psd_gap_le_0.08": bool(target["rows"] and target["second_order_mean_abs_psd_gap"] <= 0.08),
+        "T2_second_order_inside_wilson_ge_0.54": bool(target["rows"] and target["second_order_inside_wilson95_share"] >= 0.54),
+        "T3_first_over_second_psd_gap_ratio_ge_2": bool(ratio is not None and ratio >= 2.0),
+        "T4_second_order_mean_abs_negative_gap_le_0.12": bool(target["rows"] and target["second_order_mean_abs_negative_gap"] <= 0.12),
+    }
+    return {
+        "target_set": {**target, "first_over_second_psd_gap_ratio": ratio},
+        "flagged": block([r for r in rows if r["flagged_near_degenerate"]]),
+        "unflagged_spacing_below_half": block(
+            [r for r in rows if not r["flagged_near_degenerate"] and not r["target_set"]]
+        ),
+        "targets": targets,
+    }
+
+
+def save_out_of_sample_plot(rows: list[dict[str, Any]], path: Path) -> None:
+    figure, axes = plt.subplots(1, 3, figsize=(17, 5.2))
+    panels = (
+        (axes[0], "first_order_psd_probability", "target set: first order"),
+        (axes[1], "second_order_psd_probability", "target set: second order (frozen)"),
+        (axes[2], "second_order_psd_probability", "flagged near-degenerate: second order"),
+    )
+    for index, (axis, field, title) in enumerate(panels):
+        group = [r for r in rows if (r["flagged_near_degenerate"] if index == 2 else r["target_set"])]
+        for q, color in ((2, "#1f77b4"), (3, "#d62728")):
+            sub = [r for r in group if r["qubits"] == q]
+            if not sub:
+                continue
+            observed = np.array([r["observed_psd_rate"] for r in sub])
+            bounds = np.array([r["observed_psd_wilson95"] for r in sub])
+            axis.errorbar(
+                [r[field] for r in sub], observed, yerr=[observed - bounds[:, 0], bounds[:, 1] - observed],
+                fmt="o", ms=2.5, elinewidth=0.6, alpha=0.6, color=color, label=f"q={q} ({len(sub)})",
+            )
+        axis.plot([0, 1], [0, 1], "k--", lw=1)
+        axis.set_xlabel("predicted P(PSD)")
+        axis.set_ylabel("observed PSD rate (200 draws, Wilson 95%)")
+        axis.set_title(title)
+        axis.legend(fontsize=8)
+    figure.suptitle("Out-of-sample: subsets 5-14, shots 256/1024/4096; raw binomial kernels, no repair", fontsize=10)
+    figure.tight_layout()
+    figure.savefig(path, dpi=150)
+    plt.close(figure)
+
+
+def write_out_of_sample_artifacts(results_dir: Path) -> dict[str, Any]:
+    rows = run_out_of_sample_sweep()
+    report = {
+        "description": "Pre-registered out-of-sample test of the frozen second-order negativity model.",
+        "settings": {
+            "qubit_sample_sizes": {str(q): list(ns) for q, ns in OOS_QUBIT_SAMPLE_SIZES},
+            "shot_budgets": list(OOS_SHOT_BUDGETS),
+            "subsets": list(OOS_SUBSETS),
+            "draws_per_kernel": DRAWS_PER_KERNEL,
+            "rng": "default_rng([20260928, q, n, shots, subset, 2])",
+            "degeneracy_flag": "some pair k != j with |lambda_k - lambda_j| < 0.5 * s_k",
+            "target_set": "not flagged and bottom spacing / s_1 >= 0.5",
+            "repair_applied": False,
+        },
+        "summary": summarize_out_of_sample(rows),
+        "rows": rows,
+    }
+    results_dir.mkdir(parents=True, exist_ok=True)
+    (results_dir / OOS_RESULT_FILENAME).write_text(json.dumps(report, indent=2) + "\n")
+    save_out_of_sample_plot(rows, results_dir / OOS_PLOT_FILENAME)
+    return report
