@@ -52,8 +52,8 @@ results/                   # generated JSON reports and PNG figures
 The [local dashboard](docs/dashboard.md) provides a live Bell Lab and a saved-result
 Kernel Observatory using the existing environment. Start it from the project root:
 
-```powershell
-wsl.exe -d Ubuntu-24.04 -- bash -lc "cd /mnt/c/Users/PRAXIS/Projects/praxis-quantum-lab && .venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765"
+```bash
+.venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765
 ```
 
 Open **http://127.0.0.1:8765**. It binds only to loopback; Ctrl+C stops it.
@@ -61,10 +61,10 @@ Opening the page does not start a simulation.
 
 The reference environment is Ubuntu 24.04 under WSL with Python 3.12.3. No provider token, cloud service, IBM Quantum account, GPU, or quantum hardware is used.
 
-```powershell
-wsl.exe -d Ubuntu-24.04 -- bash -lc "cd /mnt/c/Users/PRAXIS/Projects/praxis-quantum-lab && python3 -m venv .venv"
-wsl.exe -d Ubuntu-24.04 -- bash -lc "cd /mnt/c/Users/PRAXIS/Projects/praxis-quantum-lab && .venv/bin/python -m pip install --upgrade pip"
-wsl.exe -d Ubuntu-24.04 -- bash -lc "cd /mnt/c/Users/PRAXIS/Projects/praxis-quantum-lab && .venv/bin/python -m pip install -e '.[dev]'"
+```bash
+python3.12 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -e '.[dev]'
 ```
 
 Direct pins live in `pyproject.toml`: NumPy 2.5.3, scikit-learn 1.9.1, Qiskit 2.5.2, Qiskit Aer 0.17.2, matplotlib 3.11.2, and pytest 9.1.1 (development extra). `requirements.lock` records the resolved local environment used for the first run.

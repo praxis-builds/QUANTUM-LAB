@@ -2,8 +2,8 @@
 
 Start from this project's root with the existing WSL virtual environment:
 
-```powershell
-wsl.exe -d Ubuntu-24.04 -- bash -lc "cd /mnt/c/Users/PRAXIS/Projects/praxis-quantum-lab && .venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765"
+```bash
+.venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765
 ```
 
 Open **http://127.0.0.1:8765** in a local browser. Keep the terminal running;
