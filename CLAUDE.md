@@ -26,7 +26,9 @@ The repo (code, tests, `results/`) is the source of truth; `docs/history/` is ba
 - `kernel_experiment.py` – feature map, exact fidelity kernel, classical-vs-quantum comparison
 - `finite_shot_kernel.py` – compute–uncompute shot-noise kernel estimates
 - `finite_shot_psd.py` – PSD diagnostics and transductive repair
-- `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Bell Lab, Kernel Observatory)
+- `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Circuit Playground, Bell Lab, Kernel Observatory); loads Qiskit at start-up (lazy import in a request thread segfaults)
+- `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
+- `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
 - `lessons/` (outside `src/`) – six beginner lessons (script + .md + test each); see `lessons/README.md`
 
 ## Commands (from repo root; use `.venv/bin/python`)

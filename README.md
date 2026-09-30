@@ -49,8 +49,8 @@ results/                   # generated JSON reports and PNG figures
 
 ## Local setup (Windows + WSL)
 
-The [local dashboard](docs/dashboard.md) provides a live Bell Lab and a saved-result
-Kernel Observatory using the existing environment. Start it from the project root:
+The [local dashboard](docs/dashboard.md) provides a live Circuit Playground (1–3 qubits), a live Bell Lab and a saved-result
+Kernel Observatory (raw, clipped and Higham kernels) using the existing environment. Start it from the project root:
 
 ```bash
 .venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765
