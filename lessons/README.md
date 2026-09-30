@@ -1,6 +1,6 @@
 # Lessons
 
-Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms). Run every script from the repo root with `.venv/bin/python`.
+Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation). Run every script from the repo root with `.venv/bin/python`.
 
 Each lesson has a `.py` script and a `.md` page: the idea in plain words, three "predict first" questions, how to run, and what you should see. **Answer the questions before you run the script.** The answers sit at the bottom of the `.md` page under "Spoiler". Plots go to `lessons/out/` (git-ignored).
 
@@ -16,6 +16,8 @@ Each lesson has a `.py` script and a `.md` page: the idea in plain words, three 
 | 08 | [Deutsch–Jozsa](08_deutsch_jozsa.md) | One query tells constant from balanced for certain; classical needs up to 2^(n−1)+1 | `_oracles.py`, Aer |
 | 09 | [Bernstein–Vazirani](09_bernstein_vazirani.md) | One query reads out a hidden n-bit string s; classical needs n | `_oracles.py`, Aer |
 | 10 | [Simon](10_simon.md) | Runs give equations y·s = 0; GF(2) algebra finds the hidden period, the idea behind Shor | `_oracles.py`, Aer |
+| 11 | [Quantum Fourier transform](11_qft.md) | A repeating pattern in amplitudes becomes sharp peaks; the QFT is the DFT with a + sign and Qiskit's bit order | `_qft.py`, Aer |
+| 12 | [Phase estimation](12_phase_estimation.md) | Kickback plus inverse QFT reads a gate's eigenphase; more qubits sharpen it, the engine of Shor | `_qft.py`, Aer |
 
 Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their checks: `.venv/bin/python -m pytest tests/test_lesson_*.py tests/test_oracles.py`.
 
@@ -33,8 +35,8 @@ Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their che
 | A first quantum algorithm (Grover) | 05 |
 | Noise (usually a later topic, so this is extra) | 06 |
 
-Lessons 07–10 (oracle algorithms) go beyond that description. Not covered yet: the quantum Fourier transform, Shor, real hardware, and programming-language basics.
+Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Not covered yet: Shor, real hardware, and programming-language basics.
 
 ## Honest limits
 
-These are simulations on a classical computer. The Grover lesson compares oracle calls on 4 items; lessons 07–10 compare oracle calls on at most 4 input bits, with the oracle given for free. Each states its classical baseline and what it does not show. Nothing here claims a quantum speed-up. The repo's rules on this (see `CLAUDE.md`) apply to lessons too.
+These are simulations on a classical computer. The Grover lesson compares oracle calls on 4 items; lessons 07–10 compare oracle calls on at most 4 input bits, with the oracle given for free. Lessons 11–12 run on at most 6 qubits and compare against numpy's FFT and eigenvalue routines. Each states its classical baseline and what it does not show. Nothing here claims a quantum speed-up. The repo's rules on this (see `CLAUDE.md`) apply to lessons too.
