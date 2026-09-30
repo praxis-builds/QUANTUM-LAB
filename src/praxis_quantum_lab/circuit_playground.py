@@ -380,6 +380,20 @@ PRESETS: list[dict[str, Any]] = [
         ],
     },
     {
+        "id": "bb84_right",
+        "title": "BB84: right basis",
+        "caption": "Alice encodes 1 in the X basis (X then H gives |−⟩); Bob measures in X (H, then measure) and reads 1 every time. Why Eve gets caught: see the wrong basis.",
+        "qubits": 1,
+        "gates": [_gate("x", 0), _gate("h", 0), _gate("h", 0), _gate("measure", 0)],
+    },
+    {
+        "id": "bb84_wrong",
+        "title": "BB84: wrong basis",
+        "caption": "Same |−⟩ measured in Z: 50/50, and the qubit is now |0⟩ or |1⟩. Why Eve gets caught: guessing the wrong basis randomises the bit she resends.",
+        "qubits": 1,
+        "gates": [_gate("x", 0), _gate("h", 0), _gate("measure", 0)],
+    },
+    {
         "id": "bitflip_code",
         "title": "Bit-flip code: one error fixed",
         "caption": "One flipped qubit, recovered: q0 holds 0.5|0⟩ + 0.866|1⟩, two CNOTs copy it, X hits q0, and two CNOTs plus a Toffoli (CCX) take a majority vote; q1 q2 = 11 is the syndrome.",

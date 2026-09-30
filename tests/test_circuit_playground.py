@@ -165,12 +165,13 @@ def preset_state(name):
     return final_state(request(qubits=preset["qubits"], gates=preset["gates"]))
 
 
-def test_all_fifteen_presets_validate_and_have_captions():
+def test_all_seventeen_presets_validate_and_have_captions():
     assert [p["id"] for p in cp.PRESETS] == [
         "superposition", "interference", "phase", "bell", "ghz", "grover", "kickback",
-        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s", "bitflip_code", "grover3",
+        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s", "bb84_right", "bb84_wrong",
+        "bitflip_code", "grover3",
     ]
-    assert len(cp.presets_payload()["presets"]) == 15
+    assert len(cp.presets_payload()["presets"]) == 17
     assert all(p["qubits"] <= cp.MAX_QUBITS == 3 for p in cp.PRESETS)  # the limit was not raised
     for preset in cp.PRESETS:
         assert preset["caption"] and preset["title"]
@@ -277,6 +278,17 @@ def test_ccx_flips_the_target_only_when_both_controls_are_one():
         assert abs(state[expected]) == pytest.approx(1.0), controls
     result = cp.simulate_circuit(request(qubits=3, gates=[gate("x", 0), gate("x", 1), gate("ccx", 0, 1, 2)], shots=8))
     assert result["counts"]["111"] == 8 and result["steps"][-1]["label"] == "CCX on q0,q1,q2"
+
+
+def test_presets_bb84_right_basis_is_certain_and_wrong_basis_is_a_coin():
+    assert "why eve gets caught" in PRESET["bb84_right"]["caption"].lower()
+    assert "why eve gets caught" in PRESET["bb84_wrong"]["caption"].lower()
+    np.testing.assert_allclose(np.abs(preset_state("bb84_right")) ** 2, [0, 1], atol=1e-12)
+    np.testing.assert_allclose(np.abs(preset_state("bb84_wrong")) ** 2, [0.5, 0.5], atol=1e-12)
+    right = cp.simulate_circuit(request(qubits=1, gates=PRESET["bb84_right"]["gates"], shots=500, seed=2))
+    assert right["counts"] == {"0": 0, "1": 500}
+    wrong = cp.simulate_circuit(request(qubits=1, gates=PRESET["bb84_wrong"]["gates"], shots=4000, seed=2))
+    assert abs(wrong["counts"]["1"] / 4000 - 0.5) < 0.03
 
 
 def test_preset_bitflip_code_recovers_the_state_after_one_flip():
@@ -487,7 +499,7 @@ def test_http_presets_route_is_static_and_never_simulates(server, monkeypatch):
     monkeypatch.setattr(dashboard, "simulate_bell", unexpected)
     status, headers, body = send(server, "GET", "/api/circuit-presets")
     assert status == 200 and "application/json" in headers["Content-Type"]
-    assert len(json.loads(body)["presets"]) == 15
+    assert len(json.loads(body)["presets"]) == 17
     status, _, _ = send(server, "GET", "/api/circuit-presets?x=1")
     assert status == 400
 

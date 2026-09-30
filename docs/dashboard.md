@@ -60,7 +60,9 @@ Build circuits on 1–3 qubits and watch the state change.
   period-2 input (peaks at |000⟩ and |100⟩); Phase estimation of S (2 counting
   qubits read 01 = 1/4 every shot). Both use CP; lessons 11–12 go further. Grover
   search on 3 qubits (CCZ oracle marks |111⟩, found with probability 0.945 after 2
-  steps; the diffusion writes H-then-X as RY(π/2) to fit the 30-gate cap). Bit-flip
+  steps; the diffusion writes H-then-X as RY(π/2) to fit the 30-gate cap). BB84 right
+  basis (1 in X, measured in X: always 1) and wrong basis (measured in Z: 50/50), why
+  Eve gets caught. Bit-flip
   code (one X error on q0 is undone by a CNOT + Toffoli majority vote; q1 q2 = 11
   is the syndrome).
 
