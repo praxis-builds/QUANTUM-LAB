@@ -1,6 +1,26 @@
-# Praxis Quantum Lab 01 — Classical vs Quantum-Kernel Classification
+# Praxis Quantum Lab — quantum computing, toward post-quantum security
 
-Praxis Quantum Lab is a local, simulator-only learning and research project. It starts with the mathematics of state vectors, recreates the ideas in Qiskit, then compares a classical classifier with a quantum-kernel classifier on one small, reproducible binary data set. It is designed for a laptop, not a cloud account or quantum hardware.
+Praxis Quantum Lab is a local, simulator-only learning lab for **quantum computing**: circuits, gates and algorithms, built by hand and run on local Qiskit Aer. The goal is cybersecurity: understand exactly what Shor's and Grover's algorithms threaten, and then move on to post-quantum cryptography. It runs on a laptop, with no cloud account, provider token or quantum hardware.
+
+The method for every step: predict, build the circuit, run it on local Aer, explain any mismatch. Nothing here claims a quantum speed-up; every quantum result is set against an honestly counted classical baseline.
+
+## Main path: the quantum computing program
+
+| Step | Topic | Where |
+|---|---|---|
+| 1 | Foundations: qubits, interference, phase, entanglement, Grover on 2 qubits, noise | [`lessons/`](lessons/README.md) 01–06 |
+| 2 | First quantum algorithms: Deutsch–Jozsa, Bernstein–Vazirani, Simon | `lessons/` (next) |
+| 3 | Quantum Fourier transform and phase estimation (the engine of Shor) | planned |
+| 4 | Shor: factor 15 and 21 on Aer, order finding plus classical post-processing | planned |
+| 5 | Grover in depth: toy key search, and why it only halves key strength | planned |
+| 6 | Noise and error-correction basics: 3-qubit bit-flip and phase-flip codes | planned |
+| 7 | Bridge to post-quantum cryptography (ML-KEM / Kyber) | planned |
+
+Each algorithm is a lesson (script, plain-words page, test) plus a preset in the dashboard's Circuit Playground.
+
+## Completed study: classical vs quantum-kernel classification (frozen)
+
+The lab began as a kernel study: a classical RBF classifier against a quantum-kernel classifier on one small data set, followed by finite-shot and PSD-repair experiments. That study is **complete and frozen**: its code, results, tests and docs stay as they are and are not extended. The index is [`docs/studies/README.md`](docs/studies/README.md). The sections below describe it and the shared foundations.
 
 ## What quantum computing means here
 
@@ -91,7 +111,7 @@ The Qiskit run writes exact probabilities, ideal sampled counts, noisy sampled c
 
 For a clean-environment check, create a new empty virtual environment and run the same editable install followed by `python -m pytest`; do not reuse the existing `.venv` for that check. See the verification commands in `docs/experiment-guide.md`.
 
-## Stages and study path
+## Stages and study path (foundations + frozen kernel study)
 
 1. **Foundations from scratch** — inspect the NumPy implementation, manually alter an amplitude, and run the state-vector tests.
 2. **Circuit equivalents** — inspect the four circuit constructors and compare exact statevector probabilities with finite-shot Aer counts and noisy Aer.

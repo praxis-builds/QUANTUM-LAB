@@ -1,9 +1,24 @@
 # CLAUDE.md
 
 ## Purpose
-Local, simulator-only Qiskit/Aer **learning lab**. Workflow for every experiment:
+Local, simulator-only Qiskit/Aer **learning lab** for **quantum computing** (circuits, gates,
+algorithms), aimed at cybersecurity: understand the Shor/Grover threat, then bridge to
+post-quantum crypto. Workflow for every experiment or lesson:
 theory → written prediction → code → result → explain any mismatch.
 The repo (code, tests, `results/`) is the source of truth; `docs/history/` is background only.
+
+## Program (main path)
+1. Foundations — qubits, interference, phase, entanglement, Grover-2q, noise (lessons 01–06).
+2. First quantum algorithms — Deutsch–Jozsa, Bernstein–Vazirani, Simon.
+3. QFT + phase estimation.
+4. Shor — factor 15 and 21 on Aer (order finding + classical post-processing).
+5. Grover in depth — toy key search; why it only halves key strength.
+6. Noise + error-correction basics — 3-qubit bit-flip/phase-flip codes.
+7. Bridge to post-quantum crypto — ML-KEM (Kyber); needs a dependency decision first.
+
+Each algorithm = a lesson (script + plain-words doc + test) + a Circuit Playground preset.
+The kernel/PSD work is a **completed, frozen study** (`docs/studies/README.md`):
+kept, not moved, not extended.
 
 ## Hard rules
 - Local simulators only. No cloud, no QPU, no provider tokens.
@@ -23,9 +38,10 @@ The repo (code, tests, `results/`) is the source of truth; `docs/history/` is ba
 - `density_matrices.py` – density matrices and Kraus channels
 - `density_matrix_noise.py` – Bell-state Kraus sweeps vs Aer
 - `bell_noise_analytics.py` – analytical Bell-noise references
-- `kernel_experiment.py` – feature map, exact fidelity kernel, classical-vs-quantum comparison
-- `finite_shot_kernel.py` – compute–uncompute shot-noise kernel estimates
-- `finite_shot_psd.py` – PSD diagnostics and transductive repair
+- Frozen kernel/PSD study (see `docs/studies/README.md`):
+  - `kernel_experiment.py` – feature map, exact fidelity kernel, classical-vs-quantum comparison
+  - `finite_shot_kernel.py` – compute–uncompute shot-noise kernel estimates
+  - `finite_shot_psd.py` – PSD diagnostics and transductive repair
 - `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Circuit Playground, Bell Lab, Kernel Observatory); loads Qiskit at start-up (lazy import in a request thread segfaults)
 - `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
 - `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
