@@ -141,11 +141,19 @@ function renderBell() {
 }
 
 // Canvas coordinates are fixed logical units. CSS scales the canvases responsively.
+// Canvas colours come from the CSS theme tokens; the cache is cleared when the theme changes.
+let themeCache = {};
 function themeColor(name, fallback) {
-  try {
-    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return value || fallback;
-  } catch (error) { return fallback; }
+  if (!(name in themeCache)) {
+    let value = "";
+    try { value = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); } catch (error) { value = ""; }
+    themeCache[name] = value;
+  }
+  return themeCache[name] || fallback;
+}
+function themeRGB(name, fallback) {
+  const parts = themeColor(name, "").split(",").map((part) => Number(part.trim()));
+  return parts.length === 3 && parts.every(Number.isFinite) ? parts : fallback;
 }
 function context(canvas) {
   const width = Number(canvas.getAttribute("width"));
@@ -153,7 +161,7 @@ function context(canvas) {
   const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, width, height);
   ctx.font = "12px ui-monospace, Consolas, monospace";
-  ctx.fillStyle = "#a6b5c8";
+  ctx.fillStyle = themeColor("--muted", "#a6b5c8");
   return {ctx, width, height};
 }
 
@@ -162,7 +170,9 @@ function mixColor(start, end, fraction) {
 }
 function heatColor(value, signed) {
   const t = Math.min(1, Math.max(0, Math.abs(value)));
-  return mixColor([23, 36, 52], signed && value < 0 ? [186, 117, 172] : [92, 205, 193], t);
+  const zero = themeRGB("--heat-zero", [23, 36, 52]);
+  const end = signed && value < 0 ? themeRGB("--heat-negative", [186, 117, 172]) : themeRGB("--heat-positive", [92, 205, 193]);
+  return mixColor(zero, end, t);
 }
 function renderEmptyDensity() {
   const {ctx, width, height} = context(byId("density-canvas"));
@@ -183,12 +193,12 @@ function renderDensity() {
   const left = 76, top = 42, cellSize = 75;
   ctx.textAlign = "center";
   values.forEach((row, i) => {
-    ctx.fillStyle = "#a6b5c8"; ctx.fillText(basis[i], left - 26, top + i * cellSize + cellSize / 2 + 4);
+    ctx.fillStyle = themeColor("--muted", "#a6b5c8"); ctx.fillText(basis[i], left - 26, top + i * cellSize + cellSize / 2 + 4);
     ctx.fillText(basis[i], left + i * cellSize + cellSize / 2, top - 16);
     row.forEach((value, j) => {
       const x = left + j * cellSize, y = top + i * cellSize;
       ctx.fillStyle = heatColor(value, true); ctx.fillRect(x, y, cellSize - 2, cellSize - 2);
-      ctx.fillStyle = Math.abs(value) > .65 ? "#102726" : "#edf6fa";
+      ctx.fillStyle = Math.abs(value) > .65 ? themeColor("--heat-text-strong", "#102726") : themeColor("--heat-text-weak", "#edf6fa");
       ctx.fillText(number(value, 3), x + cellSize / 2, y + cellSize / 2 + 4);
     });
   });
@@ -209,7 +219,7 @@ byId("density-component").addEventListener("change", renderDensity);
 
 function drawScale(ctx, left, top, width, signed) {
   for (let i = 0; i < width; i++) {const value = signed ? (2 * i / (width - 1) - 1) : i / (width - 1);ctx.fillStyle = heatColor(value, signed);ctx.fillRect(left + i, top, 1, 8);}
-  ctx.fillStyle = "#a6b5c8";ctx.textAlign = "left";ctx.fillText(signed ? "−1" : "0", left, top + 26);
+  ctx.fillStyle = themeColor("--muted", "#a6b5c8");ctx.textAlign = "left";ctx.fillText(signed ? "−1" : "0", left, top + 26);
   ctx.textAlign = "center";ctx.fillText(signed ? "0" : "0.5", left + width / 2, top + 26);
   ctx.textAlign = "right";ctx.fillText("+1", left + width, top + 26);
 }
@@ -330,7 +340,7 @@ function renderSpectrum(entry, kind) {
   const y = (v) => bottom - (symlog(v) - low) / (high - low) * (bottom - top);
   const x = (i) => left + (i + 0.5) * (right - left) / values.length;
   ctx.strokeStyle = themeColor("--border", "#2a3748");ctx.lineWidth = 1;
-  ctx.fillStyle = themeColor("--muted", "#a6b5c8");ctx.textAlign = "right";
+  ctx.fillStyle = themeColor("--muted", themeColor("--muted", "#a6b5c8"));ctx.textAlign = "right";
   for (const tick of [-1, -0.1, -0.01, 0.01, 0.1, 1, 10]) {
     if (symlog(tick) < low || symlog(tick) > high) continue;
     ctx.beginPath();ctx.moveTo(left, y(tick));ctx.lineTo(right, y(tick));ctx.stroke();
@@ -339,7 +349,7 @@ function renderSpectrum(entry, kind) {
   ctx.strokeStyle = themeColor("--text", "#eef3f9");ctx.setLineDash([6, 4]);ctx.lineWidth = 1.3;
   ctx.beginPath();ctx.moveTo(left, y(0));ctx.lineTo(right, y(0));ctx.stroke();ctx.setLineDash([]);
   ctx.fillText("0", left - 8, y(0) + 4);
-  ctx.strokeStyle = themeColor("--muted", "#a6b5c8");ctx.lineWidth = 1;
+  ctx.strokeStyle = themeColor("--muted", themeColor("--muted", "#a6b5c8"));ctx.lineWidth = 1;
   exact.forEach((v, i) => {ctx.beginPath();ctx.arc(x(i), y(v), 5.5, 0, 2 * Math.PI);ctx.stroke();});
   let negatives = 0;
   values.forEach((v, i) => {
@@ -350,7 +360,7 @@ function renderSpectrum(entry, kind) {
       ctx.fillStyle = themeColor("--accent", "#76d8c6");ctx.beginPath();ctx.arc(x(i), y(v), 3.2, 0, 2 * Math.PI);ctx.fill();
     }
   });
-  ctx.fillStyle = themeColor("--muted", "#a6b5c8");ctx.textAlign = "center";
+  ctx.fillStyle = themeColor("--muted", themeColor("--muted", "#a6b5c8"));ctx.textAlign = "center";
   ctx.fillText("eigenvalue rank (ascending)", (left + right) / 2, height - 12);
   // Same rank rule as the Python code: eigenvalue > n * machine epsilon * largest eigenvalue.
   const exactRank = exact.filter((v) => v > exact.length * Number.EPSILON * Math.max(...exact)).length;
@@ -377,10 +387,10 @@ function renderKernelHeatmap(trainSize) {
   const canvas = byId("kernel-canvas");const {ctx} = context(canvas);
   const left = 68, top = 36, size = 480, cell = size / selectedMatrix.length;
   selectedMatrix.forEach((row, i) => row.forEach((value, j) => {ctx.fillStyle = heatColor(value, true);ctx.fillRect(left + j * cell, top + i * cell, cell + .3, cell + .3);}));
-  ctx.strokeStyle = "#e7eff8";ctx.lineWidth = 1.3;ctx.setLineDash([5, 4]);
+  ctx.strokeStyle = themeColor("--boundary", "#e7eff8");ctx.lineWidth = 1.3;ctx.setLineDash([5, 4]);
   const boundary = trainSize * cell;
   ctx.beginPath();ctx.moveTo(left + boundary, top);ctx.lineTo(left + boundary, top + size);ctx.moveTo(left, top + boundary);ctx.lineTo(left + size, top + boundary);ctx.stroke();ctx.setLineDash([]);
-  ctx.fillStyle = "#a6b5c8";ctx.textAlign = "center";
+  ctx.fillStyle = themeColor("--muted", "#a6b5c8");ctx.textAlign = "center";
   for (const i of [0, trainSize - 1, trainSize, selectedMatrix.length - 1]) {ctx.fillText(String(i), left + (i + .5) * cell, top - 13);ctx.fillText(String(i), left - 22, top + (i + .5) * cell + 4);}
   ctx.fillText("training inputs", left + boundary / 2, top + size + 25);
   ctx.fillText("test inputs", left + boundary + (size - boundary) / 2, top + size + 25);
@@ -407,3 +417,35 @@ byId("kernel-canvas").addEventListener("click", (event) => {
   if (row >= 0 && col >= 0 && row < selectedMatrix.length && col < selectedMatrix.length) {byId("kernel-row").value = row;byId("kernel-col").value = col;inspectCell();}
 });
 renderEmptyDensity();
+
+// ---------------------------------------------------------------- theme (dark default, light option)
+const THEME_KEY = "praxis-lab-theme";
+function systemTheme() {
+  try { return typeof matchMedia === "function" && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"; } catch (error) { return "dark"; }
+}
+function activeTheme() { return document.documentElement.getAttribute("data-theme") || systemTheme(); }
+function syncThemeToggle() { byId("theme-toggle").setAttribute("aria-pressed", String(activeTheme() === "light")); }
+function redrawForTheme() {
+  themeCache = {};
+  syncThemeToggle();
+  const event = typeof CustomEvent === "function" ? new CustomEvent("praxis-theme-change") : {type: "praxis-theme-change"};
+  document.dispatchEvent(event);
+  if (bellResult) renderDensity(); else renderEmptyDensity();
+  if (kernelData) renderKernel();
+}
+function applyTheme(theme, remember) {
+  document.documentElement.setAttribute("data-theme", theme);
+  if (remember) { try { localStorage.setItem(THEME_KEY, theme); } catch (error) { /* storage may be unavailable */ } }
+  redrawForTheme();
+}
+byId("theme-toggle").addEventListener("click", () => applyTheme(activeTheme() === "light" ? "dark" : "light", true));
+(function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (error) { saved = null; }
+  if (saved === "light" || saved === "dark") applyTheme(saved, false); else syncThemeToggle();
+  try {
+    if (typeof matchMedia === "function") {
+      matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if (!document.documentElement.getAttribute("data-theme")) redrawForTheme(); });
+    }
+  } catch (error) { /* older browsers: the theme still follows CSS */ }
+})();

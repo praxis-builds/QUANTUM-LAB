@@ -96,6 +96,18 @@ function choose(kind) {
   $("kernel-seed").value = second; $("kernel-seed").dispatch("change");
   assert.match($("distance-note").textContent, /Higham 0\.\d\d×/);
 
+  // Theme toggle: works without localStorage or matchMedia and redraws every canvas.
+  let themeEvents = 0;
+  env.document.addEventListener("praxis-theme-change", () => { themeEvents += 1; });
+  $("theme-toggle").click();
+  assert.equal(env.document.documentElement.getAttribute("data-theme"), "light");
+  assert.equal($("theme-toggle").getAttribute("aria-pressed"), "true");
+  $("theme-toggle").click();
+  assert.equal(env.document.documentElement.getAttribute("data-theme"), "dark");
+  assert.equal($("theme-toggle").getAttribute("aria-pressed"), "false");
+  assert.equal(themeEvents, 2);
+  assert.match($("spectrum-caption").textContent, /Higham · transductive/);
+
   $("playground-tab").click();
   assert.equal($("playground-area").hidden, false); assert.equal($("kernel-area").hidden, true);
   process.stdout.write("APP-SMOKE-OK\n");
