@@ -115,9 +115,16 @@ def toeplitz_matrix(n: int, m: int, seed_bits: np.ndarray) -> np.ndarray:
 
 
 def toeplitz_hash(bits: np.ndarray, m: int, seed_bits: np.ndarray) -> np.ndarray:
-    """Hash n bits to m bits: T x mod 2. Linear, and a universal hash family over random seeds."""
-    bits = np.asarray(bits, dtype=int)
-    return toeplitz_matrix(len(bits), m, seed_bits) @ bits % 2
+    """Hash n bits to m bits: T x mod 2. Linear, and a universal hash family over random seeds.
+
+    Computed as a correlation (y_i = sum_k seed[i + k] * x[n - 1 - k]) instead of building the
+    m x n matrix, which for a 9,000-bit key would take hundreds of megabytes. Same result as
+    toeplitz_matrix(n, m, seed_bits) @ bits % 2 (checked in the tests)."""
+    bits = np.asarray(bits, dtype=np.int64)
+    seed_bits = np.asarray(seed_bits, dtype=np.int64)
+    if len(seed_bits) != len(bits) + m - 1:
+        raise ValueError("a Toeplitz matrix needs n + m - 1 seed bits.")
+    return np.correlate(seed_bits, bits[::-1], mode="valid") % 2
 
 
 def _parity(bits: np.ndarray) -> int:
@@ -125,20 +132,22 @@ def _parity(bits: np.ndarray) -> int:
 
 
 def parity_error_correction(alice: np.ndarray, bob: np.ndarray, rng: np.random.Generator, *, estimated_q: float,
-                            passes: int = 6) -> tuple[np.ndarray, int]:
+                            clean_passes: int = 3, max_passes: int = 60) -> tuple[np.ndarray, int]:
     """Toy error correction in the style of the BBBSS/Cascade family (much simplified).
 
     Each pass: publicly shuffle positions, cut into blocks, compare block parities (1 public bit
     each); for a mismatched block, halve it repeatedly comparing parities (1 public bit per step)
-    to find one error, and Bob flips it. Blocks double in size each pass. Blocks with an even
-    number of errors are missed in that pass and caught (usually) in a later one.
-    Returns Bob's corrected bits and the number of parity bits revealed ("leaked") to everyone.
+    to find one error, and Bob flips it. A block with an even number of errors looks clean, so
+    passes repeat with new shuffles (blocks growing, capped at a quarter of the key) until
+    `clean_passes` passes in a row find nothing. There is no Cascade-style backtracking, so it
+    reveals more than the minimum. Returns Bob's corrected bits and the number of public bits.
     """
     bob = bob.copy()
-    leaked = 0
+    leaked, clean = 0, 0
     block = max(4, int(0.73 / max(estimated_q, 1e-3)))
-    for _ in range(passes):
+    for _ in range(max_passes):
         order = rng.permutation(len(alice))
+        fixed = 0
         for start in range(0, len(order), block):
             positions = order[start:start + block]
             leaked += 1
@@ -149,7 +158,11 @@ def parity_error_correction(alice: np.ndarray, bob: np.ndarray, rng: np.random.G
                 leaked += 1
                 positions = half if _parity(alice[half]) != _parity(bob[half]) else positions[len(positions) // 2:]
             bob[positions[0]] ^= 1
-        block *= 2
+            fixed += 1
+        clean = clean + 1 if fixed == 0 else 0
+        if clean >= clean_passes:
+            break
+        block = min(block * 2, max(4, len(alice) // 4))
     return bob, leaked
 
 

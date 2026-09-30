@@ -37,3 +37,27 @@ def test_channel_noise_flips_either_basis_with_probability_p():
 def test_binary_entropy():
     assert qkd.binary_entropy(0.5) == 1.0 and qkd.binary_entropy(0) == 0.0
     assert qkd.binary_entropy(0.11) == pytest.approx(0.4999, abs=1e-3)  # where 1 - 2h(Q) = 0
+
+
+def test_toeplitz_hash_is_linear_has_the_right_length_and_matches_the_matrix():
+    rng = np.random.default_rng(21)
+    for n, m in ((64, 16), (200, 37), (9, 9)):
+        seed = rng.integers(0, 2, n + m - 1)
+        x, y = rng.integers(0, 2, n), rng.integers(0, 2, n)
+        hx, hy = qkd.toeplitz_hash(x, m, seed), qkd.toeplitz_hash(y, m, seed)
+        assert hx.shape == (m,)
+        np.testing.assert_array_equal(qkd.toeplitz_hash(x ^ y, m, seed), hx ^ hy)  # linear over GF(2)
+        np.testing.assert_array_equal(hx, qkd.toeplitz_matrix(n, m, seed) @ x % 2)
+    matrix = qkd.toeplitz_matrix(5, 3, np.arange(7))
+    assert all(matrix[i, j] == matrix[i + 1, j + 1] for i in range(2) for j in range(4))  # constant diagonals
+    with pytest.raises(ValueError):
+        qkd.toeplitz_hash(np.zeros(5, int), 3, np.zeros(6, int))
+
+
+def test_parity_error_correction_fixes_errors_and_counts_leakage():
+    rng = np.random.default_rng(22)
+    alice = rng.integers(0, 2, 4000)
+    bob = alice ^ (rng.random(4000) < 0.05)
+    corrected, leaked = qkd.parity_error_correction(alice, bob, rng, estimated_q=0.05)
+    assert np.array_equal(corrected, alice)
+    assert 4000 * qkd.binary_entropy(0.05) < leaked < 4000  # at least the Shannon minimum, less than the key
