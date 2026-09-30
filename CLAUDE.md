@@ -29,7 +29,7 @@ kept, not moved, not extended.
 - Seeds, shots and splits must be explicit.
 - Don't regenerate existing `results/` files unless asked.
 - No new dependencies without asking.
-- Commit predictions before running the experiment that tests them.
+- Commit predictions before running the experiment that tests them (research experiments; lessons may commit their "Predict first" questions and spoilers together).
 
 ## Repo map (`src/praxis_quantum_lab/`)
 - `state_vectors.py` – NumPy state-vector foundations (no SDK)
