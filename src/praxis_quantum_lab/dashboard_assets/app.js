@@ -33,19 +33,17 @@ async function requestJSON(url, options = {}) {
   return data;
 }
 
+const AREAS = ["playground", "bell", "kernel"];
 function chooseArea(area) {
-  const bell = area === "bell";
-  byId("bell-area").hidden = !bell;
-  byId("kernel-area").hidden = bell;
-  for (const name of ["bell", "kernel"]) {
+  for (const name of AREAS) {
     const active = name === area;
+    byId(`${name}-area`).hidden = !active;
     byId(`${name}-tab`).classList.toggle("active", active);
     byId(`${name}-tab`).setAttribute("aria-pressed", String(active));
   }
-  if (!bell && !kernelData && !kernelLoading) loadKernelData();
+  if (area === "kernel" && !kernelData && !kernelLoading) loadKernelData();
 }
-byId("bell-tab").addEventListener("click", () => chooseArea("bell"));
-byId("kernel-tab").addEventListener("click", () => chooseArea("kernel"));
+for (const name of AREAS) byId(`${name}-tab`).addEventListener("click", () => chooseArea(name));
 
 function currentBellSettings() {
   return {
