@@ -109,3 +109,23 @@ def test_new_static_route_is_served_with_security_headers(dashboard_process):
         assert response.status == 200 and kind in response.getheader("Content-Type") and body
         assert "script-src 'self'" in response.getheader("Content-Security-Policy")
         assert response.getheader("X-Content-Type-Options") == "nosniff"
+
+
+def test_observatory_markup_has_the_repair_toggle_caption_and_link():
+    page = html()
+    assert re.search(r'<input type="radio" name="kernel-kind" id="kernel-kind-raw" value="raw" checked>', page)
+    assert re.search(r'<input type="radio" name="kernel-kind" id="kernel-kind-clipped" value="clipped">', page)
+    assert re.search(r'<input type="radio" name="kernel-kind" id="kernel-kind-higham" value="higham" disabled>', page)
+    assert "Clipping lands further from the exact kernel than the raw matrix" in page
+    assert '<a href="/docs/higham-vs-clipping.md">' in page
+    assert re.search(r'<section id="kernel-area"[^>]*hidden', page) and 'id="kernel-results" hidden' in page
+
+
+@needs_node
+@pytest.mark.parametrize("mode", [[], ["--fail-repairs"]])
+def test_app_ui_smoke_bell_lab_and_observatory(dashboard_process, mode):
+    process, port = dashboard_process
+    run = subprocess.run([NODE, str(JS_TESTS / "app_ui_smoke.js"), str(port), *mode], capture_output=True, text=True, timeout=240)
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert "APP-SMOKE-OK" in run.stdout
+    assert process.poll() is None

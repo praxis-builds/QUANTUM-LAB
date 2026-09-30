@@ -9,6 +9,8 @@ let bellRequestSettings = null;
 let kernelData = null;
 let kernelLoading = false;
 let selectedMatrix = null;
+let kernelRepairs = null;
+let repairsLoading = false;
 
 const channelNotes = {
   bit_flip: "E(ρ) = (1 − p)ρ + pXρX. Strength p is the bit-flip probability.",
@@ -139,6 +141,12 @@ function renderBell() {
 }
 
 // Canvas coordinates are fixed logical units. CSS scales the canvases responsively.
+function themeColor(name, fallback) {
+  try {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  } catch (error) { return fallback; }
+}
 function context(canvas) {
   const width = Number(canvas.getAttribute("width"));
   const height = Number(canvas.getAttribute("height"));
@@ -217,6 +225,7 @@ async function loadKernelData() {
     budget.disabled = false; populateSeeds();
     byId("kernel-results").hidden = false;
     byId("kernel-status").textContent = "Loaded finite_shot_kernel_psd_repair.json. These are saved results; no experiment is running.";
+    loadKernelRepairs();
   } catch (error) {
     kernelData = null; byId("kernel-error").textContent = `Could not load saved results: ${error.message}`; byId("kernel-error").hidden = false;
     byId("retry-kernel").hidden = false; byId("kernel-status").textContent = "Saved results are unavailable.";
@@ -232,19 +241,32 @@ function populateSeeds() {
 }
 byId("kernel-budget").addEventListener("change", populateSeeds);
 byId("kernel-seed").addEventListener("change", renderKernel);
-byId("kernel-kind").addEventListener("change", renderKernel);
+for (const kind of ["raw", "clipped", "higham"]) byId(`kernel-kind-${kind}`).addEventListener("change", renderKernel);
 byId("retry-kernel").addEventListener("click", loadKernelData);
+
+function kernelKind() {
+  const checked = ["raw", "clipped", "higham"].find((kind) => byId(`kernel-kind-${kind}`).checked);
+  return checked || "raw";
+}
+function repairEntry(replicate) {
+  if (!kernelRepairs) return null;
+  return kernelRepairs.entries.find((entry) => entry.shots === currentBudget().shots && entry.shot_seed === replicate.shot_seed) || null;
+}
+const KIND_LABELS = {raw: "Raw sampled kernel", clipped: "Clipped · transductive", higham: "Higham · transductive"};
 
 function renderKernel() {
   if (!kernelData) return;
   const metadata = kernelData.metadata;
   const replicate = currentBudget().replicates.find((item) => String(item.shot_seed) === byId("kernel-seed").value);
-  const repaired = byId("kernel-kind").value === "repaired";
-  selectedMatrix = repaired ? replicate.psd_repaired_kernel_matrix : replicate.raw_sampled_kernel_matrix;
-  const diagnostics = repaired ? replicate.repaired_matrix_diagnostics : replicate.raw_matrix_diagnostics;
+  const entry = repairEntry(replicate);
+  let kind = kernelKind();
+  if (kind === "higham" && !entry) { kind = "raw"; byId("kernel-kind-raw").checked = true; }
+  const repaired = kind !== "raw";
+  selectedMatrix = {raw: replicate.raw_sampled_kernel_matrix, clipped: replicate.psd_repaired_kernel_matrix, higham: entry && entry.higham_matrix}[kind];
+  const diagnostics = {raw: replicate.raw_matrix_diagnostics, clipped: replicate.repaired_matrix_diagnostics, higham: entry && entry.higham_diagnostics}[kind];
   const scope = byId("kernel-scope");scope.classList.toggle("transductive", repaired);
   scope.textContent = repaired
-    ? "TRANSDUCTIVE EVALUATION · Repair uses the full unlabeled matrix, including test inputs. Test labels are not used. Interpret these metrics as a transductive fixed-split result."
+    ? `TRANSDUCTIVE · ${kind === "higham" ? "Higham" : "Clipping"} repair uses the full unlabeled matrix, including test inputs. Test labels are not used. The repair changes the measured data; interpret any metric as a transductive fixed-split result.`
     : "RAW SAMPLED KERNEL · One estimate per unique pair, reflected for symmetry, with exact K(x, x) = 1. The classifier uses raw train/train and test/train blocks; negative eigenvalues are preserved.";
   const psd = diagnostics.positive_semidefinite_within_tolerance;
   byId("psd-badge").textContent = psd ? "PSD WITHIN TOLERANCE" : "INDEFINITE";
@@ -254,15 +276,18 @@ function renderKernel() {
   byId("kernel-symmetry").textContent = scientific(diagnostics.symmetry_max_abs_error);
   byId("kernel-diagonal").textContent = `${number(Math.min(...diagnostics.diagonal_values), 6)} – ${number(Math.max(...diagnostics.diagonal_values), 6)}`;
   byId("kernel-distance").textContent = number(diagnostics.frobenius_distance_from_raw, 6);
-  byId("kernel-repair-note").textContent = repaired
-    ? "Eigenvalue clipping and diagonal renormalization change measured similarities. This PSD, unit-diagonal matrix is not necessarily the nearest correlation matrix. This is classical post-processing."
-    : "An exact fidelity kernel is PSD. Independently sampled pair estimates can be indefinite; accepting this matrix in SVC does not restore the PSD condition.";
+  byId("kernel-repair-note").textContent = {
+    raw: "An exact fidelity kernel is PSD. Independently sampled pair estimates can be indefinite; accepting this matrix in SVC does not restore the PSD condition.",
+    clipped: "Eigenvalue clipping and diagonal renormalization change measured similarities. This PSD, unit-diagonal matrix is not the nearest correlation matrix, and here it lands further from the exact kernel than the raw matrix. This is classical post-processing.",
+    higham: `Higham's alternating projections (${entry ? entry.higham_iterations : "—"} iterations) find the nearest PSD, unit-diagonal matrix to the raw one in Frobenius norm. It still changes measured similarities and uses test inputs. Recomputed from the saved raw matrix; not re-sampled.`
+  }[kind];
   byId("kernel-size").textContent = `${metadata.sample_size} × ${metadata.sample_size} · FULL SUBSET`;
   byId("kernel-ordering").textContent = `Rows and columns: ${metadata.train_size} training inputs, then ${metadata.test_size} test inputs. The dashed boundary marks the fixed split. Color scale is fixed at −1 to +1.`;
-  byId("kernel-split").textContent = `${metadata.sample_size} inputs · ${metadata.train_size} train / ${metadata.test_size} test · split seed ${metadata.seed}. Accuracy and F1 come directly from the saved result.`;
+  byId("kernel-split").textContent = `${metadata.sample_size} inputs · ${metadata.train_size} train / ${metadata.test_size} test · split seed ${metadata.seed}. Accuracy and F1 come directly from the saved result.${kind === "higham" ? " No classifier metrics were saved for Higham on this split; docs/repeated-model-comparison.md compares it over 50 splits." : ""}`;
   const rows = [
-    ["Raw finite-shot kernel", replicate.classifier_results.raw_finite_shot_kernel, !repaired],
-    ["Repaired · transductive", replicate.classifier_results.psd_repaired_transductive_kernel, repaired],
+    ["Raw finite-shot kernel", replicate.classifier_results.raw_finite_shot_kernel, kind === "raw"],
+    ["Clipped · transductive", replicate.classifier_results.psd_repaired_transductive_kernel, kind === "clipped"],
+    ["Higham · transductive (not recorded)", {accuracy: NaN, f1: NaN}, kind === "higham"],
     ["Exact statevector kernel", kernelData.baselines.exact_statevector_kernel_svc, false],
     ["Fixed RBF baseline", kernelData.baselines.fixed_rbf_svc, false]
   ];
@@ -270,6 +295,82 @@ function renderKernel() {
   rows.forEach(([label, metrics, selected]) => {const row = document.createElement("tr");row.classList.toggle("selected", selected);for (const text of [label, percent(metrics.accuracy), number(metrics.f1)]) {const td = document.createElement("td");td.textContent = text;row.append(td);}body.append(row);});
   byId("kernel-row").max = String(selectedMatrix.length - 1);byId("kernel-col").max = String(selectedMatrix.length - 1);
   renderKernelHeatmap(metadata.train_size);inspectCell();
+  renderDistances(entry, kind);
+  renderSpectrum(entry, kind);
+}
+
+function renderDistances(entry, kind) {
+  const body = byId("distance-body");body.replaceChildren();
+  for (const name of ["raw", "clipped", "higham"]) {
+    const row = document.createElement("tr");row.classList.toggle("selected", name === kind);
+    const distance = entry ? entry.distance_to_exact[name] : NaN;
+    const ratio = entry ? distance / entry.distance_to_exact.raw : NaN;
+    const label = document.createElement("td");label.textContent = {raw: "Raw", clipped: "Clipped", higham: "Higham"}[name];
+    const value = document.createElement("td");
+    const bar = document.createElement("span");bar.className = `distance-bar ${name}`;
+    if (entry) bar.style.width = `${Math.min(100, 100 * distance / Math.max(...Object.values(entry.distance_to_exact)))}%`;
+    const text = document.createElement("span");text.textContent = number(distance, 4);
+    value.append(bar, text);
+    const relative = document.createElement("td");relative.textContent = Number.isFinite(ratio) ? `${ratio.toFixed(2)}×` : "—";
+    row.append(label, value, relative);body.append(row);
+  }
+  byId("distance-note").textContent = entry
+    ? `Exact = statevector fidelity kernel on the same 40 inputs. Here clipping is ${(entry.distance_to_exact.clipped / entry.distance_to_exact.raw).toFixed(2)}× the raw distance and Higham ${(entry.distance_to_exact.higham / entry.distance_to_exact.raw).toFixed(2)}×. Distances are checked against results/higham_vs_clipping.json.`
+    : "Distance to exact needs the repair comparison, which is unavailable.";
+}
+
+function symlog(value) { const c = 1e-3; return Math.sign(value) * Math.log10(1 + Math.abs(value) / c); }
+function renderSpectrum(entry, kind) {
+  const canvas = byId("kernel-spectrum");const {ctx, width, height} = context(canvas);
+  if (!entry) {ctx.textAlign = "center";ctx.fillText("Spectrum needs the repair comparison, which is unavailable.", width / 2, height / 2);byId("spectrum-caption").textContent = "Spectrum unavailable.";return;}
+  const values = entry.eigenvalues[kind], exact = kernelRepairs.exact_eigenvalues;
+  const left = 64, right = width - 18, top = 18, bottom = height - 40;
+  const all = [...values, ...exact].map(symlog);
+  const high = Math.max(...all), low = Math.min(0, ...all);
+  const y = (v) => bottom - (symlog(v) - low) / (high - low) * (bottom - top);
+  const x = (i) => left + (i + 0.5) * (right - left) / values.length;
+  ctx.strokeStyle = themeColor("--border", "#2a3748");ctx.lineWidth = 1;
+  ctx.fillStyle = themeColor("--muted", "#a6b5c8");ctx.textAlign = "right";
+  for (const tick of [-1, -0.1, -0.01, 0.01, 0.1, 1, 10]) {
+    if (symlog(tick) < low || symlog(tick) > high) continue;
+    ctx.beginPath();ctx.moveTo(left, y(tick));ctx.lineTo(right, y(tick));ctx.stroke();
+    ctx.fillText(String(tick), left - 8, y(tick) + 4);
+  }
+  ctx.strokeStyle = themeColor("--text", "#eef3f9");ctx.setLineDash([6, 4]);ctx.lineWidth = 1.3;
+  ctx.beginPath();ctx.moveTo(left, y(0));ctx.lineTo(right, y(0));ctx.stroke();ctx.setLineDash([]);
+  ctx.fillText("0", left - 8, y(0) + 4);
+  ctx.strokeStyle = themeColor("--muted", "#a6b5c8");ctx.lineWidth = 1;
+  exact.forEach((v, i) => {ctx.beginPath();ctx.arc(x(i), y(v), 5.5, 0, 2 * Math.PI);ctx.stroke();});
+  let negatives = 0;
+  values.forEach((v, i) => {
+    if (v < -1e-10) {
+      negatives += 1;ctx.fillStyle = themeColor("--danger", "#ff9a9a");
+      ctx.beginPath();ctx.moveTo(x(i) - 5, y(v) - 4);ctx.lineTo(x(i) + 5, y(v) - 4);ctx.lineTo(x(i), y(v) + 5);ctx.closePath();ctx.fill();
+    } else {
+      ctx.fillStyle = themeColor("--accent", "#76d8c6");ctx.beginPath();ctx.arc(x(i), y(v), 3.2, 0, 2 * Math.PI);ctx.fill();
+    }
+  });
+  ctx.fillStyle = themeColor("--muted", "#a6b5c8");ctx.textAlign = "center";
+  ctx.fillText("eigenvalue rank (ascending)", (left + right) / 2, height - 12);
+  // Same rank rule as the Python code: eigenvalue > n * machine epsilon * largest eigenvalue.
+  const exactRank = exact.filter((v) => v > exact.length * Number.EPSILON * Math.max(...exact)).length;
+  const text = `${KIND_LABELS[kind]}: ${negatives} negative eigenvalue${negatives === 1 ? "" : "s"} (most negative ${scientific(values[0])}). The exact kernel has rank ${exactRank} of ${exact.length}; its remaining eigenvalues are zero, which is why sampling noise pushes so many raw eigenvalues below zero.`;
+  byId("spectrum-caption").textContent = text;
+  canvas.setAttribute("aria-label", text);
+}
+
+async function loadKernelRepairs() {
+  if (kernelRepairs || repairsLoading) return;
+  repairsLoading = true;
+  byId("kernel-repairs-status").textContent = "Computing the Higham comparison from the saved raw matrices (read-only, no sampling)…";
+  try {
+    kernelRepairs = await requestJSON("/api/kernel-repairs");
+    byId("kernel-kind-higham").disabled = false;
+    byId("kernel-repairs-status").textContent = "Higham comparison ready. Distances agree with results/higham_vs_clipping.json.";
+  } catch (error) {
+    kernelRepairs = null;
+    byId("kernel-repairs-status").textContent = `Higham comparison unavailable (${error.message}). Raw and clipped views still work.`;
+  } finally { repairsLoading = false; renderKernel(); }
 }
 
 function renderKernelHeatmap(trainSize) {
@@ -284,7 +385,7 @@ function renderKernelHeatmap(trainSize) {
   ctx.fillText("training inputs", left + boundary / 2, top + size + 25);
   ctx.fillText("test inputs", left + boundary + (size - boundary) / 2, top + size + 25);
   drawScale(ctx, left, top + size + 46, size, true);
-  canvas.setAttribute("aria-label", `${selectedMatrix.length} by ${selectedMatrix.length} ${byId("kernel-kind").value} kernel heatmap. Use row and column controls below to read individual values.`);
+  canvas.setAttribute("aria-label", `${selectedMatrix.length} by ${selectedMatrix.length} ${KIND_LABELS[kernelKind()]} heatmap. Use row and column controls below to read individual values.`);
 }
 function inspectCell() {
   if (!selectedMatrix) return;

@@ -14,8 +14,16 @@ class Node {
     this.tagName = String(tag).toUpperCase(); this.localName = tag; this.namespaceURI = namespace || null;
     this.children = []; this.parentNode = null; this.attributes = {}; this.listeners = {};
     this.classList = new ClassList(this); this.style = {}; this.ownText = ""; this.hidden = false;
-    this.value = ""; this.disabled = false; this.dataset = {};
+    this.explicitValue = null; this.disabled = false; this.dataset = {}; this.checked = false;
   }
+  // A select without an explicit value reports its first option, like a browser does.
+  get value() {
+    if (this.explicitValue !== null) return this.explicitValue;
+    const first = this.options[0];
+    return first ? first.value : "";
+  }
+  set value(v) { this.explicitValue = String(v); }
+  get options() { return this.children.filter((c) => c.tagName === "OPTION"); }
   get className() { return this.classList.toString(); }
   set className(value) { this.classList = new ClassList(this); String(value).split(/\s+/).filter(Boolean).forEach((c) => this.classList.add(c)); }
   setAttribute(name, value) { this.attributes[name] = String(value); if (name === "class") this.className = value; if (name === "id") this.id = String(value); }
@@ -41,7 +49,14 @@ class Node {
   getBoundingClientRect() { return {left: 0, top: 0, width: 600, height: 300}; }
   reportValidity() { return true; }
   querySelectorAll() { return []; }
-  getContext() { return null; }
+  getContext() {
+    // Records 2D drawing calls; drawing itself is not checked.
+    const store = {calls: []};
+    return new Proxy(store, {
+      get(target, prop) { return prop in target ? target[prop] : (...args) => { target.calls.push([prop, ...args]); }; },
+      set(target, prop, value) { target[prop] = value; return true; }
+    });
+  }
   descendants() { return this.children.flatMap((c) => [c, ...c.descendants()]); }
   find(predicate) { return this.descendants().find(predicate) || null; }
   findAll(predicate) { return this.descendants().filter(predicate); }
