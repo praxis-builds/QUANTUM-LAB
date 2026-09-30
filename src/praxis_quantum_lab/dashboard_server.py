@@ -14,6 +14,10 @@ from urllib.parse import urlsplit
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RESULT_PATH = PROJECT_ROOT / "results" / "finite_shot_kernel_psd_repair.json"
+DISTANCES_PATH = PROJECT_ROOT / "results" / "higham_vs_clipping.json"
+DOC_ROUTES = {
+    "/docs/higham-vs-clipping.md": PROJECT_ROOT / "docs" / "higham-vs-clipping.md",
+}
 ASSET_ROOT = Path(__file__).resolve().parent / "dashboard_assets"
 MAX_BODY_BYTES = 1024
 MAX_CIRCUIT_BODY_BYTES = 4096
@@ -138,6 +142,20 @@ def circuit_presets() -> dict[str, Any]:
     from .circuit_playground import presets_payload
 
     return presets_payload()
+
+
+_repairs_lock = threading.Lock()
+_repairs_cache: dict[str, Any] = {}
+
+
+def kernel_repairs() -> dict[str, Any]:
+    """Read-only Observatory repair comparison, built once per process (no sampling)."""
+    with _repairs_lock:
+        if "report" not in _repairs_cache:
+            from .observatory import build_kernel_repairs
+
+            _repairs_cache["report"] = build_kernel_repairs(RESULT_PATH, DISTANCES_PATH)
+        return _repairs_cache["report"]
 
 
 def _finite_number(value: object) -> bool:
@@ -274,6 +292,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._respond(200, (ASSET_ROOT / filename).read_bytes(), mime)
             except OSError:
                 self._error(503, "Dashboard assets unavailable.")
+        elif self.path in DOC_ROUTES:
+            try:
+                self._respond(200, DOC_ROUTES[self.path].read_bytes(), "text/plain; charset=utf-8")
+            except OSError:
+                self._error(503, "Document unavailable.")
+        elif self.path == "/api/kernel-repairs":
+            try:
+                self._json(200, kernel_repairs())
+            except (OSError, ValueError, RuntimeError):
+                self._error(503, "Saved repair results unavailable or inconsistent.")
         elif self.path == "/api/circuit-presets":
             self._json(200, circuit_presets())
         elif self.path == "/api/kernel-results":
