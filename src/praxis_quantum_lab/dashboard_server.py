@@ -367,9 +367,24 @@ class DashboardServer(ThreadingHTTPServer):
             self._connections.release()
 
 
+def preload_simulators() -> None:
+    """Import Qiskit, Aer and the simulation adapters on the thread that creates the server.
+
+    If they are first imported lazily inside a short-lived request thread, the *next*
+    simulation request crashes the whole process with a segmentation fault inside
+    Qiskit's native circuit code (seen with Qiskit 2.5.2 / Aer 0.17.2, and reproduced with
+    the original dashboard). Loading them once up front avoids it. No simulation runs here.
+    """
+    import qiskit  # noqa: F401
+    import qiskit_aer  # noqa: F401
+
+    from . import circuit_playground, density_matrix_noise, qiskit_experiments  # noqa: F401
+
+
 def make_server(*, port: int = 8765) -> DashboardServer:
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError("port must be an integer from 0 to 65535.")
+    preload_simulators()
     return DashboardServer(port)
 
 
@@ -377,6 +392,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
     arguments = parser.parse_args()
+    print("Loading Qiskit and Aer…", flush=True)
     with make_server(port=arguments.port) as server:
         print(f"Praxis Quantum Lab: http://127.0.0.1:{server.server_port}", flush=True)
         print("Local Aer only. Ctrl+C stops the dashboard.", flush=True)
