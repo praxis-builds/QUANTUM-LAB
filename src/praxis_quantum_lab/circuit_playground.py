@@ -33,7 +33,7 @@ MAX_CIRCUIT_BODY_BYTES = 4096
 SINGLE_QUBIT_GATES = {"h", "x", "y", "z", "s", "t"}
 ROTATION_GATES = {"rx", "ry", "rz", "cp"}  # gates that take an angle
 TWO_QUBIT_GATES = {"cx", "cz", "swap", "cp"}
-THREE_QUBIT_GATES = {"ccz"}
+THREE_QUBIT_GATES = {"ccz", "ccx"}  # ccx qubits: [control, control, target]
 GATE_NAMES = SINGLE_QUBIT_GATES | ROTATION_GATES | TWO_QUBIT_GATES | THREE_QUBIT_GATES | {"measure"}
 REQUEST_FIELDS = {"qubits", "gates", "shots", "seed"}
 
@@ -112,6 +112,11 @@ def apply_gate(state: np.ndarray, gate: dict[str, Any], num_qubits: int) -> np.n
     name, wires = gate["gate"], gate["qubits"]
     if name == "measure":
         return state
+    if name == "ccx":  # Toffoli: flip the target where both controls are 1
+        indices = np.arange(2**num_qubits)
+        first, second, target = wires
+        both = ((indices >> first) & 1) & ((indices >> second) & 1)
+        return state[np.where(both, indices ^ (1 << target), indices)]
     if name in THREE_QUBIT_GATES:  # ccz: flip the sign where all three qubits are 1
         indices = np.arange(2**num_qubits)
         all_one = np.ones(2**num_qubits, dtype=bool)
@@ -372,6 +377,19 @@ PRESETS: list[dict[str, Any]] = [
             _gate("cp", 0, 2, angle=math.pi / 2), _gate("cp", 1, 2, angle=math.pi),
             _gate("swap", 0, 1), _gate("h", 0), _gate("cp", 0, 1, angle=-math.pi / 2), _gate("h", 1),
             _gate("measure", 0), _gate("measure", 1),
+        ],
+    },
+    {
+        "id": "bitflip_code",
+        "title": "Bit-flip code: one error fixed",
+        "caption": "One flipped qubit, recovered: q0 holds 0.5|0⟩ + 0.866|1⟩, two CNOTs copy it, X hits q0, and two CNOTs plus a Toffoli (CCX) take a majority vote; q1 q2 = 11 is the syndrome.",
+        "qubits": 3,
+        "gates": [
+            _gate("ry", 0, angle=2 * math.pi / 3),
+            _gate("cx", 0, 1), _gate("cx", 0, 2),
+            _gate("x", 0),
+            _gate("cx", 0, 1), _gate("cx", 0, 2), _gate("ccx", 1, 2, 0),
+            _gate("measure", 0),
         ],
     },
     {

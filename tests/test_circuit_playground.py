@@ -77,6 +77,10 @@ def final_state(payload):
         request(qubits=3, gates=[{"gate": "ccz", "qubits": [0, 1, 3]}]),
         request(qubits=2, gates=[{"gate": "ccz", "qubits": [0, 1, 2]}]),
         request(qubits=3, gates=[{"gate": "cx", "qubits": [0, 1, 2]}]),
+        request(qubits=3, gates=[{"gate": "ccx", "qubits": [0, 1]}]),
+        request(qubits=3, gates=[{"gate": "ccx", "qubits": [0, 0, 1]}]),
+        request(qubits=3, gates=[{"gate": "ccx", "qubits": [0, 1, 2], "angle": 1.0}]),
+        request(qubits=2, gates=[{"gate": "ccx", "qubits": [0, 1, 2]}]),
         request(gates=[gate("measure", 0), gate("h", 0)]),
         request(gates=[gate("measure", 0), gate("measure", 0)]),
         request(qubits=2, gates=[gate("measure", 1), gate("cx", 0, 1)]),
@@ -123,12 +127,12 @@ def qiskit_state(num_qubits, gates):
 def test_numpy_state_matches_qiskit_for_random_circuits(num_qubits, seed):
     rng = np.random.default_rng([num_qubits, seed])
     names = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz"] + (["cx", "cz", "cp", "swap"] if num_qubits > 1 else [])
-    names += ["ccz"] if num_qubits == 3 else []
+    names += ["ccz", "ccx"] if num_qubits == 3 else []
     gates = []
     for _ in range(int(rng.integers(5, 25))):
         name = names[int(rng.integers(len(names)))]
-        if name == "ccz":
-            gates.append(gate("ccz", *[int(w) for w in rng.permutation(3)]))
+        if name in ("ccz", "ccx"):
+            gates.append(gate(name, *[int(w) for w in rng.permutation(3)]))
         elif name in {"cx", "cz", "cp", "swap"}:
             wires = [int(w) for w in rng.choice(num_qubits, size=2, replace=False)]
             angle = float(rng.uniform(-4 * math.pi, 4 * math.pi)) if name == "cp" else None
@@ -161,12 +165,12 @@ def preset_state(name):
     return final_state(request(qubits=preset["qubits"], gates=preset["gates"]))
 
 
-def test_all_fourteen_presets_validate_and_have_captions():
+def test_all_fifteen_presets_validate_and_have_captions():
     assert [p["id"] for p in cp.PRESETS] == [
         "superposition", "interference", "phase", "bell", "ghz", "grover", "kickback",
-        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s", "grover3",
+        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s", "bitflip_code", "grover3",
     ]
-    assert len(cp.presets_payload()["presets"]) == 14
+    assert len(cp.presets_payload()["presets"]) == 15
     assert all(p["qubits"] <= cp.MAX_QUBITS == 3 for p in cp.PRESETS)  # the limit was not raised
     for preset in cp.PRESETS:
         assert preset["caption"] and preset["title"]
@@ -264,6 +268,31 @@ def test_ccz_flips_only_the_111_component_on_any_qubit_order():
         np.testing.assert_allclose(state, expected, atol=1e-12)
     result = cp.simulate_circuit(request(qubits=3, gates=[gate("x", 0), gate("x", 1), gate("x", 2), gate("ccz", 0, 1, 2)], shots=8))
     assert result["counts"]["111"] == 8 and result["steps"][-1]["label"] == "CCZ on q0,q1,q2"
+
+
+def test_ccx_flips_the_target_only_when_both_controls_are_one():
+    for controls, expected in (((0, 0), 0b000), ((1, 0), 0b010), ((0, 1), 0b100), ((1, 1), 0b111)):
+        prep = [gate("x", q) for q, bit in zip((1, 2), controls) if bit]
+        state = final_state(request(qubits=3, gates=[*prep, gate("ccx", 1, 2, 0)]))
+        assert abs(state[expected]) == pytest.approx(1.0), controls
+    result = cp.simulate_circuit(request(qubits=3, gates=[gate("x", 0), gate("x", 1), gate("ccx", 0, 1, 2)], shots=8))
+    assert result["counts"]["111"] == 8 and result["steps"][-1]["label"] == "CCX on q0,q1,q2"
+
+
+def test_preset_bitflip_code_recovers_the_state_after_one_flip():
+    preset = PRESET["bitflip_code"]
+    assert [g["gate"] for g in preset["gates"]].count("x") == 1  # exactly one injected error
+    state = preset_state("bitflip_code")
+    theta = 2 * math.pi / 3
+    np.testing.assert_allclose(cp.bloch_vectors(state, 3)[0], [math.sin(theta), 0, math.cos(theta)], atol=1e-12)  # q0 = |psi>
+    np.testing.assert_allclose(cp.bloch_vectors(state, 3)[1], [0, 0, -1], atol=1e-12)  # syndrome q1 = 1
+    np.testing.assert_allclose(cp.bloch_vectors(state, 3)[2], [0, 0, -1], atol=1e-12)  # syndrome q2 = 1
+    without_fix = final_state(request(qubits=3, gates=preset["gates"][:-2]))  # drop the Toffoli (and measure)
+    assert cp.bloch_vectors(without_fix, 3)[0][2] == pytest.approx(-math.cos(theta))  # the flip would remain
+    result = cp.simulate_circuit(request(qubits=3, gates=preset["gates"], shots=4000, seed=6))
+    assert result["measured_qubits"] == [0]
+    np.testing.assert_allclose(result["measured_probabilities"], [0.25, 0.75], atol=1e-12)
+    assert abs(result["counts"]["1"] / 4000 - 0.75) < 0.03
 
 
 def test_preset_grover3_finds_111_and_fits_the_gate_cap():
@@ -458,7 +487,7 @@ def test_http_presets_route_is_static_and_never_simulates(server, monkeypatch):
     monkeypatch.setattr(dashboard, "simulate_bell", unexpected)
     status, headers, body = send(server, "GET", "/api/circuit-presets")
     assert status == 200 and "application/json" in headers["Content-Type"]
-    assert len(json.loads(body)["presets"]) == 14
+    assert len(json.loads(body)["presets"]) == 15
     status, _, _ = send(server, "GET", "/api/circuit-presets?x=1")
     assert status == 400
 

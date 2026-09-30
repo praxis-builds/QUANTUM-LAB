@@ -48,7 +48,7 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   require(path.join(__dirname, "..", "..", "src", "praxis_quantum_lab", "dashboard_assets", "playground.js"));
 
   // First load: presets arrive by GET, nothing is simulated, the |00> state is drawn locally.
-  await until(() => $("pg-preset-buttons").children.length === 14, "presets");
+  await until(() => $("pg-preset-buttons").children.length === 15, "presets");
   await sleep(300);
   assert.equal(circuitCalls(), 0, "first load must not simulate");
   assert.match($("pg-status").textContent, /Nothing has been simulated yet/);
@@ -112,6 +112,10 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   await settled();
   assert.match(probLabel(), /\|111⟩ 0\.945/);
   assert.match($("pg-gate-count").textContent, /^19 \/ 30 GATES/);
+  buttonIn("pg-preset-buttons", "Bit-flip code: one error fixed").click();
+  await settled();
+  assert.match($("pg-preset-caption").textContent, /One flipped qubit, recovered/);
+  assert.match(probLabel(), /\|110⟩ 0\.250, \|111⟩ 0\.750/);
 
   // Build by hand on 1 qubit with the palette and placement buttons.
   $("pg-reset").click();

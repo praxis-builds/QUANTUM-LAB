@@ -79,6 +79,8 @@ assert.equal(C.describeGate(g("cx", [0, 1])), "CNOT control q0 → target q1");
 assert.equal(C.describeGate(g("rz", [2], Math.PI / 4)), "RZ(π/4) on q2");
 assert.equal(C.describeGate(g("cp", [0, 2], -Math.PI / 2)), "CP(−π/2) control q0 → target q2");
 assert.equal(C.describeGate(g("ccz", [0, 1, 2])), "CCZ on q0, q1, q2");
+assert.equal(C.describeGate(g("ccx", [1, 2, 0])), "CCX controls q1, q2 → target q0");
+assert.match(C.placementProblem([], g("ccx", [1, 1, 0]), 3), /different qubits/);
 assert.match(C.placementProblem([], g("ccz", [0, 1, 1]), 3), /different qubits/);
 assert.match(C.placementProblem([], g("ccz", [0, 1, 2]), 2), /inside the circuit/);
 assert.equal(C.placementProblem([], g("ccz", [2, 0, 1]), 3), null);

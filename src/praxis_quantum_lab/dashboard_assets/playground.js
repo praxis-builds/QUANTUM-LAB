@@ -20,10 +20,11 @@ const PlaygroundCore = (() => {
     cz: {label: "CZ", arity: 2, name: "controlled Z"},
     cp: {label: "CP", arity: 2, angle: true, name: "controlled phase"},
     ccz: {label: "CCZ", arity: 3, name: "controlled-controlled Z"},
+    ccx: {label: "CCX", arity: 3, name: "Toffoli (controlled-controlled X)"},
     swap: {label: "SWAP", arity: 2, name: "swap"},
     measure: {label: "M", arity: 1, name: "measure"}
   };
-  const PALETTE = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "cp", "ccz", "swap", "measure"];
+  const PALETTE = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "cp", "ccz", "ccx", "swap", "measure"];
 
   // Earliest column after every earlier gate that touches (or visually crosses) the same wires.
   function layoutColumns(gates) {
@@ -139,6 +140,7 @@ const PlaygroundCore = (() => {
   function describeGate(gate) {
     const info = GATES[gate.gate];
     const angle = info.angle ? `(${piLabel(gate.angle)})` : "";
+    if (gate.gate === "ccx") return `CCX controls q${gate.qubits[0]}, q${gate.qubits[1]} → target q${gate.qubits[2]}`;
     if (info.arity === 3) return `${info.label} on ${gate.qubits.map((q) => `q${q}`).join(", ")}`;
     if (info.arity === 2) {
       return gate.gate === "swap"
@@ -226,6 +228,7 @@ if (typeof document !== "undefined") (() => {
   }
   function roleName(name, index) {
     if (name === "swap") return ["first qubit", "second qubit"][index];
+    if (name === "ccx") return ["first control", "second control", "target"][index];
     if (C.GATES[name].arity === 3) return ["first qubit", "second qubit", "third qubit"][index];
     return ["control", "target"][index];
   }
@@ -444,7 +447,14 @@ if (typeof document !== "undefined") (() => {
       const ys = gate.qubits.map(wireY), top = Math.min(...ys), bottom = Math.max(...ys);
       svg("rect", {x: x - 18, y: top - 18, width: 36, height: bottom - top + 36, class: "pg-hit"}, group);
       svg("line", {x1: x, y1: top, x2: x, y2: bottom, class: "pg-link"}, group);
-      for (const y of ys) svg("circle", {cx: x, cy: y, r: 6, class: "pg-dot"}, group);
+      const dots = gate.gate === "ccx" ? ys.slice(0, 2) : ys;
+      for (const y of dots) svg("circle", {cx: x, cy: y, r: 6, class: "pg-dot"}, group);
+      if (gate.gate === "ccx") {
+        const yt = ys[2];
+        svg("circle", {cx: x, cy: yt, r: 14, class: "pg-target"}, group);
+        svg("line", {x1: x - 14, y1: yt, x2: x + 14, y2: yt, class: "pg-link"}, group);
+        svg("line", {x1: x, y1: yt - 14, x2: x, y2: yt + 14, class: "pg-link"}, group);
+      }
     } else if (info.arity === 2) {
       const [a, b] = gate.qubits;
       const ya = wireY(a), yb = wireY(b);
