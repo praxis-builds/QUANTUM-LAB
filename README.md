@@ -13,7 +13,7 @@ The method for every step: predict, build the circuit, run it on local Aer, expl
 | 3 | Quantum Fourier transform and phase estimation (the engine of Shor) | [`lessons/`](lessons/README.md) 11–12 |
 | 4 | Shor: factor 15 and 21 on Aer, order finding plus classical post-processing; break a toy RSA key | [`lessons/`](lessons/README.md) 13–16 |
 | 5 | Grover in depth: toy key search, hash preimages, and why it only halves key strength | [`lessons/`](lessons/README.md) 17–20 |
-| 6 | Noise and error-correction basics: 3-qubit bit-flip and phase-flip codes | planned |
+| 6 | Noise and error-correction basics: bit-flip, phase-flip and Shor's 9-qubit codes, thresholds | [`lessons/`](lessons/README.md) 21–25 |
 | 7 | Bridge to post-quantum cryptography (ML-KEM / Kyber) | planned |
 
 Each algorithm is a lesson (script, plain-words page, test) plus a preset in the dashboard's Circuit Playground.

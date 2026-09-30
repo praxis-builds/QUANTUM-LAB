@@ -13,7 +13,7 @@ The repo (code, tests, `results/`) is the source of truth; `docs/history/` is ba
 3. QFT + phase estimation (lessons 11–12).
 4. Shor — factor 15 and 21 on Aer (order finding + classical post-processing); toy RSA break (lessons 13–16).
 5. Grover in depth — toy key search, hash preimages; why it only halves key strength (lessons 17–20).
-6. Noise + error-correction basics — 3-qubit bit-flip/phase-flip codes.
+6. Noise + error-correction basics — bit-flip/phase-flip/Shor-9 codes, thresholds (lessons 21–25).
 7. Bridge to post-quantum crypto — ML-KEM (Kyber); needs a dependency decision first.
 
 Each algorithm = a lesson (script + plain-words doc + test) + a Circuit Playground preset.
@@ -45,7 +45,7 @@ kept, not moved, not extended.
 - `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Circuit Playground, Bell Lab, Kernel Observatory); loads Qiskit at start-up (lazy import in a request thread segfaults)
 - `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
 - `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
-- `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon), 11–12 (QFT, phase estimation), 13–16 (Shor, toy RSA) and 17–20 (Grover in depth); script + .md + test each; shared helpers `_grover.py`, `_grover_n.py`, `_oracles.py`, `_qft.py`, `_shor.py` (checked in `tests/test_grover_n.py`, `tests/test_oracles.py`, `tests/test_qft.py`, `tests/test_shor.py`); see `lessons/README.md`
+- `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon), 11–12 (QFT, phase estimation), 13–16 (Shor, toy RSA), 17–20 (Grover in depth) and 21–25 (noise, error correction); script + .md + test each; shared helpers `_grover.py`, `_grover_n.py`, `_oracles.py`, `_qec.py`, `_qft.py`, `_shor.py` (checked in `tests/test_grover_n.py`, `tests/test_oracles.py`, `tests/test_qec.py`, `tests/test_qft.py`, `tests/test_shor.py`); see `lessons/README.md`
 
 ## Commands (from repo root; use `.venv/bin/python`)
 - Setup: `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'`
@@ -56,4 +56,5 @@ kept, not moved, not extended.
 ## Conventions
 - Basis ordering is `|q1 q0>` (Qiskit little-endian).
 - Results are JSON + PNG in `results/`.
+- Aer seeds shot i as `seed_simulator + i` for noisy or mid-circuit-measured runs, so runs meant to be independent need seeds at least `shots` apart (`lessons/_qec.run_seed`). Never pool runs whose seeds are close.
 - Each experiment has a runner in `experiments/`, a test in `tests/`, and a doc in `docs/`.
