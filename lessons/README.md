@@ -1,6 +1,6 @@
 # Lessons
 
-Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation); 13–16 are step 4 (Shor and a toy RSA break). Run every script from the repo root with `.venv/bin/python`.
+Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation); 13–16 are step 4 (Shor and a toy RSA break); 17–20 are step 5 (Grover in depth). Run every script from the repo root with `.venv/bin/python`.
 
 Each lesson has a `.py` script and a `.md` page: the idea in plain words, three "predict first" questions, how to run, and what you should see. **Answer the questions before you run the script.** The answers sit at the bottom of the `.md` page under "Spoiler". Plots go to `lessons/out/` (git-ignored).
 
@@ -22,6 +22,10 @@ Each lesson has a `.py` script and a `.md` page: the idea in plain words, three 
 | 14 | [Shor for N = 15](14_shor_15.md) | Phase estimation of "multiply by a mod 15" plus continued fractions finds 3 × 5; "compiled Shor", stated | `_shor.py`, `_qft.py`, Aer |
 | 15 | [Shor for N = 21](15_shor_21.md) | Generic permutation unitaries, spread peaks, which a work, and how the qubit count grows | `_shor.py`, Aer |
 | 16 | [Break a toy RSA key](16_toy_rsa_break.md) | From the public key (21, 5) alone: factor, compute d, decrypt; RSA-2048 estimates and why RSA is being replaced | `_shor.py`, Aer |
+| 17 | [Grover on n qubits](17_grover_n_qubits.md) | About (π/4)√(N/M) rotations to the answer; too many overshoot; unknown M needs BBHT or quantum counting | `_grover_n.py`, Aer |
+| 18 | [Toy key search](18_toy_key_search.md) | Grover runs a 4-bit cipher inside a reversible oracle; false positives, and a second known pair | `_grover_n.py`, Aer |
+| 19 | [Toy hash preimages](19_toy_hash_preimage.md) | Measured slope of log₂(calls): 0.50 for Grover against 0.99 classical, the square-root speed-up | `_grover_n.py`, Aer |
+| 20 | [Reality check: AES and SHA](20_grover_reality_check.md) | 2^64 / 2^128 sequential full-circuit calls, √p parallelism, NIST categories; Grover weakens, Shor breaks | arithmetic only |
 
 Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their checks: `.venv/bin/python -m pytest tests/test_lesson_*.py tests/test_oracles.py`.
 
@@ -39,8 +43,8 @@ Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their che
 | A first quantum algorithm (Grover) | 05 |
 | Noise (usually a later topic, so this is extra) | 06 |
 
-Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Lessons 13–16 add Shor and a toy RSA break. Not covered yet: Grover in depth, error correction, post-quantum crypto, real hardware, and programming-language basics.
+Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Lessons 13–16 add Shor and a toy RSA break. Lessons 17–20 cover Grover in depth. Not covered yet: error correction, post-quantum crypto, real hardware, and programming-language basics.
 
 ## Honest limits
 
-These are simulations on a classical computer. The Grover lesson compares oracle calls on 4 items; lessons 07–10 compare oracle calls on at most 4 input bits, with the oracle given for free. Lessons 11–12 run on at most 6 qubits and compare against numpy's FFT and eigenvalue routines. Lessons 13–16 factor 15 and 21 with compiled multipliers built from known answers, and trial division beats them instantly. Each states its classical baseline and what it does not show. Nothing here claims a quantum speed-up. The repo's rules on this (see `CLAUDE.md`) apply to lessons too.
+These are simulations on a classical computer. The Grover lesson compares oracle calls on 4 items; lessons 07–10 compare oracle calls on at most 4 input bits, with the oracle given for free. Lessons 11–12 run on at most 6 qubits and compare against numpy's FFT and eigenvalue routines. Lessons 13–16 factor 15 and 21 with compiled multipliers built from known answers, and trial division beats them instantly. Lessons 17–20 search at most 1,024 items; their resource figures for AES and SHA come from cited papers. Each states its classical baseline and what it does not show. Nothing here claims a quantum speed-up. The repo's rules on this (see `CLAUDE.md`) apply to lessons too.

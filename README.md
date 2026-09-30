@@ -12,7 +12,7 @@ The method for every step: predict, build the circuit, run it on local Aer, expl
 | 2 | First quantum algorithms: oracles, Deutsch–Jozsa, Bernstein–Vazirani, Simon | [`lessons/`](lessons/README.md) 07–10 |
 | 3 | Quantum Fourier transform and phase estimation (the engine of Shor) | [`lessons/`](lessons/README.md) 11–12 |
 | 4 | Shor: factor 15 and 21 on Aer, order finding plus classical post-processing; break a toy RSA key | [`lessons/`](lessons/README.md) 13–16 |
-| 5 | Grover in depth: toy key search, and why it only halves key strength | planned |
+| 5 | Grover in depth: toy key search, hash preimages, and why it only halves key strength | [`lessons/`](lessons/README.md) 17–20 |
 | 6 | Noise and error-correction basics: 3-qubit bit-flip and phase-flip codes | planned |
 | 7 | Bridge to post-quantum cryptography (ML-KEM / Kyber) | planned |
 
