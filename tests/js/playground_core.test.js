@@ -77,6 +77,9 @@ assert.equal(C.blochNote(0), "entangled: this qubit has no pure state of its own
 assert.equal(C.blochNote(0.5), "entangled: this qubit has no pure state of its own");
 assert.equal(C.describeGate(g("cx", [0, 1])), "CNOT control q0 → target q1");
 assert.equal(C.describeGate(g("rz", [2], Math.PI / 4)), "RZ(π/4) on q2");
+assert.equal(C.describeGate(g("cp", [0, 2], -Math.PI / 2)), "CP(−π/2) control q0 → target q2");
+assert.match(C.placementProblem([], g("cp", [0, 1], 5 * Math.PI), 2), /angle/);
+assert.equal(C.placementProblem([], g("cp", [0, 1], Math.PI / 4), 2), null);
 close(C.largestGap({"0": 60, "1": 40}, ["0", "1"], [0.5, 0.5], 100), 0.1);
 
 // constants for the Python cross-check

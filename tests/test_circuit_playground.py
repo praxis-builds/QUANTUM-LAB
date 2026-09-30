@@ -64,6 +64,13 @@ def final_state(payload):
         request(gates=[{"gate": "rz", "qubits": [0], "angle": -4 * math.pi - 1e-9}]),
         request(gates=[{"gate": "rz", "qubits": [0], "angle": 10**400}]),
         request(gates=[{"gate": "rz", "qubits": [0], "angle": -(10**400)}]),
+        request(qubits=2, gates=[{"gate": "cp", "qubits": [0, 1]}]),
+        request(qubits=2, gates=[{"gate": "cp", "qubits": [0], "angle": 1.0}]),
+        request(qubits=2, gates=[{"gate": "cp", "qubits": [1, 1], "angle": 1.0}]),
+        request(qubits=2, gates=[{"gate": "cp", "qubits": [0, 1], "angle": 4 * math.pi + 1e-9}]),
+        request(qubits=2, gates=[{"gate": "cp", "qubits": [0, 1], "angle": float("nan")}]),
+        request(qubits=2, gates=[{"gate": "cz", "qubits": [0, 1], "angle": 1.0}]),
+        request(gates=[{"gate": "cp", "qubits": [0, 1], "angle": 1.0}]),
         request(gates=[gate("measure", 0), gate("h", 0)]),
         request(gates=[gate("measure", 0), gate("measure", 0)]),
         request(qubits=2, gates=[gate("measure", 1), gate("cx", 0, 1)]),
@@ -109,13 +116,14 @@ def qiskit_state(num_qubits, gates):
 @pytest.mark.parametrize("num_qubits", [1, 2, 3])
 def test_numpy_state_matches_qiskit_for_random_circuits(num_qubits, seed):
     rng = np.random.default_rng([num_qubits, seed])
-    names = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz"] + (["cx", "cz", "swap"] if num_qubits > 1 else [])
+    names = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz"] + (["cx", "cz", "cp", "swap"] if num_qubits > 1 else [])
     gates = []
     for _ in range(int(rng.integers(5, 25))):
         name = names[int(rng.integers(len(names)))]
-        if name in {"cx", "cz", "swap"}:
+        if name in {"cx", "cz", "cp", "swap"}:
             wires = [int(w) for w in rng.choice(num_qubits, size=2, replace=False)]
-            gates.append(gate(name, *wires))
+            angle = float(rng.uniform(-4 * math.pi, 4 * math.pi)) if name == "cp" else None
+            gates.append(gate(name, *wires, angle=angle))
         elif name in {"rx", "ry", "rz"}:
             gates.append(gate(name, int(rng.integers(num_qubits)), angle=float(rng.uniform(-4 * math.pi, 4 * math.pi))))
         else:
@@ -144,12 +152,12 @@ def preset_state(name):
     return final_state(request(qubits=preset["qubits"], gates=preset["gates"]))
 
 
-def test_all_eleven_presets_validate_and_have_captions():
+def test_all_thirteen_presets_validate_and_have_captions():
     assert [p["id"] for p in cp.PRESETS] == [
         "superposition", "interference", "phase", "bell", "ghz", "grover", "kickback",
-        "dj_constant", "dj_balanced", "bv_101", "simon_11",
+        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s",
     ]
-    assert len(cp.presets_payload()["presets"]) == 11
+    assert len(cp.presets_payload()["presets"]) == 13
     assert all(p["qubits"] <= cp.MAX_QUBITS == 3 for p in cp.PRESETS)  # the limit was not raised
     for preset in cp.PRESETS:
         assert preset["caption"] and preset["title"]
@@ -209,6 +217,34 @@ def test_preset_simon_outcomes_are_orthogonal_to_s():
     result = cp.simulate_circuit(request(qubits=3, gates=PRESET["simon_11"]["gates"], shots=2000, seed=5))
     assert result["counts"]["01"] == result["counts"]["10"] == 0
     assert result["counts"]["00"] + result["counts"]["11"] == 2000
+
+
+def test_cp_gate_phases_only_the_11_component():
+    state = final_state(request(qubits=2, gates=[gate("h", 0), gate("h", 1), gate("cp", 0, 1, angle=math.pi / 3)]))
+    np.testing.assert_allclose(state, 0.5 * np.array([1, 1, 1, np.exp(1j * math.pi / 3)]), atol=1e-12)
+    cz = final_state(request(qubits=2, gates=[gate("h", 0), gate("h", 1), gate("cz", 0, 1)]))
+    cp_pi = final_state(request(qubits=2, gates=[gate("h", 0), gate("h", 1), gate("cp", 1, 0, angle=math.pi)]))
+    np.testing.assert_allclose(cp_pi, cz, atol=1e-12)  # CP(pi) = CZ, and CP is symmetric in its qubits
+    result = cp.simulate_circuit(request(qubits=2, gates=[gate("x", 0), gate("x", 1), gate("cp", 0, 1, angle=1.0)], shots=16))
+    assert result["counts"]["11"] == 16  # the Aer path accepts CP
+    assert result["steps"][-1]["label"].startswith("CP (")
+
+
+def test_preset_qft_period2_gives_peaks_at_0_and_4():
+    np.testing.assert_allclose(np.abs(preset_state("qft_period2")) ** 2, [0.5, 0, 0, 0, 0.5, 0, 0, 0], atol=1e-12)
+    qft = QuantumCircuit(3)
+    for item in PRESET["qft_period2"]["gates"][2:]:
+        getattr(qft, item["gate"])(*([item["angle"]] if "angle" in item else []), *item["qubits"])
+    from qiskit.circuit.library import QFTGate
+    from qiskit.quantum_info import Operator
+    np.testing.assert_allclose(Operator(qft).data, Operator(QFTGate(3)).data, atol=1e-12)  # the preset's QFT is the QFT
+
+
+def test_preset_qpe_s_reads_01_with_probability_one():
+    np.testing.assert_allclose(input_marginals("qpe_s"), [0, 1, 0, 0], atol=1e-12)  # m = 1: phase 1/4
+    assert abs(preset_state("qpe_s")[0b101]) ** 2 == pytest.approx(1.0)  # the eigenstate |1> on q2 is untouched
+    result = cp.simulate_circuit(request(qubits=3, gates=PRESET["qpe_s"]["gates"], shots=500, seed=9))
+    assert result["counts"] == {"00": 0, "01": 500, "10": 0, "11": 0}
 
 
 def dashboard_free_steps(payload):
@@ -390,7 +426,7 @@ def test_http_presets_route_is_static_and_never_simulates(server, monkeypatch):
     monkeypatch.setattr(dashboard, "simulate_bell", unexpected)
     status, headers, body = send(server, "GET", "/api/circuit-presets")
     assert status == 200 and "application/json" in headers["Content-Type"]
-    assert len(json.loads(body)["presets"]) == 11
+    assert len(json.loads(body)["presets"]) == 13
     status, _, _ = send(server, "GET", "/api/circuit-presets?x=1")
     assert status == 400
 

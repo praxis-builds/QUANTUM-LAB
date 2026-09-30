@@ -18,10 +18,11 @@ const PlaygroundCore = (() => {
     rz: {label: "RZ", arity: 1, angle: true, name: "rotation about z"},
     cx: {label: "CNOT", arity: 2, name: "controlled NOT"},
     cz: {label: "CZ", arity: 2, name: "controlled Z"},
+    cp: {label: "CP", arity: 2, angle: true, name: "controlled phase"},
     swap: {label: "SWAP", arity: 2, name: "swap"},
     measure: {label: "M", arity: 1, name: "measure"}
   };
-  const PALETTE = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "swap", "measure"];
+  const PALETTE = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "cp", "swap", "measure"];
 
   // Earliest column after every earlier gate that touches (or visually crosses) the same wires.
   function layoutColumns(gates) {
@@ -140,7 +141,7 @@ const PlaygroundCore = (() => {
     if (info.arity === 2) {
       return gate.gate === "swap"
         ? `SWAP q${gate.qubits[0]} ↔ q${gate.qubits[1]}`
-        : `${info.label} control q${gate.qubits[0]} → target q${gate.qubits[1]}`;
+        : `${info.label}${angle} control q${gate.qubits[0]} → target q${gate.qubits[1]}`;
     }
     return `${info.label}${angle} on q${gate.qubits[0]}`;
   }
@@ -235,8 +236,8 @@ if (typeof document !== "undefined") (() => {
       gate = {gate: state.armed, qubits: [state.pendingFirst, qubit]};
     } else {
       gate = {gate: state.armed, qubits: [qubit]};
-      if (info.angle) gate.angle = state.angle;
     }
+    if (info.angle) gate.angle = state.angle;
     const problem = C.placementProblem(state.gates, gate, state.qubits);
     if (problem) { state.pendingFirst = null; renderPlacement(); showError(problem); return; }
     commit(() => { state.gates.push(gate); state.presetId = null; }, `Added ${C.describeGate(gate)}.`);
@@ -441,9 +442,10 @@ if (typeof document !== "undefined") (() => {
         svg("circle", {cx: x, cy: yb, r: 14, class: "pg-target"}, group);
         svg("line", {x1: x - 14, y1: yb, x2: x + 14, y2: yb, class: "pg-link"}, group);
         svg("line", {x1: x, y1: yb - 14, x2: x, y2: yb + 14, class: "pg-link"}, group);
-      } else if (gate.gate === "cz") {
+      } else if (gate.gate === "cz" || gate.gate === "cp") {
         svg("circle", {cx: x, cy: ya, r: 6, class: "pg-dot"}, group);
         svg("circle", {cx: x, cy: yb, r: 6, class: "pg-dot"}, group);
+        if (gate.gate === "cp") svgText(group, x + 4, (ya + yb) / 2 + 3, C.piLabel(gate.angle), {class: "pg-gate-angle", "text-anchor": "start"});
       } else {
         for (const y of [ya, yb]) {
           svg("line", {x1: x - 8, y1: y - 8, x2: x + 8, y2: y + 8, class: "pg-link"}, group);

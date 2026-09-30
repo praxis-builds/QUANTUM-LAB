@@ -31,8 +31,8 @@ MAX_ANGLE = 4 * math.pi
 MAX_CIRCUIT_BODY_BYTES = 4096
 
 SINGLE_QUBIT_GATES = {"h", "x", "y", "z", "s", "t"}
-ROTATION_GATES = {"rx", "ry", "rz"}
-TWO_QUBIT_GATES = {"cx", "cz", "swap"}
+ROTATION_GATES = {"rx", "ry", "rz", "cp"}  # gates that take an angle
+TWO_QUBIT_GATES = {"cx", "cz", "swap", "cp"}
 GATE_NAMES = SINGLE_QUBIT_GATES | ROTATION_GATES | TWO_QUBIT_GATES | {"measure"}
 REQUEST_FIELDS = {"qubits", "gates", "shots", "seed"}
 
@@ -42,7 +42,7 @@ FIXED_GATES = {"h": HADAMARD, "x": PAULI_X, "y": PAULI_Y, "z": PAULI_Z, "s": S_G
 
 
 def rotation_matrix(name: str, angle: float) -> np.ndarray:
-    """RX, RY, RZ in Qiskit's convention (RZ has the symmetric global phase)."""
+    """RX, RY, RZ in Qiskit's convention (RZ has the symmetric global phase). CP is applied in apply_gate."""
     cosine, sine = math.cos(angle / 2), math.sin(angle / 2)
     if name == "rx":
         return np.array([[cosine, -1j * sine], [-1j * sine, cosine]], dtype=np.complex128)
@@ -59,7 +59,7 @@ def _is_int(value: object) -> bool:
 
 def _parse_gate(item: object, qubits: int) -> dict[str, Any]:
     if not isinstance(item, dict) or not {"gate", "qubits"} <= set(item) or not set(item) <= {"gate", "qubits", "angle"}:
-        raise ValueError("Each gate needs exactly gate and qubits (plus angle for rx, ry, rz).")
+        raise ValueError("Each gate needs exactly gate and qubits (plus angle for rx, ry, rz, cp).")
     name = item["gate"]
     if not isinstance(name, str) or name not in GATE_NAMES:
         raise ValueError("Unsupported gate.")
@@ -116,8 +116,9 @@ def apply_gate(state: np.ndarray, gate: dict[str, Any], num_qubits: int) -> np.n
         first, second = wires
         if name == "cx":
             return state[np.where((indices >> first) & 1, indices ^ (1 << second), indices)]
-        if name == "cz":
-            return state * np.where(((indices >> first) & 1) & ((indices >> second) & 1), -1.0, 1.0)
+        if name in ("cz", "cp"):
+            phase = -1.0 if name == "cz" else np.exp(1j * gate["angle"])
+            return state * np.where(((indices >> first) & 1) & ((indices >> second) & 1), phase, 1.0)
         differ = ((indices >> first) & 1) != ((indices >> second) & 1)
         return state[np.where(differ, indices ^ (1 << first) ^ (1 << second), indices)]
     matrix = rotation_matrix(name, gate["angle"]) if name in ROTATION_GATES else FIXED_GATES[name]
@@ -340,6 +341,30 @@ PRESETS: list[dict[str, Any]] = [
             _gate("h", 0), _gate("h", 1),
             _gate("cx", 0, 2), _gate("cx", 1, 2),
             _gate("h", 0), _gate("h", 1), _gate("measure", 0), _gate("measure", 1),
+        ],
+    },
+    {
+        "id": "qft_period2",
+        "title": "QFT of a period-2 input",
+        "caption": "H on q1, q2 spreads over 0, 2, 4, 6 (period 2); the QFT turns that into two peaks, |000⟩ and |100⟩ (multiples of 8/2).",
+        "qubits": 3,
+        "gates": [
+            _gate("h", 1), _gate("h", 2),
+            _gate("h", 2), _gate("cp", 1, 2, angle=math.pi / 2), _gate("cp", 0, 2, angle=math.pi / 4),
+            _gate("h", 1), _gate("cp", 0, 1, angle=math.pi / 2),
+            _gate("h", 0), _gate("swap", 0, 2),
+        ],
+    },
+    {
+        "id": "qpe_s",
+        "title": "Phase estimation of S",
+        "caption": "S multiplies |1⟩ (on q2) by e^{2πi/4}; kickback onto q0, q1 and an inverse QFT read that phase as 01 = 1/4, every shot.",
+        "qubits": 3,
+        "gates": [
+            _gate("x", 2), _gate("h", 0), _gate("h", 1),
+            _gate("cp", 0, 2, angle=math.pi / 2), _gate("cp", 1, 2, angle=math.pi),
+            _gate("swap", 0, 1), _gate("h", 0), _gate("cp", 0, 1, angle=-math.pi / 2), _gate("h", 1),
+            _gate("measure", 0), _gate("measure", 1),
         ],
     },
 ]
