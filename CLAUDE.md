@@ -11,7 +11,7 @@ The repo (code, tests, `results/`) is the source of truth; `docs/history/` is ba
 1. Foundations — qubits, interference, phase, entanglement, Grover-2q, noise (lessons 01–06).
 2. First quantum algorithms — Deutsch–Jozsa, Bernstein–Vazirani, Simon (lessons 07–10).
 3. QFT + phase estimation (lessons 11–12).
-4. Shor — factor 15 and 21 on Aer (order finding + classical post-processing).
+4. Shor — factor 15 and 21 on Aer (order finding + classical post-processing); toy RSA break (lessons 13–16).
 5. Grover in depth — toy key search; why it only halves key strength.
 6. Noise + error-correction basics — 3-qubit bit-flip/phase-flip codes.
 7. Bridge to post-quantum crypto — ML-KEM (Kyber); needs a dependency decision first.
@@ -45,7 +45,7 @@ kept, not moved, not extended.
 - `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Circuit Playground, Bell Lab, Kernel Observatory); loads Qiskit at start-up (lazy import in a request thread segfaults)
 - `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
 - `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
-- `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon) and 11–12 (QFT, phase estimation); script + .md + test each; shared helpers `_grover.py`, `_oracles.py`, `_qft.py` (checked in `tests/test_oracles.py`, `tests/test_qft.py`); see `lessons/README.md`
+- `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon), 11–12 (QFT, phase estimation) and 13–16 (Shor, toy RSA); script + .md + test each; shared helpers `_grover.py`, `_oracles.py`, `_qft.py`, `_shor.py` (checked in `tests/test_oracles.py`, `tests/test_qft.py`, `tests/test_shor.py`); see `lessons/README.md`
 
 ## Commands (from repo root; use `.venv/bin/python`)
 - Setup: `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'`
