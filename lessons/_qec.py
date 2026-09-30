@@ -12,7 +12,21 @@ from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit_aer import AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error, pauli_error
 
+from _common import SEED
+
 BASIS = ["u", "cx"]
+SEED_STRIDE = 10**7
+
+
+def run_seed(index: int) -> int:
+    """Seed for the index-th independent Aer run.
+
+    Measured in this lab (Aer 0.17.2): with noise or mid-circuit measurement, Aer seeds shot i of a
+    run as seed_simulator + i. Two runs whose seeds differ by less than their shot count therefore
+    reuse the same random numbers (shot i of seed s = shot i - 1 of seed s + 1). Runs meant to be
+    independent get seeds SEED_STRIDE apart, far more than any shot count used here.
+    """
+    return SEED + index * SEED_STRIDE
 
 
 def per_gate_noise(p: float, *, qubits_1q: set[int] | None = None, pairs_2q: set[tuple[int, int]] | None = None) -> NoiseModel:

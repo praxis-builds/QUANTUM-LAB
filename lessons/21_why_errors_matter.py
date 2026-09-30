@@ -10,7 +10,7 @@ from qiskit_aer import AerSimulator
 
 from _common import SEED, heading, out_dir
 from _grover_n import grover_circuit, marked_item_oracle, optimal_iterations
-from _qec import gate_count, per_gate_noise, to_basis
+from _qec import gate_count, per_gate_noise, run_seed, to_basis
 from _shor import run_gives_order, shor_circuit
 
 RATES = (0.0, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2, 3e-2)
@@ -32,9 +32,9 @@ def build() -> dict[str, dict]:
     return circuits
 
 
-def success_rate(entry: dict, model) -> float:
+def success_rate(entry: dict, model, seed: int) -> float:
     simulator = AerSimulator(method="statevector", noise_model=model)
-    memory = simulator.run(entry["circuit"], shots=SHOTS, seed_simulator=SEED, memory=True).result().get_memory()
+    memory = simulator.run(entry["circuit"], shots=SHOTS, seed_simulator=seed, memory=True).result().get_memory()
     return float(np.mean([entry["success"](int(bits, 2)) for bits in memory]))
 
 
@@ -54,7 +54,8 @@ def where_errors_hurt(entry: dict) -> dict:
         "counting": per_gate_noise(WHERE_P, qubits_1q=singles & counting, pairs_2q={p for p in pairs if set(p) & counting}),
         "work": per_gate_noise(WHERE_P, qubits_1q=singles - counting, pairs_2q={p for p in pairs if not set(p) & counting}),
     }
-    return {part: {"gates": gates[part], "success": success_rate(entry, model)} for part, model in models.items()}
+    return {part: {"gates": gates[part], "success": success_rate(entry, model, run_seed(900 + i))}
+            for i, (part, model) in enumerate(models.items())}
 
 
 def plot(results: dict, circuits: dict):
@@ -85,10 +86,10 @@ def main() -> dict:
         print(f"{name:<11}: {entry['circuit'].num_qubits:>2} qubits, {entry['gates']:>3} gates, "
               f"random-guess success {entry['floor']:.3f}")
 
-    heading(f"Step 2: success vs depolarizing error p on every gate ({SHOTS} seeded shots each)")
+    heading(f"Step 2: success vs depolarizing error p on every gate ({SHOTS} shots per point, independent seeds)")
     results = {}
-    for name, entry in circuits.items():
-        raw = {p: success_rate(entry, per_gate_noise(p)) for p in RATES}
+    for c, (name, entry) in enumerate(circuits.items()):
+        raw = {p: success_rate(entry, per_gate_noise(p), run_seed(1 + c * len(RATES) + j)) for j, p in enumerate(RATES)}
         ideal, floor = raw[0.0], entry["floor"]
         normalised = {p: (raw[p] - floor) / (ideal - floor) for p in RATES}
         results[name] = {"raw": raw, "normalised": normalised}

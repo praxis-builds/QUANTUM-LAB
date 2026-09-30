@@ -5,7 +5,7 @@ from __future__ import annotations
 from qiskit_aer import AerSimulator
 
 from _common import SEED, heading
-from _qec import INPUT_STATES, bit_flip_code, logical_error_rate, pauli_channel_noise, phase_flip_code
+from _qec import INPUT_STATES, bit_flip_code, logical_error_rate, pauli_channel_noise, phase_flip_code, run_seed
 
 CODES = {"bit-flip code": bit_flip_code, "phase-flip code": phase_flip_code}
 P = 0.1
@@ -49,9 +49,9 @@ def main() -> dict:
 
     heading(f"Step 3: random errors, p = {P} per qubit ({SHOTS} seeded shots)")
     rates = {}
-    for name, code in CODES.items():
-        for pauli, state in (("x", "0"), ("x", "+"), ("z", "0"), ("z", "+")):
-            rate = logical_error_rate(code(state), state, shots=SHOTS, seed=SEED, noise=pauli_channel_noise(P, pauli))
+    for c, (name, code) in enumerate(CODES.items()):
+        for k, (pauli, state) in enumerate((("x", "0"), ("x", "+"), ("z", "0"), ("z", "+"))):
+            rate = logical_error_rate(code(state), state, shots=SHOTS, seed=run_seed(1 + 4 * c + k), noise=pauli_channel_noise(P, pauli))
             rates[(name, pauli, state)] = rate
     for name in CODES:
         print(f"{name:<15}: X noise -> |0> {rates[(name, 'x', '0')]:.4f}, |+> {rates[(name, 'x', '+')]:.4f};   "

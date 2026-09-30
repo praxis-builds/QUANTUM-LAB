@@ -9,7 +9,7 @@ import numpy as np
 from qiskit_aer import AerSimulator
 
 from _common import SEED, heading, out_dir
-from _qec import INPUT_STATES, bit_flip_code, logical_error_rate, pauli_channel_noise
+from _qec import INPUT_STATES, bit_flip_code, logical_error_rate, pauli_channel_noise, run_seed
 
 RATES = (0.01, 0.02, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6)
 SHOTS = 4000
@@ -80,8 +80,8 @@ def main() -> dict:
     sweep = {}
     for index, p in enumerate(RATES):
         noise = pauli_channel_noise(p, "x")
-        measured = np.mean([logical_error_rate(bit_flip_code(state), state, shots=SHOTS, seed=SEED + index, noise=noise)
-                            for state in ("0", "1")])
+        measured = np.mean([logical_error_rate(bit_flip_code(state), state, shots=SHOTS, seed=run_seed(1 + 2 * index + k), noise=noise)
+                            for k, state in enumerate(("0", "1"))])
         sigma = np.sqrt(formula(p) * (1 - formula(p)) / (2 * SHOTS))
         sweep[p] = {"measured": float(measured), "formula": formula(p), "sigma": float(sigma)}
         print(f"p = {p:<4}: logical error {measured:.4f}, formula {formula(p):.4f} "

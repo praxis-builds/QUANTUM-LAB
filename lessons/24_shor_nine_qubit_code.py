@@ -10,7 +10,7 @@ from qiskit.quantum_info import Statevector, partial_trace, state_fidelity
 from qiskit_aer import AerSimulator
 
 from _common import SEED, heading, out_dir
-from _qec import INPUT_STATES, depolarizing_channel_noise, logical_error_rate, shor9_code
+from _qec import INPUT_STATES, depolarizing_channel_noise, logical_error_rate, run_seed, shor9_code
 
 RY_ANGLE = 0.7
 RY_ERRORS = ([], [(4, "x")], [(7, "y")], [(0, "z")], [(8, "y")])
@@ -103,7 +103,8 @@ def main() -> dict:
     sweep = {}
     for index, p in enumerate(RATES):
         noise = depolarizing_channel_noise(p)
-        encoded = np.mean([logical_error_rate(shor9_code(s), s, shots=SHOTS, seed=SEED + index, noise=noise) for s in SWEEP_STATES])
+        encoded = np.mean([logical_error_rate(shor9_code(s), s, shots=SHOTS, seed=run_seed(1 + 3 * index + k), noise=noise)
+                           for k, s in enumerate(SWEEP_STATES)])
         sweep[p] = {"encoded": float(encoded), "bare": 2 * p / 3}
         print(f"p = {p:<5}: encoded {encoded:.4f}   bare qubit {2 * p / 3:.4f}   "
               f"{'better' if encoded < 2 * p / 3 else 'WORSE'}")

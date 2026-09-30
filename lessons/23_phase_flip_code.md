@@ -28,7 +28,7 @@ Answers are below.
    | bit-flip code | all 6 survive | only \|0⟩, \|1⟩ | only \|0⟩, \|1⟩ |
    | phase-flip code | only \|0⟩, \|1⟩ | all 6 survive | only \|0⟩, \|1⟩ |
 
-3. **Worse.** Facing its own error type, each code's logical error rate is 0.0290 (formula 3p² − 2p³ = 0.0280). Facing the other type, the logical qubit flips whenever an **odd** number of the three qubits is hit: 0.2445 measured, (1 − (1 − 2p)³)/2 = 0.2440 in theory, against 0.1 for a bare qubit. Three qubits give the error three targets instead of one.
+3. **Worse.** Facing its own error type, the logical error rates are 0.0280 and 0.0297 (formula 3p² − 2p³ = 0.0280). Facing the other type, the logical qubit flips whenever an **odd** number of the three qubits is hit: 0.2387 and 0.2520 measured, (1 − (1 − 2p)³)/2 = 0.2440 in theory, against 0.1 for a bare qubit. Three qubits give the error three targets instead of one.
 
 **Classical baseline.** Classical bits have no phase, so the classical repetition code only ever meets the Lesson 22 problem. Needing to guard two independent error types at once is what makes quantum codes harder. Lesson 24 combines both codes to do it.
 
