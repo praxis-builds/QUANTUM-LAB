@@ -61,3 +61,21 @@ def test_parity_error_correction_fixes_errors_and_counts_leakage():
     corrected, leaked = qkd.parity_error_correction(alice, bob, rng, estimated_q=0.05)
     assert np.array_equal(corrected, alice)
     assert 4000 * qkd.binary_entropy(0.05) < leaked < 4000  # at least the Shannon minimum, less than the key
+
+
+def test_randomness_tests_reject_bad_sequences():
+    n = 20000
+    assert qkd.monobit_test(np.ones(n, int)) < 0.01
+    assert qkd.monobit_test(np.arange(n) % 2) == pytest.approx(1.0)
+    assert qkd.runs_test(np.arange(n) % 2) < 0.01  # too many runs
+    assert qkd.runs_test(np.repeat([0, 1], n // 2)) < 0.01  # too few runs
+    good = np.random.default_rng(31).integers(0, 2, n)
+    assert qkd.monobit_test(good) > 0.01 and qkd.runs_test(good) > 0.01
+
+
+def test_von_neumann_removes_bias_from_independent_bits():
+    assert qkd.von_neumann(np.array([0, 1, 1, 0, 0, 0, 1, 1, 1])).tolist() == [0, 1]  # 01 -> 0, 10 -> 1, rest dropped
+    biased = (np.random.default_rng(32).random(200000) < 0.8).astype(int)
+    out = qkd.von_neumann(biased)
+    assert abs(out.mean() - 0.5) < 0.02  # stated: bias below 0.02 from a P(1) = 0.8 source
+    assert len(out) / (len(biased) // 2) == pytest.approx(2 * 0.8 * 0.2, abs=0.01)

@@ -193,4 +193,4 @@ def von_neumann(bits: np.ndarray) -> np.ndarray:
     bits = np.asarray(bits, dtype=int)
     pairs = bits[: len(bits) // 2 * 2].reshape(-1, 2)
     keep = pairs[:, 0] != pairs[:, 1]
-    return pairs[keep, 1]
+    return pairs[keep, 0]

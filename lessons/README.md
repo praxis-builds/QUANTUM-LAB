@@ -1,6 +1,6 @@
 # Lessons
 
-Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation); 13–16 are step 4 (Shor and a toy RSA break); 17–20 are step 5 (Grover in depth); 21–25 are step 6 (noise and error correction). Run every script from the repo root with `.venv/bin/python`.
+Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation); 13–16 are step 4 (Shor and a toy RSA break); 17–20 are step 5 (Grover in depth); 21–25 are step 6 (noise and error correction); 26–29 are step 7 (quantum security). Run every script from the repo root with `.venv/bin/python`.
 
 Each lesson has a `.py` script and a `.md` page: the idea in plain words, three "predict first" questions, how to run, and what you should see. **Answer the questions before you run the script.** The answers sit at the bottom of the `.md` page under "Spoiler". Plots go to `lessons/out/` (git-ignored).
 
@@ -31,6 +31,10 @@ Each lesson has a `.py` script and a `.md` page: the idea in plain words, three 
 | 23 | [Phase-flip code](23_phase_flip_code.md) | The same code in the H basis fixes Z; each code is blind to the other's error | `_qec.py`, Aer stabilizer |
 | 24 | [Shor's 9-qubit code](24_shor_nine_qubit_code.md) | Nesting both codes fixes any single-qubit error: all 27 Paulis, and non-stabilizer inputs | `_qec.py`, Aer |
 | 25 | [Thresholds and overhead](25_threshold_reality_check.md) | Bigger codes help below threshold and hurt above it; why RSA-2048 needs about a million physical qubits | `_qec.py`, Aer stabilizer |
+| 26 | [BB84 key distribution](26_bb84.md) | Random bases, public sifting keeps about half; QBER is 0 on a perfect channel and p with noise p | `_qkd.py`, Aer |
+| 27 | [Intercept-resend attack](27_intercept_resend.md) | Eve causes 25% errors; k sample bits miss her with probability (3/4)^k | `_qkd.py`, Aer |
+| 28 | [Raw key to secret key](28_raw_to_secret_key.md) | Parity error correction plus Toeplitz privacy amplification; abort above 11%; what QKD does not give you | `_qkd.py`, Aer |
+| 29 | [Quantum randomness](29_quantum_randomness.md) | Same seed, same "quantum" bits; statistical tests and a von Neumann extractor; why passing tests proves nothing | `_qkd.py`, Aer |
 
 Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their checks: `.venv/bin/python -m pytest tests/test_lesson_*.py tests/test_oracles.py`.
 
@@ -48,8 +52,8 @@ Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their che
 | A first quantum algorithm (Grover) | 05 |
 | Noise (usually a later topic, so this is extra) | 06 |
 
-Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Lessons 13–16 add Shor and a toy RSA break. Lessons 17–20 cover Grover in depth, 21–25 error-correction basics. Not covered yet: fault-tolerant codes, post-quantum crypto, real hardware, and programming-language basics.
+Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Lessons 13–16 add Shor and a toy RSA break. Lessons 17–20 cover Grover in depth, 21–25 error-correction basics, 26–29 BB84 and randomness. Not covered yet: post-quantum cryptography (step 8), fault-tolerant codes, post-quantum crypto, real hardware, and programming-language basics.
 
 ## Honest limits
 
-These are simulations on a classical computer. The Grover lesson compares oracle calls on 4 items; lessons 07–10 compare oracle calls on at most 4 input bits, with the oracle given for free. Lessons 11–12 run on at most 6 qubits and compare against numpy's FFT and eigenvalue routines. Lessons 13–16 factor 15 and 21 with compiled multipliers built from known answers, and trial division beats them instantly. Lessons 17–20 search at most 1,024 items; their resource figures for AES and SHA come from cited papers. Lessons 21–25 use perfect syndrome extraction, so their thresholds are far above real ones. Each states its classical baseline and what it does not show. Nothing here claims a quantum speed-up. The repo's rules on this (see `CLAUDE.md`) apply to lessons too.
+These are simulations on a classical computer. The Grover lesson compares oracle calls on 4 items; lessons 07–10 compare oracle calls on at most 4 input bits, with the oracle given for free. Lessons 11–12 run on at most 6 qubits and compare against numpy's FFT and eigenvalue routines. Lessons 13–16 factor 15 and 21 with compiled multipliers built from known answers, and trial division beats them instantly. Lessons 17–20 search at most 1,024 items; their resource figures for AES and SHA come from cited papers. Lessons 21–25 use perfect syndrome extraction, so their thresholds are far above real ones. Lessons 26–29 simulate photons as ideal qubits and produce pseudo-random bits: none of it is usable cryptography. Each states its classical baseline and what it does not show. Nothing here claims a quantum speed-up. The repo's rules on this (see `CLAUDE.md`) apply to lessons too.
