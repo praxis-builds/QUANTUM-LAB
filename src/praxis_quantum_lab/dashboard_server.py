@@ -16,14 +16,20 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RESULT_PATH = PROJECT_ROOT / "results" / "finite_shot_kernel_psd_repair.json"
 ASSET_ROOT = Path(__file__).resolve().parent / "dashboard_assets"
 MAX_BODY_BYTES = 1024
+MAX_CIRCUIT_BODY_BYTES = 4096
 MAX_RESULT_BYTES = 8 * 1024 * 1024
 MAX_SHOTS = 8192
 MAX_SEED = 2**31 - 1
 CHANNEL_NAMES = {"bit_flip", "amplitude_damping", "depolarizing"}
+POST_ROUTES = {
+    "/api/bell": (MAX_BODY_BYTES, "Invalid Bell request. Check channel, strength, shots, seed, and step limits."),
+    "/api/circuit": (MAX_CIRCUIT_BODY_BYTES, "Invalid circuit request. Check qubits, gates, shots, and seed limits."),
+}
 STATIC_ROUTES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
+    "/playground.js": ("playground.js", "text/javascript; charset=utf-8"),
 }
 
 
@@ -113,6 +119,25 @@ def simulate_bell(payload: object) -> dict[str, Any]:
         "aer_bell_fidelity": initial_bell_fidelity(aer),
         "frobenius_error": float(np.linalg.norm(custom - aer, ord="fro")),
     }
+
+
+def parse_circuit_request(payload: object) -> dict[str, Any]:
+    """Circuit Playground validation (imported lazily so the server starts light)."""
+    from .circuit_playground import parse_circuit_request as parse
+
+    return parse(payload)
+
+
+def simulate_circuit(payload: object) -> dict[str, Any]:
+    from .circuit_playground import simulate_circuit as simulate
+
+    return simulate(payload)
+
+
+def circuit_presets() -> dict[str, Any]:
+    from .circuit_playground import presets_payload
+
+    return presets_payload()
 
 
 def _finite_number(value: object) -> bool:
@@ -249,6 +274,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._respond(200, (ASSET_ROOT / filename).read_bytes(), mime)
             except OSError:
                 self._error(503, "Dashboard assets unavailable.")
+        elif self.path == "/api/circuit-presets":
+            self._json(200, circuit_presets())
         elif self.path == "/api/kernel-results":
             try:
                 report = load_kernel_results()
@@ -261,31 +288,38 @@ class DashboardHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         if not self._check_request():
             return
-        if self.path != "/api/bell":
+        route = POST_ROUTES.get(self.path)
+        if route is None:
             self._error(404, "Route not found.")
             return
+        limit, invalid_message = route
         lengths = self.headers.get_all("Content-Length", [])
         if len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdecimal():
             self._error(400, "One valid Content-Length is required.")
             return
         if len(lengths[0]) > 10:
-            self._error(413, "Request body exceeds 1024 bytes.")
+            self._error(413, f"Request body exceeds {limit} bytes.")
             return
         length = int(lengths[0])
-        if length > MAX_BODY_BYTES:
-            self._error(413, "Request body exceeds 1024 bytes.")
+        if length > limit:
+            self._error(413, f"Request body exceeds {limit} bytes.")
             return
         if self.headers.get_content_type() != "application/json":
             self._error(415, "Use application/json.")
             return
+        # Look the functions up now so each route uses its own validator and simulator.
+        parse, simulate = (
+            (parse_bell_request, simulate_bell) if self.path == "/api/bell"
+            else (parse_circuit_request, simulate_circuit)
+        )
         try:
             body = self.rfile.read(length)
             if len(body) != length:
                 raise ValueError("Incomplete JSON body.")
             payload = json.loads(body, object_pairs_hook=_unique_object, parse_constant=_reject_constant)
-            parameters = parse_bell_request(payload)
-        except (ValueError, UnicodeError, RecursionError):
-            self._error(400, "Invalid Bell request. Check channel, strength, shots, seed, and step limits.")
+            parameters = parse(payload)
+        except (ValueError, UnicodeError, RecursionError, OverflowError):
+            self._error(400, invalid_message)
             return
         except (TimeoutError, socket.timeout):
             self._error(408, "Request body timed out.")
@@ -294,7 +328,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._error(429, "A local simulation is running. Try again shortly.")
             return
         try:
-            self._json(200, simulate_bell(parameters))
+            self._json(200, simulate(parameters))
         except Exception:
             self._error(500, "Local simulation failed; see server terminal.")
             import traceback
