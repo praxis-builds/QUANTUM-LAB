@@ -147,16 +147,23 @@ def phase_flip_code(state: str, errors: list[tuple[int, str]] = (), *, correct: 
     return circuit
 
 
-def shor9_code(state: str, errors: list[tuple[int, str]] = (), *, correct: bool = True) -> QuantumCircuit:
+def shor9_code(state: str, errors: list[tuple[int, str]] = (), *, correct: bool = True,
+               ry_angle: float | None = None, save_state: bool = False) -> QuantumCircuit:
     """Shor's 9-qubit code: a phase-flip code whose three qubits are each a bit-flip block.
     Corrections: a bit-flip round inside each block (6 ancillas), then the X-parities of blocks
-    1+2 and 2+3 (2 ancillas) locate a phase-flipped block, fixed by one Z on that block."""
+    1+2 and 2+3 (2 ancillas) locate a phase-flipped block, fixed by one Z on that block.
+    With ry_angle, the input is RY(angle)|0> instead (not a stabilizer state: use the
+    statevector method) and the output is measured in Z. With save_state, the final state vector
+    is saved instead of measuring the output (for exact checks when the syndromes are deterministic)."""
     data, anc = QuantumRegister(9, "data"), QuantumRegister(8, "anc")
     block_syndromes = [ClassicalRegister(2, f"block{b}") for b in range(3)]
     phase, out = ClassicalRegister(2, "phase"), ClassicalRegister(1, "out")
     circuit = QuantumCircuit(data, anc, *block_syndromes, phase, out)
     blocks = [[data[3 * b], data[3 * b + 1], data[3 * b + 2]] for b in range(3)]
-    prepare(circuit, data[0], state)
+    if ry_angle is None:
+        prepare(circuit, data[0], state)
+    else:
+        circuit.ry(ry_angle, data[0])
     circuit.cx(data[0], data[3])
     circuit.cx(data[0], data[6])
     circuit.h([data[0], data[3], data[6]])
@@ -184,7 +191,10 @@ def shor9_code(state: str, errors: list[tuple[int, str]] = (), *, correct: bool 
     circuit.h([data[0], data[3], data[6]])
     circuit.cx(data[0], data[6])
     circuit.cx(data[0], data[3])
-    measure_in_basis(circuit, data[0], state, out[0])
+    if save_state:
+        circuit.save_statevector()
+    else:
+        measure_in_basis(circuit, data[0], "0" if ry_angle is not None else state, out[0])
     return circuit
 
 
