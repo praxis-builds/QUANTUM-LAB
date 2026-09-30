@@ -33,7 +33,8 @@ MAX_CIRCUIT_BODY_BYTES = 4096
 SINGLE_QUBIT_GATES = {"h", "x", "y", "z", "s", "t"}
 ROTATION_GATES = {"rx", "ry", "rz", "cp"}  # gates that take an angle
 TWO_QUBIT_GATES = {"cx", "cz", "swap", "cp"}
-GATE_NAMES = SINGLE_QUBIT_GATES | ROTATION_GATES | TWO_QUBIT_GATES | {"measure"}
+THREE_QUBIT_GATES = {"ccz"}
+GATE_NAMES = SINGLE_QUBIT_GATES | ROTATION_GATES | TWO_QUBIT_GATES | THREE_QUBIT_GATES | {"measure"}
 REQUEST_FIELDS = {"qubits", "gates", "shots", "seed"}
 
 S_GATE = np.array([[1, 0], [0, 1j]], dtype=np.complex128)
@@ -64,11 +65,11 @@ def _parse_gate(item: object, qubits: int) -> dict[str, Any]:
     if not isinstance(name, str) or name not in GATE_NAMES:
         raise ValueError("Unsupported gate.")
     wires = item["qubits"]
-    arity = 2 if name in TWO_QUBIT_GATES else 1
+    arity = 3 if name in THREE_QUBIT_GATES else 2 if name in TWO_QUBIT_GATES else 1
     if not isinstance(wires, list) or len(wires) != arity or not all(_is_int(w) and 0 <= w < qubits for w in wires):
         raise ValueError(f"Gate {name} needs {arity} qubit index(es) inside the circuit.")
     if len(set(wires)) != len(wires):
-        raise ValueError("A two-qubit gate needs two different qubits.")
+        raise ValueError("A multi-qubit gate needs different qubits.")
     gate: dict[str, Any] = {"gate": name, "qubits": list(wires)}
     if name in ROTATION_GATES:
         angle = item.get("angle")
@@ -111,6 +112,12 @@ def apply_gate(state: np.ndarray, gate: dict[str, Any], num_qubits: int) -> np.n
     name, wires = gate["gate"], gate["qubits"]
     if name == "measure":
         return state
+    if name in THREE_QUBIT_GATES:  # ccz: flip the sign where all three qubits are 1
+        indices = np.arange(2**num_qubits)
+        all_one = np.ones(2**num_qubits, dtype=bool)
+        for wire in wires:
+            all_one &= ((indices >> wire) & 1).astype(bool)
+        return state * np.where(all_one, -1.0, 1.0)
     if name in TWO_QUBIT_GATES:
         indices = np.arange(2**num_qubits)
         first, second = wires
@@ -365,6 +372,25 @@ PRESETS: list[dict[str, Any]] = [
             _gate("cp", 0, 2, angle=math.pi / 2), _gate("cp", 1, 2, angle=math.pi),
             _gate("swap", 0, 1), _gate("h", 0), _gate("cp", 0, 1, angle=-math.pi / 2), _gate("h", 1),
             _gate("measure", 0), _gate("measure", 1),
+        ],
+    },
+    {
+        "id": "grover3",
+        "title": "Grover search on 3 qubits",
+        "caption": "Two Grover steps find |111⟩ among 8 with probability 0.945; CCZ is the oracle, and RY(±π/2) = H then X (or X then H) in the diffusion.",
+        "qubits": 3,
+        "gates": [
+            _gate("h", 0), _gate("h", 1), _gate("h", 2),
+            *[
+                gate
+                for _ in range(2)
+                for gate in (
+                    _gate("ccz", 0, 1, 2),
+                    _gate("ry", 0, angle=math.pi / 2), _gate("ry", 1, angle=math.pi / 2), _gate("ry", 2, angle=math.pi / 2),
+                    _gate("ccz", 0, 1, 2),
+                    _gate("ry", 0, angle=-math.pi / 2), _gate("ry", 1, angle=-math.pi / 2), _gate("ry", 2, angle=-math.pi / 2),
+                )
+            ],
         ],
     },
 ]

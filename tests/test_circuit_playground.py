@@ -71,6 +71,12 @@ def final_state(payload):
         request(qubits=2, gates=[{"gate": "cp", "qubits": [0, 1], "angle": float("nan")}]),
         request(qubits=2, gates=[{"gate": "cz", "qubits": [0, 1], "angle": 1.0}]),
         request(gates=[{"gate": "cp", "qubits": [0, 1], "angle": 1.0}]),
+        request(qubits=3, gates=[{"gate": "ccz", "qubits": [0, 1]}]),
+        request(qubits=3, gates=[{"gate": "ccz", "qubits": [0, 1, 1]}]),
+        request(qubits=3, gates=[{"gate": "ccz", "qubits": [0, 1, 2], "angle": 1.0}]),
+        request(qubits=3, gates=[{"gate": "ccz", "qubits": [0, 1, 3]}]),
+        request(qubits=2, gates=[{"gate": "ccz", "qubits": [0, 1, 2]}]),
+        request(qubits=3, gates=[{"gate": "cx", "qubits": [0, 1, 2]}]),
         request(gates=[gate("measure", 0), gate("h", 0)]),
         request(gates=[gate("measure", 0), gate("measure", 0)]),
         request(qubits=2, gates=[gate("measure", 1), gate("cx", 0, 1)]),
@@ -117,10 +123,13 @@ def qiskit_state(num_qubits, gates):
 def test_numpy_state_matches_qiskit_for_random_circuits(num_qubits, seed):
     rng = np.random.default_rng([num_qubits, seed])
     names = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz"] + (["cx", "cz", "cp", "swap"] if num_qubits > 1 else [])
+    names += ["ccz"] if num_qubits == 3 else []
     gates = []
     for _ in range(int(rng.integers(5, 25))):
         name = names[int(rng.integers(len(names)))]
-        if name in {"cx", "cz", "cp", "swap"}:
+        if name == "ccz":
+            gates.append(gate("ccz", *[int(w) for w in rng.permutation(3)]))
+        elif name in {"cx", "cz", "cp", "swap"}:
             wires = [int(w) for w in rng.choice(num_qubits, size=2, replace=False)]
             angle = float(rng.uniform(-4 * math.pi, 4 * math.pi)) if name == "cp" else None
             gates.append(gate(name, *wires, angle=angle))
@@ -152,12 +161,12 @@ def preset_state(name):
     return final_state(request(qubits=preset["qubits"], gates=preset["gates"]))
 
 
-def test_all_thirteen_presets_validate_and_have_captions():
+def test_all_fourteen_presets_validate_and_have_captions():
     assert [p["id"] for p in cp.PRESETS] == [
         "superposition", "interference", "phase", "bell", "ghz", "grover", "kickback",
-        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s",
+        "dj_constant", "dj_balanced", "bv_101", "simon_11", "qft_period2", "qpe_s", "grover3",
     ]
-    assert len(cp.presets_payload()["presets"]) == 13
+    assert len(cp.presets_payload()["presets"]) == 14
     assert all(p["qubits"] <= cp.MAX_QUBITS == 3 for p in cp.PRESETS)  # the limit was not raised
     for preset in cp.PRESETS:
         assert preset["caption"] and preset["title"]
@@ -245,6 +254,29 @@ def test_preset_qpe_s_reads_01_with_probability_one():
     assert abs(preset_state("qpe_s")[0b101]) ** 2 == pytest.approx(1.0)  # the eigenstate |1> on q2 is untouched
     result = cp.simulate_circuit(request(qubits=3, gates=PRESET["qpe_s"]["gates"], shots=500, seed=9))
     assert result["counts"] == {"00": 0, "01": 500, "10": 0, "11": 0}
+
+
+def test_ccz_flips_only_the_111_component_on_any_qubit_order():
+    for wires in ([0, 1, 2], [2, 0, 1]):
+        state = final_state(request(qubits=3, gates=[gate("h", 0), gate("h", 1), gate("h", 2), gate("ccz", *wires)]))
+        expected = np.full(8, 8**-0.5)
+        expected[7] *= -1
+        np.testing.assert_allclose(state, expected, atol=1e-12)
+    result = cp.simulate_circuit(request(qubits=3, gates=[gate("x", 0), gate("x", 1), gate("x", 2), gate("ccz", 0, 1, 2)], shots=8))
+    assert result["counts"]["111"] == 8 and result["steps"][-1]["label"] == "CCZ on q0,q1,q2"
+
+
+def test_preset_grover3_finds_111_and_fits_the_gate_cap():
+    preset = PRESET["grover3"]
+    assert len(preset["gates"]) == 19 <= cp.MAX_GATES == 30
+    probabilities = np.abs(preset_state("grover3")) ** 2
+    assert probabilities[7] == pytest.approx(math.sin(5 * math.asin(8**-0.5)) ** 2, abs=1e-12)  # 0.945, 2 iterations
+    assert probabilities[7] > 0.94
+    # RY(pi/2) is exactly "H then X", and RY(-pi/2) is exactly "X then H" (no global phase).
+    h = np.array([[1, 1], [1, -1]]) / np.sqrt(2)
+    x = np.array([[0, 1], [1, 0]])
+    np.testing.assert_allclose(cp.rotation_matrix("ry", math.pi / 2), x @ h, atol=1e-12)
+    np.testing.assert_allclose(cp.rotation_matrix("ry", -math.pi / 2), h @ x, atol=1e-12)
 
 
 def dashboard_free_steps(payload):
@@ -426,7 +458,7 @@ def test_http_presets_route_is_static_and_never_simulates(server, monkeypatch):
     monkeypatch.setattr(dashboard, "simulate_bell", unexpected)
     status, headers, body = send(server, "GET", "/api/circuit-presets")
     assert status == 200 and "application/json" in headers["Content-Type"]
-    assert len(json.loads(body)["presets"]) == 13
+    assert len(json.loads(body)["presets"]) == 14
     status, _, _ = send(server, "GET", "/api/circuit-presets?x=1")
     assert status == 400
 

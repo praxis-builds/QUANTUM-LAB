@@ -48,7 +48,7 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   require(path.join(__dirname, "..", "..", "src", "praxis_quantum_lab", "dashboard_assets", "playground.js"));
 
   // First load: presets arrive by GET, nothing is simulated, the |00> state is drawn locally.
-  await until(() => $("pg-preset-buttons").children.length === 13, "presets");
+  await until(() => $("pg-preset-buttons").children.length === 14, "presets");
   await sleep(300);
   assert.equal(circuitCalls(), 0, "first load must not simulate");
   assert.match($("pg-status").textContent, /Nothing has been simulated yet/);
@@ -108,6 +108,10 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   assert.match($("pg-histogram-caption").textContent, /shots/);
   assert.match($("pg-preset-caption").textContent, /01 = 1\/4/);
   assert.match(probLabel(), /Probabilities: \|101⟩ 1\.000\./);
+  buttonIn("pg-preset-buttons", "Grover search on 3 qubits").click();
+  await settled();
+  assert.match(probLabel(), /\|111⟩ 0\.945/);
+  assert.match($("pg-gate-count").textContent, /^19 \/ 30 GATES/);
 
   // Build by hand on 1 qubit with the palette and placement buttons.
   $("pg-reset").click();
@@ -158,6 +162,23 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   await settled();
   assert.match($("pg-gate-count").textContent, /^4 \/ 30 GATES/);  // RY (restored by undo), H, CNOT, Z
   assert.match($("pg-status").textContent, /Added Z on q0/);
+
+  // A three-qubit CCZ: three clicks, with a prompt for each.
+  $("pg-qubits").value = "3"; $("pg-qubits").dispatch("change", {target: $("pg-qubits")});
+  buttonIn("pg-palette-buttons", "CCZ").click();
+  buttonIn("pg-place-buttons", "q2").click();
+  buttonIn("pg-place-buttons", "q2").click();
+  assert.match($("pg-error").textContent, /different qubit/);
+  buttonIn("pg-place-buttons", "q0").click();
+  assert.match($("pg-place-prompt").textContent, /first qubit q2, second qubit q0; choose the third qubit/);
+  buttonIn("pg-place-buttons", "q1").click();
+  await settled();
+  assert.match($("pg-status").textContent, /Added CCZ on q2, q0, q1/);
+  assert.match($("pg-gate-count").textContent, /^5 \/ 30 GATES/);
+  $("pg-undo").click();
+  await settled();
+  $("pg-qubits").value = "2"; $("pg-qubits").dispatch("change", {target: $("pg-qubits")});
+  await settled();
 
   // Rotating a Bloch sphere by keyboard and by pointer redraws without errors.
   const sphere = $("pg-bloch").find((n) => n.classList.contains("pg-sphere-svg"));

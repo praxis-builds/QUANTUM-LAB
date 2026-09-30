@@ -24,8 +24,8 @@ The dashboard has three tabs: **Circuit Playground** (default), **Bell Lab** and
 Build circuits on 1–3 qubits and watch the state change.
 
 - **Gates:** H, X, Y, Z, S, T, RX/RY/RZ (angle slider, −2π to 2π in steps of
-  π/16), CNOT, CZ, CP (controlled phase: e^{iθ} on |11⟩, same angle slider), SWAP
-  and M (measure). Choose a gate in the palette, then a
+  π/16), CNOT, CZ, CP (controlled phase: e^{iθ} on |11⟩, same angle slider), CCZ
+  (sign flip on |111⟩ of its three qubits: three clicks), SWAP and M (measure). Choose a gate in the palette, then a
   qubit (the "Place on" buttons, or click its wire), or drag a gate onto a wire.
   Two-qubit gates take the control (or first qubit) and then the target. New
   gates go at the end of their wires. Click a placed gate, or focus it and press
@@ -57,7 +57,9 @@ Build circuits on 1–3 qubits and watch the state change.
   a one-qubit output: only 00 and 11 appear). The oracle presets fit in 3 qubits,
   so the qubit limit stays at 3; lessons 07–10 cover the full forms. QFT of a
   period-2 input (peaks at |000⟩ and |100⟩); Phase estimation of S (2 counting
-  qubits read 01 = 1/4 every shot). Both use CP; lessons 11–12 go further.
+  qubits read 01 = 1/4 every shot). Both use CP; lessons 11–12 go further. Grover
+  search on 3 qubits (CCZ oracle marks |111⟩, found with probability 0.945 after 2
+  steps; the diffusion writes H-then-X as RY(π/2) to fit the 30-gate cap).
 
 Exact states come from the project's NumPy state-vector code (Hadamard, Pauli
 matrices and Born rule from `state_vectors.py`); they are cross-checked against
@@ -207,7 +209,7 @@ What the tests cover:
   NumPy states match Qiskit for random 1–3 qubit circuits. Presets reach their
   expected states (H·H = |0⟩, Bell ½/½, GHZ, Grover success = 1, kickback,
   DJ 00 only for constant, BV → 101, Simon outcomes orthogonal to s, QFT peaks,
-  QPE → 01; CP matches Qiskit in the random circuits). Bloch
+  QPE → 01, 3-qubit Grover 0.945; CP and CCZ match Qiskit in the random circuits). Bloch
   vectors have length 1 for product states and 0 for Bell/GHZ. The repair view
   agrees with the saved files and fails closed.
 - Real process: the documented entry point in a fresh interpreter, with

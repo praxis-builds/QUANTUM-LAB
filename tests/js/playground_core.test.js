@@ -78,9 +78,13 @@ assert.equal(C.blochNote(0.5), "entangled: this qubit has no pure state of its o
 assert.equal(C.describeGate(g("cx", [0, 1])), "CNOT control q0 → target q1");
 assert.equal(C.describeGate(g("rz", [2], Math.PI / 4)), "RZ(π/4) on q2");
 assert.equal(C.describeGate(g("cp", [0, 2], -Math.PI / 2)), "CP(−π/2) control q0 → target q2");
+assert.equal(C.describeGate(g("ccz", [0, 1, 2])), "CCZ on q0, q1, q2");
+assert.match(C.placementProblem([], g("ccz", [0, 1, 1]), 3), /different qubits/);
+assert.match(C.placementProblem([], g("ccz", [0, 1, 2]), 2), /inside the circuit/);
+assert.equal(C.placementProblem([], g("ccz", [2, 0, 1]), 3), null);
 assert.match(C.placementProblem([], g("cp", [0, 1], 5 * Math.PI), 2), /angle/);
 assert.equal(C.placementProblem([], g("cp", [0, 1], Math.PI / 4), 2), null);
 close(C.largestGap({"0": 60, "1": 40}, ["0", "1"], [0.5, 0.5], 100), 0.1);
 
 // constants for the Python cross-check
-process.stdout.write(JSON.stringify({MAX_QUBITS: C.MAX_QUBITS, MAX_GATES: C.MAX_GATES, MAX_SHOTS: C.MAX_SHOTS, MAX_SEED: C.MAX_SEED, PALETTE: C.PALETTE, ANGLE: Object.keys(C.GATES).filter((k) => C.GATES[k].angle), TWO: Object.keys(C.GATES).filter((k) => C.GATES[k].arity === 2)}));
+process.stdout.write(JSON.stringify({MAX_QUBITS: C.MAX_QUBITS, MAX_GATES: C.MAX_GATES, MAX_SHOTS: C.MAX_SHOTS, MAX_SEED: C.MAX_SEED, PALETTE: C.PALETTE, ANGLE: Object.keys(C.GATES).filter((k) => C.GATES[k].angle), TWO: Object.keys(C.GATES).filter((k) => C.GATES[k].arity === 2), THREE: Object.keys(C.GATES).filter((k) => C.GATES[k].arity === 3)}));

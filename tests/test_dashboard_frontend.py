@@ -85,6 +85,7 @@ def test_playground_core_logic_and_limits_match_the_server():
     assert set(limits["PALETTE"]) == cp.GATE_NAMES
     assert set(limits["ANGLE"]) == cp.ROTATION_GATES
     assert set(limits["TWO"]) == cp.TWO_QUBIT_GATES
+    assert set(limits["THREE"]) == cp.THREE_QUBIT_GATES
 
 
 @needs_node

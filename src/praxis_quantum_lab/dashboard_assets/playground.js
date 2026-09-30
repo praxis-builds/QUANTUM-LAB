@@ -19,10 +19,11 @@ const PlaygroundCore = (() => {
     cx: {label: "CNOT", arity: 2, name: "controlled NOT"},
     cz: {label: "CZ", arity: 2, name: "controlled Z"},
     cp: {label: "CP", arity: 2, angle: true, name: "controlled phase"},
+    ccz: {label: "CCZ", arity: 3, name: "controlled-controlled Z"},
     swap: {label: "SWAP", arity: 2, name: "swap"},
     measure: {label: "M", arity: 1, name: "measure"}
   };
-  const PALETTE = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "cp", "swap", "measure"];
+  const PALETTE = ["h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx", "cz", "cp", "ccz", "swap", "measure"];
 
   // Earliest column after every earlier gate that touches (or visually crosses) the same wires.
   function layoutColumns(gates) {
@@ -46,7 +47,7 @@ const PlaygroundCore = (() => {
     if (!info) return "Unknown gate.";
     if (gates.length >= MAX_GATES) return `The circuit is full (${MAX_GATES} gates). Remove a gate or press Undo.`;
     if (gate.qubits.length !== info.arity || gate.qubits.some((q) => !Number.isInteger(q) || q < 0 || q >= qubits)) return "Choose qubits inside the circuit.";
-    if (new Set(gate.qubits).size !== gate.qubits.length) return "A two-qubit gate needs two different qubits.";
+    if (new Set(gate.qubits).size !== gate.qubits.length) return "A multi-qubit gate needs different qubits.";
     const measured = measuredQubits(gates);
     for (const q of gate.qubits) {
       if (measured.has(q)) return `q${q} is already measured. Measurement must be the last operation on its wire.`;
@@ -138,6 +139,7 @@ const PlaygroundCore = (() => {
   function describeGate(gate) {
     const info = GATES[gate.gate];
     const angle = info.angle ? `(${piLabel(gate.angle)})` : "";
+    if (info.arity === 3) return `${info.label} on ${gate.qubits.map((q) => `q${q}`).join(", ")}`;
     if (info.arity === 2) {
       return gate.gate === "swap"
         ? `SWAP q${gate.qubits[0]} ↔ q${gate.qubits[1]}`
@@ -164,7 +166,7 @@ if (typeof document !== "undefined") (() => {
   const $ = (id) => document.getElementById(id);
   const state = {
     qubits: 2, gates: [], history: [], presetId: null, presets: [],
-    armed: null, pendingFirst: null, angle: Math.PI / 2,
+    armed: null, placing: [], angle: Math.PI / 2,
     shots: 1024, seed: 20260928,
     result: null, resultKey: "", resultCircuitKey: "", lastSteps: null,
     step: 0, view: {az: -0.5, el: 0.35},
@@ -206,7 +208,7 @@ if (typeof document !== "undefined") (() => {
     state.history.push(snapshot());
     if (state.history.length > 200) state.history.shift();
     change();
-    state.pendingFirst = null;
+    state.placing = [];
     state.step = state.gates.length;
     showError("");
     renderAll();
@@ -214,32 +216,38 @@ if (typeof document !== "undefined") (() => {
     scheduleRequest();
   }
   function arm(name) {
-    if (C.GATES[name].arity === 2 && state.qubits < 2) { showError("Two-qubit gates need at least 2 qubits."); return; }
+    const arity = C.GATES[name].arity;
+    if (arity > state.qubits) { showError(arity === 2 ? "Two-qubit gates need at least 2 qubits." : `${C.GATES[name].label} needs ${arity} qubits.`); return; }
     state.armed = name;
-    state.pendingFirst = null;
+    state.placing = [];
     showError("");
     renderPalette(); renderPlacement();
-    setStatus(`${C.GATES[name].label} chosen. ${C.GATES[name].arity === 2 ? "Now choose the first qubit." : "Now choose a qubit."}`);
+    setStatus(`${C.GATES[name].label} chosen. ${arity > 1 ? "Now choose the first qubit." : "Now choose a qubit."}`);
+  }
+  function roleName(name, index) {
+    if (name === "swap") return ["first qubit", "second qubit"][index];
+    if (C.GATES[name].arity === 3) return ["first qubit", "second qubit", "third qubit"][index];
+    return ["control", "target"][index];
   }
   function place(qubit) {
     if (!state.armed) { setStatus("Choose a gate from the palette first."); return; }
     const info = C.GATES[state.armed];
     let gate;
-    if (info.arity === 2) {
-      if (state.pendingFirst === null) {
-        state.pendingFirst = qubit;
+    if (info.arity > 1) {
+      if (state.placing.includes(qubit)) { showError("Choose a different qubit for the next end of the gate."); return; }
+      if (state.placing.length < info.arity - 1) {
+        state.placing.push(qubit);
         renderPlacement();
-        setStatus(`${info.label}: ${state.armed === "swap" ? "first qubit" : "control"} is q${qubit}. Now choose the ${state.armed === "swap" ? "second qubit" : "target"}.`);
+        setStatus(`${info.label}: ${roleName(state.armed, state.placing.length - 1)} is q${qubit}. Now choose the ${roleName(state.armed, state.placing.length)}.`);
         return;
       }
-      if (state.pendingFirst === qubit) { showError("Choose a different qubit for the second end of the gate."); return; }
-      gate = {gate: state.armed, qubits: [state.pendingFirst, qubit]};
+      gate = {gate: state.armed, qubits: [...state.placing, qubit]};
     } else {
       gate = {gate: state.armed, qubits: [qubit]};
     }
     if (info.angle) gate.angle = state.angle;
     const problem = C.placementProblem(state.gates, gate, state.qubits);
-    if (problem) { state.pendingFirst = null; renderPlacement(); showError(problem); return; }
+    if (problem) { state.placing = []; renderPlacement(); showError(problem); return; }
     commit(() => { state.gates.push(gate); state.presetId = null; }, `Added ${C.describeGate(gate)}.`);
   }
   function removeGate(index) {
@@ -251,7 +259,7 @@ if (typeof document !== "undefined") (() => {
     const previous = state.history.pop();
     if (!previous) { setStatus("Nothing to undo."); return; }
     state.qubits = previous.qubits; state.gates = previous.gates; state.presetId = previous.presetId;
-    state.pendingFirst = null; state.step = state.gates.length;
+    state.placing = []; state.step = state.gates.length;
     if (state.armed && C.GATES[state.armed].arity > state.qubits) state.armed = null;
     showError(""); renderAll(); setStatus("Undid the last change."); scheduleRequest();
   }
@@ -375,7 +383,7 @@ if (typeof document !== "undefined") (() => {
       const button = element("button", "pg-chip", `q${q}`);
       button.type = "button";
       button.disabled = !state.armed;
-      button.setAttribute("aria-pressed", String(state.pendingFirst === q));
+      button.setAttribute("aria-pressed", String(state.placing.includes(q)));
       button.setAttribute("aria-label", state.armed ? `Place ${C.GATES[state.armed].label} on qubit ${q}` : `Qubit ${q} (choose a gate first)`);
       button.addEventListener("click", () => place(q));
       row.append(button);
@@ -384,8 +392,8 @@ if (typeof document !== "undefined") (() => {
     if (state.armed) {
       const info = C.GATES[state.armed];
       if (info.arity === 1) prompt = `${info.label}${info.angle ? `(${C.piLabel(state.angle)})` : ""}: choose a qubit, or click its wire.`;
-      else if (state.pendingFirst === null) prompt = `${info.label}: choose the ${state.armed === "swap" ? "first qubit" : "control"}.`;
-      else prompt = `${info.label}: ${state.armed === "swap" ? "first qubit" : "control"} q${state.pendingFirst}; choose the ${state.armed === "swap" ? "second qubit" : "target"}.`;
+      else if (state.placing.length === 0) prompt = `${info.label}: choose the ${roleName(state.armed, 0)}.`;
+      else prompt = `${info.label}: ${state.placing.map((q, i) => `${roleName(state.armed, i)} q${q}`).join(", ")}; choose the ${roleName(state.armed, state.placing.length)}.`;
     }
     $("pg-place-prompt").textContent = prompt;
   }
@@ -432,7 +440,12 @@ if (typeof document !== "undefined") (() => {
     if (valid) stage = index < state.step - 1 ? "applied" : (index === state.step - 1 ? "current" : "future");
     const group = svg("g", {class: `pg-gate pg-${stage}`, tabindex: 0, role: "button", "aria-label": `${C.describeGate(gate)}, gate ${index + 1} of ${state.gates.length}. Press Enter or Delete to remove it.`}, root);
     const info = C.GATES[gate.gate];
-    if (info.arity === 2) {
+    if (info.arity === 3) {
+      const ys = gate.qubits.map(wireY), top = Math.min(...ys), bottom = Math.max(...ys);
+      svg("rect", {x: x - 18, y: top - 18, width: 36, height: bottom - top + 36, class: "pg-hit"}, group);
+      svg("line", {x1: x, y1: top, x2: x, y2: bottom, class: "pg-link"}, group);
+      for (const y of ys) svg("circle", {cx: x, cy: y, r: 6, class: "pg-dot"}, group);
+    } else if (info.arity === 2) {
       const [a, b] = gate.qubits;
       const ya = wireY(a), yb = wireY(b);
       svg("rect", {x: x - 18, y: Math.min(ya, yb) - 18, width: 36, height: Math.abs(yb - ya) + 36, class: "pg-hit"}, group);
