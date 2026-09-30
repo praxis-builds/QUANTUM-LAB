@@ -50,7 +50,11 @@ Build circuits on 1–3 qubits and watch the state change.
 - **Presets**, each with a one-line caption: Superposition (H); Interference
   (H·H returns to |0⟩); Phase is invisible until H (H·Z·H); Bell; GHZ (3 qubits);
   Grover search on 2 qubits (marked |11⟩, found with probability 1; the final −1
-  is a global sign); Phase kickback.
+  is a global sign); Phase kickback; Deutsch–Jozsa constant and balanced
+  (inputs read 00 only when f is constant); Bernstein–Vazirani (s = 101, the
+  oracle written as its kicked-back phase, Z on q0 and q2); Simon (s = 11, with
+  a one-qubit output: only 00 and 11 appear). The oracle presets fit in 3 qubits,
+  so the qubit limit stays at 3; lessons 07–10 cover the full forms.
 
 Exact states come from the project's NumPy state-vector code (Hadamard, Pauli
 matrices and Born rule from `state_vectors.py`); they are cross-checked against
@@ -198,7 +202,8 @@ What the tests cover:
 - Server: request limits, route/host/origin restrictions, saved-result
   failures, Bell stages and channel limits, and every circuit validation rule.
   NumPy states match Qiskit for random 1–3 qubit circuits. Presets reach their
-  expected states (H·H = |0⟩, Bell ½/½, GHZ, Grover success = 1, kickback). Bloch
+  expected states (H·H = |0⟩, Bell ½/½, GHZ, Grover success = 1, kickback,
+  DJ 00 only for constant, BV → 101, Simon outcomes orthogonal to s). Bloch
   vectors have length 1 for product states and 0 for Bell/GHZ. The repair view
   agrees with the saved files and fails closed.
 - Real process: the documented entry point in a fresh interpreter, with

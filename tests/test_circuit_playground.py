@@ -144,9 +144,13 @@ def preset_state(name):
     return final_state(request(qubits=preset["qubits"], gates=preset["gates"]))
 
 
-def test_all_seven_presets_validate_and_have_captions():
-    assert [p["id"] for p in cp.PRESETS] == ["superposition", "interference", "phase", "bell", "ghz", "grover", "kickback"]
-    assert len(cp.presets_payload()["presets"]) == 7
+def test_all_eleven_presets_validate_and_have_captions():
+    assert [p["id"] for p in cp.PRESETS] == [
+        "superposition", "interference", "phase", "bell", "ghz", "grover", "kickback",
+        "dj_constant", "dj_balanced", "bv_101", "simon_11",
+    ]
+    assert len(cp.presets_payload()["presets"]) == 11
+    assert all(p["qubits"] <= cp.MAX_QUBITS == 3 for p in cp.PRESETS)  # the limit was not raised
     for preset in cp.PRESETS:
         assert preset["caption"] and preset["title"]
         assert len(preset["gates"]) <= cp.MAX_GATES
@@ -176,6 +180,35 @@ def test_preset_kickback_control_becomes_one_and_target_stays_minus():
     bloch = steps[-1]["bloch"]
     np.testing.assert_allclose(bloch[0], [0, 0, -1], atol=1e-12)  # q0 = |1>
     np.testing.assert_allclose(bloch[1], [-1, 0, 0], atol=1e-12)  # q1 = |->
+
+
+def input_marginals(name):
+    """Exact probabilities of q1 q0 (the algorithm inputs) at the end of a 3-qubit preset."""
+    probabilities = np.abs(preset_state(name)) ** 2
+    return cp.marginal_probabilities(probabilities, [0, 1])
+
+
+def test_preset_deutsch_jozsa_constant_reads_00_and_balanced_never_does():
+    np.testing.assert_allclose(input_marginals("dj_constant"), [1, 0, 0, 0], atol=1e-12)
+    np.testing.assert_allclose(input_marginals("dj_balanced"), [0, 0, 0, 1], atol=1e-12)  # 11 = the parity pattern
+    for name in ("dj_constant", "dj_balanced"):
+        measured = sorted(g["qubits"][0] for g in PRESET[name]["gates"] if g["gate"] == "measure")
+        assert measured == [0, 1]  # the histogram shows only the inputs
+
+
+def test_preset_bernstein_vazirani_returns_101_with_probability_one():
+    np.testing.assert_allclose(np.abs(preset_state("bv_101")) ** 2, np.eye(8)[0b101], atol=1e-12)
+
+
+def test_preset_simon_outcomes_are_orthogonal_to_s():
+    marginals = input_marginals("simon_11")
+    np.testing.assert_allclose(marginals, [0.5, 0, 0, 0.5], atol=1e-12)
+    for y, probability in enumerate(marginals):
+        if probability > 1e-12:
+            assert bin(y & 0b11).count("1") % 2 == 0  # y . s = 0 mod 2
+    result = cp.simulate_circuit(request(qubits=3, gates=PRESET["simon_11"]["gates"], shots=2000, seed=5))
+    assert result["counts"]["01"] == result["counts"]["10"] == 0
+    assert result["counts"]["00"] + result["counts"]["11"] == 2000
 
 
 def dashboard_free_steps(payload):
@@ -357,7 +390,7 @@ def test_http_presets_route_is_static_and_never_simulates(server, monkeypatch):
     monkeypatch.setattr(dashboard, "simulate_bell", unexpected)
     status, headers, body = send(server, "GET", "/api/circuit-presets")
     assert status == 200 and "application/json" in headers["Content-Type"]
-    assert len(json.loads(body)["presets"]) == 7
+    assert len(json.loads(body)["presets"]) == 11
     status, _, _ = send(server, "GET", "/api/circuit-presets?x=1")
     assert status == 400
 

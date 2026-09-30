@@ -48,7 +48,7 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   require(path.join(__dirname, "..", "..", "src", "praxis_quantum_lab", "dashboard_assets", "playground.js"));
 
   // First load: presets arrive by GET, nothing is simulated, the |00> state is drawn locally.
-  await until(() => $("pg-preset-buttons").children.length === 7, "presets");
+  await until(() => $("pg-preset-buttons").children.length === 11, "presets");
   await sleep(300);
   assert.equal(circuitCalls(), 0, "first load must not simulate");
   assert.match($("pg-status").textContent, /Nothing has been simulated yet/);
@@ -99,6 +99,10 @@ const gateGroups = () => $("pg-circuit").children.filter((n) => n.classList.cont
   assert.equal($("pg-qubits").value, "3");
   assert.match(probLabel(), /\|000⟩ 0\.500, \|111⟩ 0\.500/);
   assert.equal(sphereNotes().length, 3);
+  buttonIn("pg-preset-buttons", "Bernstein–Vazirani (s = 101)").click();
+  await settled();
+  assert.match(probLabel(), /Probabilities: \|101⟩ 1\.000\./);
+  assert.match($("pg-preset-caption").textContent, /reads out s = 101/);
 
   // Build by hand on 1 qubit with the palette and placement buttons.
   $("pg-reset").click();

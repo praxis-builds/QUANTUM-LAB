@@ -298,6 +298,50 @@ PRESETS: list[dict[str, Any]] = [
         "qubits": 2,
         "gates": [_gate("x", 1), _gate("h", 1), _gate("h", 0), _gate("cx", 0, 1), _gate("h", 0)],
     },
+    {
+        "id": "dj_constant",
+        "title": "Deutsch–Jozsa: constant",
+        "caption": "Constant oracle f(x) = 1 (X on the |−⟩ qubit q2) only adds a global sign, so q1 q0 read 00 every time.",
+        "qubits": 3,
+        "gates": [
+            _gate("x", 2), _gate("h", 2), _gate("h", 0), _gate("h", 1),
+            _gate("x", 2),
+            _gate("h", 0), _gate("h", 1), _gate("measure", 0), _gate("measure", 1),
+        ],
+    },
+    {
+        "id": "dj_balanced",
+        "title": "Deutsch–Jozsa: balanced",
+        "caption": "Balanced oracle f = x0 XOR x1 (two CNOTs into the |−⟩ qubit q2): the signs cancel on 00, so q1 q0 read 11, never 00.",
+        "qubits": 3,
+        "gates": [
+            _gate("x", 2), _gate("h", 2), _gate("h", 0), _gate("h", 1),
+            _gate("cx", 0, 2), _gate("cx", 1, 2),
+            _gate("h", 0), _gate("h", 1), _gate("measure", 0), _gate("measure", 1),
+        ],
+    },
+    {
+        "id": "bv_101",
+        "title": "Bernstein–Vazirani (s = 101)",
+        "caption": "One query reads out s = 101; the oracle is written as the phase it kicks back, Z on q0 and q2 (what CNOTs into |−⟩ reduce to).",
+        "qubits": 3,
+        "gates": [
+            _gate("h", 0), _gate("h", 1), _gate("h", 2),
+            _gate("z", 0), _gate("z", 2),
+            _gate("h", 0), _gate("h", 1), _gate("h", 2),
+        ],
+    },
+    {
+        "id": "simon_11",
+        "title": "Simon (s = 11)",
+        "caption": "Hidden period s = 11 with f(x) = x0 XOR x1 on a one-qubit output q2: q1 q0 read only 00 or 11, both with y·s = 0 mod 2.",
+        "qubits": 3,
+        "gates": [
+            _gate("h", 0), _gate("h", 1),
+            _gate("cx", 0, 2), _gate("cx", 1, 2),
+            _gate("h", 0), _gate("h", 1), _gate("measure", 0), _gate("measure", 1),
+        ],
+    },
 ]
 
 
