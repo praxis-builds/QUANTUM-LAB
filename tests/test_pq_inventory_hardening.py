@@ -501,3 +501,17 @@ def test_no_private_key_block_is_committed_in_fixtures_or_examples():
     offenders = [p.relative_to(root).as_posix() for base in (root / "tests" / "fixtures", root / "examples")
                  for p in base.rglob("*") if p.is_file() and re.search(marker, p.read_bytes())]
     assert offenders == []
+
+
+# --------------------------------------------- 9. TLS/OpenSSL directives count only in configuration files
+
+def test_tls_directives_in_source_code_and_docs_are_not_findings(tmp_path):
+    from pq_inventory.scanner import scan
+
+    lines = 'ssl_ciphers = "ECDHE+AESGCM"\ndefault_bits = 1024\nssl_protocols TLSv1;\n'
+    for name in ("settings.py", "Config.java", "notes.md"):
+        (tmp_path / name).write_text(lines)
+    (tmp_path / "nginx.conf").write_text("ssl_protocols TLSv1;\n")
+    (tmp_path / "openssl.cnf").write_text("default_bits = 1024\n")
+    files = sorted({f.file for f in scan(tmp_path).findings})
+    assert files == ["nginx.conf", "openssl.cnf"]

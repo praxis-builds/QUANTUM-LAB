@@ -18,6 +18,15 @@ from .walker import DEFAULT_MAX_BYTES, DEFAULT_MAX_FILES, walk
 FILE_TIME_BUDGET = 10.0
 
 
+# TLS/OpenSSL directives are configuration syntax: in source code (`ssl_ciphers = "..."`) or prose they
+# are assignments or examples, not configuration, so those files are left to the source rules.
+NOT_CONFIG_SUFFIXES = detect_source.SOURCE_SUFFIXES | {".md", ".rst", ".html", ".htm"}
+
+
+def _may_hold_tls_config(relative: str) -> bool:
+    return Path(relative).suffix.lower() not in NOT_CONFIG_SUFFIXES
+
+
 def _is_ssh_config(relative: str) -> bool:
     name = relative.rsplit("/", 1)[-1].lower()
     return "ssh" in name or "/.ssh/" in f"/{relative.lower()}"
@@ -42,7 +51,8 @@ def scan(root: Path, *, rules=None, max_bytes: int = DEFAULT_MAX_BYTES, max_file
             if item.is_text:
                 text = item.data.decode("utf-8", errors="replace")
                 findings += detect_source.detect(item.relative, text, rules, deadline)
-                findings += detect_configs.detect_tls(item.relative, text, deadline)
+                if _may_hold_tls_config(item.relative):
+                    findings += detect_configs.detect_tls(item.relative, text, deadline)
                 if _is_ssh_config(item.relative):
                     findings += detect_configs.detect_ssh(item.relative, text)
         except TimeoutError:
