@@ -94,7 +94,8 @@
   ],
   "clean/modern.py": [
    "SHA-256",
-   "AES-256"
+   "AES-256",
+   "ML-KEM"
   ],
   "clean/decoys.py": [],
   "clean/README.md": []

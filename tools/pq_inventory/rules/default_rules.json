@@ -878,6 +878,58 @@
    "key_size_group": "bits",
    "category": "config",
    "heuristic": true
+  },
+  {
+   "id": "pq-ml-kem",
+   "description": "post-quantum KEM (ML-KEM)",
+   "files": [
+    ".py",
+    ".js",
+    ".ts",
+    ".java",
+    ".go",
+    ".c",
+    ".h",
+    ".cpp",
+    ".cs"
+   ],
+   "pattern": "[\\\"'](?:ML-KEM-(?:512|768|1024))[\\\"']|\\bOQS_KEM_alg_ml_kem_(?:512|768|1024)\\b",
+   "algorithm": "ML-KEM"
+  },
+  {
+   "id": "pq-ml-dsa",
+   "description": "post-quantum signature (ML-DSA)",
+   "files": [
+    ".py",
+    ".js",
+    ".ts",
+    ".java",
+    ".go",
+    ".c",
+    ".h",
+    ".cpp",
+    ".cs"
+   ],
+   "pattern": "[\\\"'](?:ML-DSA-(?:44|65|87))[\\\"']|\\bOQS_SIG_alg_ml_dsa_(?:44|65|87)\\b",
+   "algorithm": "ML-DSA"
+  },
+  {
+   "id": "pq-slh-dsa",
+   "description": "post-quantum hash-based signature (SLH-DSA)",
+   "files": [
+    ".py",
+    ".js",
+    ".ts",
+    ".java",
+    ".go",
+    ".c",
+    ".h",
+    ".cpp",
+    ".cs"
+   ],
+   "pattern": "[\\\"']SLH[-_]DSA[\\w-]*[\\\"']",
+   "algorithm": "SLH-DSA",
+   "flags": "i"
   }
  ]
 }

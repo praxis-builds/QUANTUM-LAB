@@ -10,3 +10,6 @@ def digest(data):
 
 def new_key():
     return AESGCM.generate_key(bit_length=256)
+
+
+KEM_NAME = "ML-KEM-768"  # post-quantum key establishment (an OK finding)

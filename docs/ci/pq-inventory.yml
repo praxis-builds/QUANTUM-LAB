@@ -1,0 +1,36 @@
+# Sample GitHub Actions workflow: fail a pull request that introduces quantum-broken or weak crypto,
+# and keep the reports as a build artifact. Copy to .github/workflows/ in the repository you scan.
+name: crypto-inventory
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pq-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pq_inventory
+        # Point this at wherever you publish the scanner; here: this lab's repository, with the
+        # [pqc] extra for certificate and key parsing (cryptography). liboqs is NOT needed for scanning.
+        run: |
+          pip install "cryptography==50.0.2"
+          pip install --no-deps "git+https://github.com/<you>/praxis-quantum-lab.git"
+      - name: Scan
+        # Exit code 1 if any finding is QUANTUM-BROKEN or CLASSICALLY-BROKEN.
+        # During a migration, prefer gating only on NEW findings (see the diff step below).
+        run: python -m pq_inventory scan . --out pq-report --fail-on classically-broken
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pq-inventory-report
+          path: pq-report/
+
+# Migration-progress variant: keep the baseline scan.json from main as an artifact, then
+#   python -m pq_inventory diff baseline/scan.json pq-report/scan.json --out pq-diff --fail-on quantum-broken
+# fails only when a pull request ADDS quantum-broken (or worse) crypto.
