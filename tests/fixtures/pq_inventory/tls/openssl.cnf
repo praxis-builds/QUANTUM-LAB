@@ -1,0 +1,8 @@
+# Planted legacy OpenSSL configuration for pq_inventory tests
+[ req ]
+default_bits = 1024
+default_md = sha1
+
+[ system_default_sect ]
+MinProtocol = TLSv1.2
+CipherString = DEFAULT@SECLEVEL=2

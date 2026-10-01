@@ -1,0 +1,105 @@
+{
+ "description": "Findings deliberately planted in this corpus, written by hand from the fixture files (not generated from scanner output). Matching is by (file, algorithm) with multiplicity. For cipher suites the expected algorithm is the suite's most severe component.",
+ "expected": {
+  "py/legacy_crypto.py": [
+   "RSA",
+   "MD5",
+   "SHA-256",
+   "3DES",
+   "AES-128"
+  ],
+  "js/crypto_utils.js": [
+   "RSA",
+   "SHA-1",
+   "AES-256",
+   "3DES"
+  ],
+  "java/Legacy.java": [
+   "RSA",
+   "RSA",
+   "MD5",
+   "3DES",
+   "ECDSA"
+  ],
+  "go/main.go": [
+   "RSA",
+   "SHA-1",
+   "ECDSA",
+   "TLS1.0"
+  ],
+  "c/legacy.c": [
+   "MD5",
+   "AES-128",
+   "RSA",
+   "EC"
+  ],
+  "cs/Legacy.cs": [
+   "RSA",
+   "MD5",
+   "3DES",
+   "AES-128"
+  ],
+  "keys/ec_p256_public.pem": [
+   "EC"
+  ],
+  "keys/ecdsa_cert.der": [
+   "ECDSA"
+  ],
+  "keys/encrypted_private_key.pem": [
+   "RSA"
+  ],
+  "keys/legacy_sha1_cert.pem": [
+   "RSA-SIGNATURE",
+   "SHA-1"
+  ],
+  "ssh/authorized_keys": [
+   "RSA-SIGNATURE",
+   "EdDSA"
+  ],
+  "ssh/sshd_config": [
+   "DH",
+   "SHA-1",
+   "X25519",
+   "HYBRID-PQ",
+   "3DES",
+   "AES-128",
+   "AES-256",
+   "HMAC-SHA1",
+   "SHA-256"
+  ],
+  "tls/nginx.conf": [
+   "TLS1.0",
+   "ECDH",
+   "HMAC-SHA1",
+   "3DES",
+   "ECDH",
+   "HYBRID-PQ"
+  ],
+  "tls/apache-ssl.conf": [
+   "TLS1.0",
+   "TLS1.1",
+   "ECDH"
+  ],
+  "tls/openssl.cnf": [
+   "RSA",
+   "SHA-1"
+  ],
+  "erp/DEFAULT.PFL": [
+   "ECDH",
+   "SHA-1"
+  ],
+  "erp/as2_partner.properties": [
+   "3DES",
+   "SHA-1"
+  ],
+  "clean/modern.py": [
+   "SHA-256",
+   "AES-256"
+  ],
+  "clean/decoys.py": [],
+  "clean/README.md": []
+ },
+ "must_skip": {
+  "clean/blob.bin": "binary file"
+ }
+}

@@ -28,14 +28,16 @@ pqc = ["liboqs-python==0.16.0.1", "cryptography==50.0.2"]
 praxis-qiskit-experiments = "praxis_quantum_lab.qiskit_experiments:main"
 praxis-kernel-experiment = "praxis_quantum_lab.kernel_experiment:main"
 praxis-density-matrix-sweep = "praxis_quantum_lab.density_matrix_noise:main"
+pq-inventory = "pq_inventory.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "tools"]
 
 [tool.setuptools.package-data]
 praxis_quantum_lab = ["dashboard_assets/*.html", "dashboard_assets/*.css", "dashboard_assets/*.js"]
+pq_inventory = ["rules/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["src", "tools"]
 addopts = "-ra"

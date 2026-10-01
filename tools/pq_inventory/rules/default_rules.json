@@ -1,0 +1,883 @@
+{
+ "version": 1,
+ "description": "Default pq_inventory rules. Add your own in a separate JSON file and pass --rules.",
+ "rules": [
+  {
+   "id": "py-rsa-generate",
+   "description": "RSA key generation",
+   "files": [
+    ".py"
+   ],
+   "pattern": "rsa\\.generate_private_key\\([^)]*?key_size\\s*=\\s*(?P<bits>\\d+)",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "py-rsa-generate-pycryptodome",
+   "description": "RSA key generation (PyCryptodome)",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bRSA\\.generate\\(\\s*(?P<bits>\\d+)",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "py-rsa-padding",
+   "description": "RSA encryption/signature padding",
+   "files": [
+    ".py"
+   ],
+   "pattern": "padding\\.(?:OAEP|PKCS1v15|PSS)\\b",
+   "algorithm": "RSA"
+  },
+  {
+   "id": "py-ec-generate",
+   "description": "elliptic-curve key",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bec\\.(?:generate_private_key|derive_private_key)\\(|\\bec\\.SECP(?:256R1|384R1|521R1|256K1)\\b",
+   "algorithm": "EC"
+  },
+  {
+   "id": "py-ecdsa",
+   "description": "ECDSA signature",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bec\\.ECDSA\\(|\\bECC\\.generate\\(|\\bDSS\\.new\\(",
+   "algorithm": "ECDSA"
+  },
+  {
+   "id": "py-ed25519",
+   "description": "Ed25519 signature key",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bEd25519PrivateKey\\b|\\bEd448PrivateKey\\b",
+   "algorithm": "EdDSA"
+  },
+  {
+   "id": "py-x25519",
+   "description": "X25519 key agreement",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bX25519PrivateKey\\b|\\bX448PrivateKey\\b",
+   "algorithm": "X25519"
+  },
+  {
+   "id": "py-dh",
+   "description": "Diffie-Hellman",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bdh\\.generate_parameters\\(|\\bdh\\.DHParameterNumbers\\(",
+   "algorithm": "DH"
+  },
+  {
+   "id": "py-dsa",
+   "description": "DSA key",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bdsa\\.generate_private_key\\(|\\bDSA\\.generate\\(",
+   "algorithm": "DSA"
+  },
+  {
+   "id": "py-hashlib",
+   "description": "hash function",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bhashlib\\.(?P<alg>md5|sha1|sha224|sha256|sha384|sha512|sha3_256)\\s*\\(",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "py-hashlib-new",
+   "description": "hash function",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bhashlib\\.new\\(\\s*['\\\"](?P<alg>md5|sha1|sha256|sha512)['\\\"]",
+   "flags": "i",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "py-hashes-class",
+   "description": "hash function",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bhashes\\.(?P<alg>MD5|SHA1|SHA224|SHA256|SHA384|SHA512)\\(",
+   "flags": "i",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "py-aes-cryptography",
+   "description": "AES with an explicit key length",
+   "files": [
+    ".py"
+   ],
+   "pattern": "algorithms\\.AES(?P<bits>128|256)\\(",
+   "algorithm_map": {
+    "128": "AES-128",
+    "256": "AES-256"
+   },
+   "map_group": "bits"
+  },
+  {
+   "id": "py-aes-keylen",
+   "description": "AES key generated with an explicit length",
+   "files": [
+    ".py"
+   ],
+   "pattern": "AESGCM\\.generate_key\\(\\s*bit_length\\s*=\\s*(?P<bits>128|192|256)",
+   "algorithm_map": {
+    "128": "AES-128",
+    "192": "AES-192",
+    "256": "AES-256"
+   },
+   "map_group": "bits"
+  },
+  {
+   "id": "py-3des",
+   "description": "3DES",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\b(?:DES3|TripleDES)\\.new\\(|algorithms\\.TripleDES\\(",
+   "algorithm": "3DES"
+  },
+  {
+   "id": "py-des",
+   "description": "single DES",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bDES\\.new\\(",
+   "algorithm": "DES"
+  },
+  {
+   "id": "py-arc4",
+   "description": "RC4",
+   "files": [
+    ".py"
+   ],
+   "pattern": "\\bARC4\\.new\\(|algorithms\\.ARC4\\(",
+   "algorithm": "RC4"
+  },
+  {
+   "id": "js-rsa-keypair",
+   "description": "RSA key pair",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "generateKeyPair(?:Sync)?\\(\\s*['\\\"]rsa(?:-pss)?['\\\"][^)]*?modulusLength\\s*:\\s*(?P<bits>\\d+)",
+   "flags": "i",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "js-ec-keypair",
+   "description": "elliptic-curve key pair",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "generateKeyPair(?:Sync)?\\(\\s*['\\\"](?:ec|ed25519|ed448|x25519)['\\\"]",
+   "flags": "i",
+   "algorithm": "EC"
+  },
+  {
+   "id": "js-hash",
+   "description": "hash function",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "create(?:Hash|Hmac)\\(\\s*['\\\"](?P<alg>md5|sha1|sha256|sha384|sha512)['\\\"]",
+   "flags": "i",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "js-cipher",
+   "description": "symmetric cipher",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "create(?:Cipheriv|Decipheriv|Cipher)\\(\\s*['\\\"](?P<alg>aes-(?:128|192|256)-(?:cbc|gcm|ctr|ecb)|des-ede3-cbc|des-ede3|des-cbc|des-ecb|rc4|chacha20-poly1305)['\\\"]",
+   "flags": "i",
+   "algorithm_map": {
+    "aes-128-cbc": "AES-128",
+    "aes-128-gcm": "AES-128",
+    "aes-128-ctr": "AES-128",
+    "aes-128-ecb": "AES-128",
+    "aes-256-cbc": "AES-256",
+    "aes-256-gcm": "AES-256",
+    "aes-256-ctr": "AES-256",
+    "aes-192-cbc": "AES-192",
+    "aes-192-gcm": "AES-192",
+    "des-ede3-cbc": "3DES",
+    "des-ede3": "3DES",
+    "des-cbc": "DES",
+    "des-ecb": "DES",
+    "rc4": "RC4",
+    "chacha20-poly1305": "CHACHA20"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "js-webcrypto-rsa",
+   "description": "WebCrypto RSA",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "name\\s*:\\s*['\\\"](?:RSA-OAEP|RSASSA-PKCS1-v1_5|RSA-PSS)['\\\"]",
+   "algorithm": "RSA"
+  },
+  {
+   "id": "js-webcrypto-ec",
+   "description": "WebCrypto elliptic curve",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "name\\s*:\\s*['\\\"](?:ECDSA|ECDH)['\\\"]",
+   "algorithm": "EC"
+  },
+  {
+   "id": "js-webcrypto-aes",
+   "description": "WebCrypto AES key length",
+   "files": [
+    ".js",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".jsx"
+   ],
+   "pattern": "name\\s*:\\s*['\\\"]AES-(?:GCM|CBC|CTR)['\\\"]\\s*,\\s*length\\s*:\\s*(?P<bits>128|192|256)",
+   "algorithm_map": {
+    "128": "AES-128",
+    "192": "AES-192",
+    "256": "AES-256"
+   },
+   "map_group": "bits"
+  },
+  {
+   "id": "java-keypairgen",
+   "description": "key pair generator",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "KeyPairGenerator\\.getInstance\\(\\s*\\\"(?P<alg>RSA|DSA|EC|DH|DiffieHellman|Ed25519|X25519)\\\"",
+   "algorithm_map": {
+    "rsa": "RSA",
+    "dsa": "DSA",
+    "ec": "EC",
+    "dh": "DH",
+    "diffiehellman": "DH",
+    "ed25519": "EdDSA",
+    "x25519": "X25519"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "java-keyinit",
+   "description": "key size initialisation",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "\\.initialize\\(\\s*(?P<bits>512|768|1024|1536|2048|3072|4096)\\b",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "java-digest",
+   "description": "hash function",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "MessageDigest\\.getInstance\\(\\s*\\\"(?P<alg>MD5|SHA-1|SHA1|SHA-256|SHA-384|SHA-512)\\\"",
+   "flags": "i",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "java-cipher",
+   "description": "cipher",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "Cipher\\.getInstance\\(\\s*\\\"(?P<alg>DESede|DES|RC4|ARCFOUR|RSA|AES)[/\\\"]",
+   "flags": "i",
+   "algorithm_map": {
+    "desede": "3DES",
+    "des": "DES",
+    "rc4": "RC4",
+    "arcfour": "RC4",
+    "rsa": "RSA",
+    "aes": "AES"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "java-aes-keygen",
+   "description": "AES key length",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "KeyGenerator\\.getInstance\\(\\s*\\\"AES\\\"\\s*\\)[^;]*;\\s*\\w+\\.init\\(\\s*(?P<bits>128|192|256)",
+   "algorithm_map": {
+    "128": "AES-128",
+    "192": "AES-192",
+    "256": "AES-256"
+   },
+   "map_group": "bits"
+  },
+  {
+   "id": "java-keygen-init",
+   "description": "symmetric key length",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "\\bkeyGen(?:erator)?\\.init\\(\\s*(?P<bits>128|192|256)\\s*\\)",
+   "flags": "i",
+   "algorithm_map": {
+    "128": "AES-128",
+    "192": "AES-192",
+    "256": "AES-256"
+   },
+   "map_group": "bits"
+  },
+  {
+   "id": "java-signature",
+   "description": "signature algorithm",
+   "files": [
+    ".java",
+    ".kt"
+   ],
+   "pattern": "Signature\\.getInstance\\(\\s*\\\"(?P<alg>SHA1withRSA|SHA256withRSA|SHA256withECDSA|SHA1withDSA|MD5withRSA|Ed25519)\\\"",
+   "flags": "i",
+   "algorithm_map": {
+    "sha1withrsa": "SHA-1",
+    "sha256withrsa": "RSA-SIGNATURE",
+    "sha256withecdsa": "ECDSA",
+    "sha1withdsa": "SHA-1",
+    "md5withrsa": "MD5",
+    "ed25519": "EdDSA"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "go-rsa",
+   "description": "RSA key generation",
+   "files": [
+    ".go"
+   ],
+   "pattern": "rsa\\.GenerateKey\\([^,]+,\\s*(?P<bits>\\d+)\\)",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "go-rsa-use",
+   "description": "RSA operation",
+   "files": [
+    ".go"
+   ],
+   "pattern": "rsa\\.(?:EncryptOAEP|EncryptPKCS1v15|SignPKCS1v15|SignPSS|DecryptOAEP)\\(",
+   "algorithm": "RSA"
+  },
+  {
+   "id": "go-ecdsa",
+   "description": "ECDSA key",
+   "files": [
+    ".go"
+   ],
+   "pattern": "ecdsa\\.GenerateKey\\(",
+   "algorithm": "ECDSA"
+  },
+  {
+   "id": "go-ecdh",
+   "description": "ECDH curve",
+   "files": [
+    ".go"
+   ],
+   "pattern": "ecdh\\.P(?:256|384|521)\\(\\)",
+   "algorithm": "ECDH"
+  },
+  {
+   "id": "go-ed25519",
+   "description": "Ed25519",
+   "files": [
+    ".go"
+   ],
+   "pattern": "ed25519\\.GenerateKey\\(",
+   "algorithm": "EdDSA"
+  },
+  {
+   "id": "go-x25519",
+   "description": "X25519",
+   "files": [
+    ".go"
+   ],
+   "pattern": "ecdh\\.X25519\\(\\)|curve25519\\.X25519\\(",
+   "algorithm": "X25519"
+  },
+  {
+   "id": "go-hash",
+   "description": "hash function",
+   "files": [
+    ".go"
+   ],
+   "pattern": "\\b(?P<alg>md5|sha1|sha256|sha512)\\.(?:New|Sum(?:256|512)?)\\(",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "go-des",
+   "description": "DES / 3DES",
+   "files": [
+    ".go"
+   ],
+   "pattern": "des\\.New(?P<alg>TripleDES)?Cipher\\(",
+   "algorithm_map": {
+    "": "DES",
+    "tripledes": "3DES"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "go-rc4",
+   "description": "RC4",
+   "files": [
+    ".go"
+   ],
+   "pattern": "rc4\\.NewCipher\\(",
+   "algorithm": "RC4"
+  },
+  {
+   "id": "go-tls-min",
+   "description": "TLS minimum version",
+   "files": [
+    ".go"
+   ],
+   "pattern": "MinVersion\\s*:\\s*tls\\.Version(?P<alg>TLS10|TLS11|SSL30)",
+   "algorithm_map": {
+    "tls10": "TLS1.0",
+    "tls11": "TLS1.1",
+    "ssl30": "SSLv3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "c-openssl-rsa",
+   "description": "OpenSSL RSA",
+   "files": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".hpp"
+   ],
+   "pattern": "\\bRSA_generate_key(?:_ex)?\\(|\\bEVP_PKEY_RSA\\b|\\bEVP_PKEY_CTX_set_rsa_keygen_bits\\([^,]+,\\s*(?P<bits>\\d+)",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "c-openssl-ec",
+   "description": "OpenSSL elliptic curve",
+   "files": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".hpp"
+   ],
+   "pattern": "\\bEC_KEY_new_by_curve_name\\(|\\bNID_X9_62_prime256v1\\b|\\bNID_secp384r1\\b|\\bEVP_PKEY_EC\\b",
+   "algorithm": "EC"
+  },
+  {
+   "id": "c-openssl-dh",
+   "description": "OpenSSL Diffie-Hellman",
+   "files": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".hpp"
+   ],
+   "pattern": "\\bDH_generate_parameters(?:_ex)?\\(|\\bEVP_PKEY_DH\\b",
+   "algorithm": "DH"
+  },
+  {
+   "id": "c-openssl-hash",
+   "description": "OpenSSL EVP hash",
+   "files": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".hpp"
+   ],
+   "pattern": "\\bEVP_(?P<alg>md5|sha1|sha256|sha384|sha512)\\(\\)",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha512": "SHA-512"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "c-openssl-hash-direct",
+   "description": "OpenSSL one-shot hash",
+   "files": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".hpp"
+   ],
+   "pattern": "\\b(?P<alg>MD5|SHA1)\\s*\\(",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "c-openssl-cipher",
+   "description": "OpenSSL EVP cipher",
+   "files": [
+    ".c",
+    ".h",
+    ".cc",
+    ".cpp",
+    ".cxx",
+    ".hpp"
+   ],
+   "pattern": "\\bEVP_(?P<alg>aes_128|aes_192|aes_256|des_ede3|des|rc4)(?:_\\w+)?\\(\\)",
+   "algorithm_map": {
+    "aes_128": "AES-128",
+    "aes_192": "AES-192",
+    "aes_256": "AES-256",
+    "des_ede3": "3DES",
+    "des": "DES",
+    "rc4": "RC4"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "cs-rsa",
+   "description": "RSA",
+   "files": [
+    ".cs"
+   ],
+   "pattern": "\\bRSA\\.Create\\(\\s*(?P<bits>\\d+)?|\\bnew\\s+RSACryptoServiceProvider\\(\\s*(?P<bits2>\\d+)?",
+   "algorithm": "RSA",
+   "key_size_group": "bits"
+  },
+  {
+   "id": "cs-ecdsa",
+   "description": "ECDsa / ECDiffieHellman",
+   "files": [
+    ".cs"
+   ],
+   "pattern": "\\bECDsa\\.Create\\(|\\bECDiffieHellman\\.Create\\(",
+   "algorithm": "EC"
+  },
+  {
+   "id": "cs-hash",
+   "description": "hash function",
+   "files": [
+    ".cs"
+   ],
+   "pattern": "\\b(?P<alg>MD5|SHA1|SHA256|SHA384|SHA512)\\.Create\\(",
+   "flags": "i",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg"
+  },
+  {
+   "id": "cs-3des",
+   "description": "3DES",
+   "files": [
+    ".cs"
+   ],
+   "pattern": "\\bTripleDES\\.Create\\(|new\\s+TripleDESCryptoServiceProvider\\(",
+   "algorithm": "3DES"
+  },
+  {
+   "id": "cs-des",
+   "description": "single DES",
+   "files": [
+    ".cs"
+   ],
+   "pattern": "\\bDES\\.Create\\(|new\\s+DESCryptoServiceProvider\\(",
+   "algorithm": "DES"
+  },
+  {
+   "id": "cs-aes-keysize",
+   "description": "AES key size",
+   "files": [
+    ".cs"
+   ],
+   "pattern": "\\bKeySize\\s*=\\s*(?P<bits>128|192|256)\\b",
+   "algorithm_map": {
+    "128": "AES-128",
+    "192": "AES-192",
+    "256": "AES-256"
+   },
+   "map_group": "bits"
+  },
+  {
+   "id": "sap-ssl-ciphersuites",
+   "description": "SAP profile TLS cipher suites (classical key exchange)",
+   "files": [
+    "*.pfl",
+    "DEFAULT.PFL",
+    "*"
+   ],
+   "pattern": "^\\s*ssl/(?:client_)?ciphersuites\\s*=\\s*\\S+",
+   "algorithm": "ECDH",
+   "category": "config",
+   "heuristic": true
+  },
+  {
+   "id": "sap-password-hash",
+   "description": "SAP password hash algorithm",
+   "files": [
+    "*.pfl",
+    "DEFAULT.PFL",
+    "*"
+   ],
+   "pattern": "^\\s*login/password_hash_algorithm\\s*=.*?(?P<alg>iSSHA-1|SHA-1|SHA1|MD5)",
+   "flags": "i",
+   "algorithm_map": {
+    "isha-1": "SHA-1",
+    "issha-1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha1": "SHA-1",
+    "md5": "MD5"
+   },
+   "map_group": "alg",
+   "category": "config",
+   "heuristic": true
+  },
+  {
+   "id": "sap-ssf-hash",
+   "description": "SAP SSF hash algorithm",
+   "files": [
+    "*.pfl",
+    "DEFAULT.PFL",
+    "*"
+   ],
+   "pattern": "^\\s*ssf/ssfapi_hash_alg\\s*=\\s*(?P<alg>SHA1|MD5)",
+   "flags": "i",
+   "algorithm_map": {
+    "sha1": "SHA-1",
+    "md5": "MD5"
+   },
+   "map_group": "alg",
+   "category": "config",
+   "heuristic": true
+  },
+  {
+   "id": "edi-as2-encryption",
+   "description": "EDI/AS2 encryption algorithm",
+   "files": [
+    "*"
+   ],
+   "pattern": "^\\s*(?:as2[._])?(?:encryption|encrypt_algorithm|encryptionalgorithm|cipher)\\s*[:=]\\s*[\\\"']?(?P<alg>3des|des3|tripledes|des|rc2|rc4|aes128|aes256)\\b",
+   "flags": "i",
+   "algorithm_map": {
+    "3des": "3DES",
+    "des3": "3DES",
+    "tripledes": "3DES",
+    "des": "DES",
+    "rc2": "RC2",
+    "rc4": "RC4",
+    "aes128": "AES-128",
+    "aes256": "AES-256"
+   },
+   "map_group": "alg",
+   "category": "config",
+   "heuristic": true
+  },
+  {
+   "id": "edi-as2-signing",
+   "description": "EDI/AS2 signing / MIC hash",
+   "files": [
+    "*"
+   ],
+   "pattern": "^\\s*(?:as2[._])?(?:signing|signature|sign|mic)[_-]?(?:algorithm|alg|digest)?\\s*[:=]\\s*[\\\"']?(?P<alg>sha1|sha-1|md5|sha256|sha-256)\\b",
+   "flags": "i",
+   "algorithm_map": {
+    "md5": "MD5",
+    "sha1": "SHA-1",
+    "sha-1": "SHA-1",
+    "sha224": "SHA-224",
+    "sha256": "SHA-256",
+    "sha-256": "SHA-256",
+    "sha384": "SHA-384",
+    "sha-384": "SHA-384",
+    "sha512": "SHA-512",
+    "sha-512": "SHA-512",
+    "sha3_256": "SHA-3",
+    "sha3-256": "SHA-3"
+   },
+   "map_group": "alg",
+   "category": "config",
+   "heuristic": true
+  },
+  {
+   "id": "config-keysize",
+   "description": "configured RSA key size",
+   "files": [
+    "*"
+   ],
+   "pattern": "^\\s*(?:rsa[_.-]?)?key[_.-]?(?:size|length|bits)\\s*[:=]\\s*[\\\"']?(?P<bits>512|768|1024|2048|3072|4096)\\b",
+   "flags": "i",
+   "algorithm": "RSA",
+   "key_size_group": "bits",
+   "category": "config",
+   "heuristic": true
+  }
+ ]
+}

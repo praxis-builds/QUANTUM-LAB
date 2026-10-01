@@ -1,0 +1,5 @@
+# Planted legacy SSH configuration for pq_inventory tests
+Port 22
+KexAlgorithms diffie-hellman-group14-sha1,curve25519-sha256,sntrup761x25519-sha512@openssh.com
+Ciphers 3des-cbc,aes128-ctr,aes256-gcm@openssh.com
+MACs hmac-sha1,hmac-sha2-256

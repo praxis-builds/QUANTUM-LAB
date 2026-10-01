@@ -1,0 +1,5 @@
+# Planted SAP-style profile for pq_inventory tests (heuristic rules)
+SAPSYSTEMNAME = DEV
+ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH
+login/password_hash_algorithm = encoding=RFC2307, algorithm=iSSHA-1, iterations=1024, saltsize=96
+icm/server_port_1 = PROT=HTTPS,PORT=44300
