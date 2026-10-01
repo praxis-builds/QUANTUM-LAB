@@ -133,6 +133,71 @@
     },
     {
       "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ECDSA-256",
+      "name": "ECDSA-256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "parameterSetIdentifier": "256",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "certs/warehouse-api.pem",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/EdDSA",
+      "name": "EdDSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "ssh/authorized_keys",
+            "line": 1
+          },
+          {
+            "location": "ssh/deploy_key.pub",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
       "bom-ref": "crypto/algorithm/HYBRID-PQ",
       "name": "HYBRID-PQ",
       "cryptoProperties": {
@@ -374,12 +439,12 @@
     {
       "type": "cryptographic-asset",
       "bom-ref": "crypto/certificate/0fb37c45c92106f9",
-      "name": "0fb37c45c92106f9",
+      "name": "certificate O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
       "cryptoProperties": {
         "assetType": "certificate",
         "certificateProperties": {
           "subjectName": "O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
-          "signatureAlgorithmRef": "crypto/algorithm/ECDSA"
+          "signatureAlgorithmRef": "crypto/algorithm/ECDSA-256"
         }
       },
       "evidence": {
@@ -403,13 +468,12 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/key/public-key/EdDSA-unknown/061fd8ceabd73f47",
-      "name": "public-key",
+      "bom-ref": "crypto/key/public-key/EdDSA/061fd8ceabd73f47",
+      "name": "EdDSA public key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
         "relatedCryptoMaterialProperties": {
           "type": "public-key",
-          "size": null,
           "algorithmRef": "crypto/algorithm/EdDSA"
         }
       },
@@ -434,13 +498,12 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/key/public-key/EdDSA-unknown/2700edab16ca2ee4",
-      "name": "public-key",
+      "bom-ref": "crypto/key/public-key/EdDSA/2700edab16ca2ee4",
+      "name": "EdDSA public key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
         "relatedCryptoMaterialProperties": {
           "type": "public-key",
-          "size": null,
           "algorithmRef": "crypto/algorithm/EdDSA"
         }
       },

@@ -347,6 +347,49 @@
     },
     {
       "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/RSA-SIGNATURE-2048",
+      "name": "RSA-SIGNATURE-2048",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "parameterSetIdentifier": "2048",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "certs/legacy-edi.pem",
+            "line": 1
+          },
+          {
+            "location": "certs/warehouse-api.pem",
+            "line": 1
+          },
+          {
+            "location": "ssh/authorized_keys",
+            "line": 1
+          },
+          {
+            "location": "ssh/deploy_key.pub",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
       "bom-ref": "crypto/algorithm/SHA-1",
       "name": "SHA-1",
       "cryptoProperties": {
@@ -431,12 +474,12 @@
     {
       "type": "cryptographic-asset",
       "bom-ref": "crypto/certificate/84fd988d285be757",
-      "name": "84fd988d285be757",
+      "name": "certificate O=Northwind Warehouse DEMO - TEST ONLY,CN=edi.northwind.test",
       "cryptoProperties": {
         "assetType": "certificate",
         "certificateProperties": {
           "subjectName": "O=Northwind Warehouse DEMO - TEST ONLY,CN=edi.northwind.test",
-          "signatureAlgorithmRef": "crypto/algorithm/RSA-SIGNATURE"
+          "signatureAlgorithmRef": "crypto/algorithm/RSA-SIGNATURE-2048"
         }
       },
       "evidence": {
@@ -461,12 +504,12 @@
     {
       "type": "cryptographic-asset",
       "bom-ref": "crypto/certificate/8fead074d6091460",
-      "name": "8fead074d6091460",
+      "name": "certificate O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
       "cryptoProperties": {
         "assetType": "certificate",
         "certificateProperties": {
           "subjectName": "O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
-          "signatureAlgorithmRef": "crypto/algorithm/RSA-SIGNATURE"
+          "signatureAlgorithmRef": "crypto/algorithm/RSA-SIGNATURE-2048"
         }
       },
       "evidence": {
@@ -491,13 +534,13 @@
     {
       "type": "cryptographic-asset",
       "bom-ref": "crypto/key/public-key/RSA-SIGNATURE-2048/a919257935f41221",
-      "name": "public-key",
+      "name": "RSA-SIGNATURE-2048 public key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
         "relatedCryptoMaterialProperties": {
           "type": "public-key",
-          "size": 2048,
-          "algorithmRef": "crypto/algorithm/RSA-SIGNATURE"
+          "algorithmRef": "crypto/algorithm/RSA-SIGNATURE-2048",
+          "size": 2048
         }
       },
       "evidence": {
@@ -522,13 +565,13 @@
     {
       "type": "cryptographic-asset",
       "bom-ref": "crypto/key/public-key/RSA-SIGNATURE-2048/e55bf050131bbadf",
-      "name": "public-key",
+      "name": "RSA-SIGNATURE-2048 public key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
         "relatedCryptoMaterialProperties": {
           "type": "public-key",
-          "size": 2048,
-          "algorithmRef": "crypto/algorithm/RSA-SIGNATURE"
+          "algorithmRef": "crypto/algorithm/RSA-SIGNATURE-2048",
+          "size": 2048
         }
       },
       "evidence": {

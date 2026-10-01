@@ -9,7 +9,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from . import __version__
-from .algorithms import CLASSICALLY_BROKEN, OK, QUANTUM_BROKEN, QUANTUM_WEAKENED, RISK_ORDER
+from .algorithms import CLASSICALLY_BROKEN, OK, QUANTUM_BROKEN, QUANTUM_WEAKENED, RISK_ORDER, classify
 
 RISK_TEXT = {
     CLASSICALLY_BROKEN: "Already weak today, without any quantum computer. Fix first.",
@@ -171,43 +171,71 @@ PRIMITIVE = {"RSA": "pke", "RSA-KEX": "pke", "RSA-SIGNATURE": "signature", "DSA"
 NIST_QUANTUM_LEVEL = {"AES-128": 1, "AES-192": 3, "AES-256": 5, "SHA-256": 2, "SHA-384": 4, "SHA-512": 5}
 
 
+def _algorithm_ref(components: dict, f: dict, algorithm: str, key_size) -> str:
+    """bom-ref of the algorithm component for (algorithm, size), creating it if needed so that every
+    algorithmRef / signatureAlgorithmRef in the CBOM resolves."""
+    name = algorithm + (f"-{key_size}" if key_size else "")
+    ref = f"crypto/algorithm/{name}"
+    if ref not in components:
+        props = {"primitive": PRIMITIVE.get(algorithm, "unknown")}
+        if key_size:
+            props["parameterSetIdentifier"] = str(key_size)
+        risk, _, replacement = classify(algorithm, key_size)
+        if risk == QUANTUM_BROKEN:
+            props["nistQuantumSecurityLevel"] = 0
+        elif algorithm in NIST_QUANTUM_LEVEL:
+            props["nistQuantumSecurityLevel"] = NIST_QUANTUM_LEVEL[algorithm]
+        components[ref] = {"type": "cryptographic-asset", "bom-ref": ref, "name": name,
+                           "cryptoProperties": {"assetType": "algorithm", "algorithmProperties": props},
+                           "evidence": {"occurrences": []},
+                           "properties": [{"name": "pq_inventory:risk", "value": risk},
+                                          {"name": "pq_inventory:replacement", "value": replacement}]}
+    return ref
+
+
+def _occurrence(f: dict) -> dict:
+    occurrence = {"location": f["file"]}
+    if f["line"]:
+        occurrence["line"] = f["line"]
+    return occurrence
+
+
 def cbom(doc: dict) -> dict:
     components: dict[str, dict] = {}
     for f in doc["findings"]:
+        refs = []
         if f["algorithm"].startswith(("TLS", "SSL")):
-            ref = f"crypto/protocol/{f['algorithm']}"
+            ref, name = f"crypto/protocol/{f['algorithm']}", f["algorithm"]
             body = {"assetType": "protocol", "protocolProperties": {"type": "tls" if f["algorithm"].startswith("TLS") else "ssl",
                                                                       "version": f["algorithm"].replace("TLS", "").replace("SSLv", "")}}
         elif f["category"] in ("private-key", "public-key", "ssh-key"):
             kind = "private-key" if f["category"] == "private-key" else "public-key"
-            ref = f"crypto/key/{kind}/{f['algorithm']}-{f['key_size'] or 'unknown'}/{f['fingerprint']}"
-            body = {"assetType": "related-crypto-material", "relatedCryptoMaterialProperties":
-                    {"type": kind, "size": f["key_size"], "algorithmRef": f"crypto/algorithm/{f['algorithm']}"}}
-        elif f["category"] == "certificate" and f["rule"].endswith("certificate"):
-            ref = f"crypto/certificate/{f['fingerprint']}"
-            body = {"assetType": "certificate", "certificateProperties": {"subjectName": f["detail"].split(";")[0].removeprefix("certificate "),
-                                                                            "signatureAlgorithmRef": f"crypto/algorithm/{f['algorithm']}"}}
-        else:
-            name = f["algorithm"] + (f"-{f['key_size']}" if f["key_size"] else "")
-            ref = f"crypto/algorithm/{name}"
-            props = {"primitive": PRIMITIVE.get(f["algorithm"], "unknown")}
+            sized = f"{f['algorithm']}-{f['key_size']}" if f["key_size"] else f["algorithm"]
+            ref, name = f"crypto/key/{kind}/{sized}/{f['fingerprint']}", f"{sized} {kind.replace('-', ' ')}"
+            material = {"type": kind, "algorithmRef": _algorithm_ref(components, f, f["algorithm"], f["key_size"])}
             if f["key_size"]:
-                props["parameterSetIdentifier"] = str(f["key_size"])
-            if f["risk"] == QUANTUM_BROKEN:
-                props["nistQuantumSecurityLevel"] = 0
-            elif f["algorithm"] in NIST_QUANTUM_LEVEL:
-                props["nistQuantumSecurityLevel"] = NIST_QUANTUM_LEVEL[f["algorithm"]]
-            body = {"assetType": "algorithm", "algorithmProperties": props}
-        component = components.setdefault(ref, {
-            "type": "cryptographic-asset", "bom-ref": ref, "name": ref.split("/")[2] if ref.count("/") >= 2 else ref,
-            "cryptoProperties": body, "evidence": {"occurrences": []},
-            "properties": [{"name": "pq_inventory:risk", "value": f["risk"]},
-                           {"name": "pq_inventory:replacement", "value": f["replacement"]}],
-        })
-        occurrence = {"location": f["file"]}
-        if f["line"]:
-            occurrence["line"] = f["line"]
-        component["evidence"]["occurrences"].append(occurrence)
+                material["size"] = f["key_size"]
+            body = {"assetType": "related-crypto-material", "relatedCryptoMaterialProperties": material}
+            refs.append(material["algorithmRef"])
+        elif f["category"] == "certificate" and f["rule"].endswith("certificate"):
+            subject = f["detail"].split(";")[0].removeprefix("certificate ")
+            ref, name = f"crypto/certificate/{f['fingerprint']}", f"certificate {subject}"
+            signature_ref = _algorithm_ref(components, f, f["algorithm"], f["key_size"])
+            body = {"assetType": "certificate", "certificateProperties": {"subjectName": subject,
+                                                                            "signatureAlgorithmRef": signature_ref}}
+            refs.append(signature_ref)
+        else:
+            ref = _algorithm_ref(components, f, f["algorithm"], f["key_size"])
+            name, body = None, None
+        if body is not None:
+            components.setdefault(ref, {
+                "type": "cryptographic-asset", "bom-ref": ref, "name": name,
+                "cryptoProperties": body, "evidence": {"occurrences": []},
+                "properties": [{"name": "pq_inventory:risk", "value": f["risk"]},
+                               {"name": "pq_inventory:replacement", "value": f["replacement"]}],
+            })
+        for target in [ref, *refs]:
+            components[target]["evidence"]["occurrences"].append(_occurrence(f))
     seed = "|".join(sorted(f["fingerprint"] for f in doc["findings"]))
     return {
         "bomFormat": "CycloneDX", "specVersion": "1.6",

@@ -54,6 +54,7 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 ## D11. CBOM: CycloneDX 1.6-shaped, not schema-validated
 - **Decision:** `cbom.cdx.json` uses CycloneDX 1.6 `cryptographic-asset` components with `cryptoProperties` (`assetType` algorithm / certificate / protocol / related-crypto-material, `algorithmProperties.primitive`, `parameterSetIdentifier`, `nistQuantumSecurityLevel`) and `evidence.occurrences` with file and line.
 - **Why not validated:** no JSON-schema validator is available without a new dependency. Field names follow my reading of the 1.6 specification. **Unverified:** that every field passes the official schema.
+- **Update (review finding 13):** every `algorithmRef` and `signatureAlgorithmRef` now resolves to a component in the same file (an algorithm component is created for each reference), an unknown key size is left out instead of written as `null`, and keys and certificates are named "RSA-2048 public key" and "certificate <subject>". A test checks all three on the corpus. The committed warehouse-demo CBOMs were regenerated; no other report changed. Still not schema-validated.
 
 ## D12. Default Mosca horizon
 - **Decision:** default z = years until 2035, labelled "ASSUMPTION ... a regulatory planning horizon, NOT a forecast". x = 10 and y = 5 are also labelled assumptions, and the reports mark which values are assumed per system.

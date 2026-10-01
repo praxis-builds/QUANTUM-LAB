@@ -515,3 +515,34 @@ def test_tls_directives_in_source_code_and_docs_are_not_findings(tmp_path):
     (tmp_path / "openssl.cnf").write_text("default_bits = 1024\n")
     files = sorted({f.file for f in scan(tmp_path).findings})
     assert files == ["nginx.conf", "openssl.cnf"]
+
+
+# --------------------------------------------- 13. CBOM: every reference resolves, no nulls, readable names
+
+def _walk_json(value):
+    if isinstance(value, dict):
+        for key, item in value.items():
+            yield key, item
+            yield from _walk_json(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _walk_json(item)
+
+
+def test_cbom_references_resolve_and_names_are_readable():
+    import re
+
+    from pq_inventory import reports
+    from pq_inventory.scanner import scan, to_document
+
+    corpus = Path(__file__).resolve().parent / "fixtures" / "pq_inventory"
+    bom = reports.cbom(to_document(scan(corpus), generated_at="2026-10-01T00:00:00+00:00"))
+    refs = {c["bom-ref"] for c in bom["components"]}
+    pairs = list(_walk_json(bom))
+    dangling = [v for k, v in pairs if k.endswith("Ref") and v not in refs]
+    assert dangling == []
+    assert [k for k, v in pairs if v is None] == []
+    assert all(type(v) is int for k, v in pairs if k == "size")
+    for component in bom["components"]:
+        assert component["name"] not in ("public-key", "private-key") and not re.fullmatch(r"[0-9a-f]{16}", component["name"])
+        assert component["evidence"]["occurrences"]
