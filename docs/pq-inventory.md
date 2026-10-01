@@ -11,7 +11,7 @@ A read-only command-line scanner that answers the first question of any post-qua
 
 Outputs in `--out`: `scan.json` (everything, including the roadmap), `report.html` (self-contained, no external assets, readable by a non-specialist), `report.md`, and `cbom.cdx.json` (CycloneDX 1.6 cryptography bill of materials). `diff` writes `diff.json` and `diff.md` (fixed / new / unchanged, matched by a fingerprint that ignores line numbers).
 
-Exit codes: `0` done; `1` a `--fail-on` threshold was reached (any finding at that level **or more severe**); `2` usage or input error. A sample CI workflow is in [`docs/ci/pq-inventory.yml`](ci/pq-inventory.yml).
+Exit codes: `0` done; `1` a `--fail-on` threshold was reached (any finding at that level **or more severe**); `2` usage or input error; `3` nothing was scanned (no readable file under the path, e.g. an empty directory, only binaries, or a symlinked root, which is not followed). An empty scan is never a pass, whatever `--fail-on` says. A sample CI workflow is in [`docs/ci/pq-inventory.yml`](ci/pq-inventory.yml).
 
 ## Risk classes and replacements
 

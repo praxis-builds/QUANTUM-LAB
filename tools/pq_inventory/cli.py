@@ -1,6 +1,7 @@
 """Command line: python -m pq_inventory scan <path> --out <dir> | diff <old.json> <new.json> --out <dir>.
 
-Exit codes: 0 = done, 1 = --fail-on threshold reached (for CI), 2 = usage or input error.
+Exit codes: 0 = done, 1 = --fail-on threshold reached (for CI), 2 = usage or input error,
+3 = nothing was scanned (no readable file under the path): never a pass, whatever --fail-on says.
 """
 
 from __future__ import annotations
@@ -22,6 +23,14 @@ from .walker import DEFAULT_MAX_BYTES, DEFAULT_MAX_FILES
 FAIL_LEVELS = {"none": None, "quantum-weakened": "QUANTUM-WEAKENED", "quantum-broken": "QUANTUM-BROKEN",
                "classically-broken": "CLASSICALLY-BROKEN"}
 FORMATS = ("json", "html", "md", "cbom")
+EXIT_OK, EXIT_THRESHOLD, EXIT_USAGE, EXIT_NOTHING_SCANNED = 0, 1, 2, 3
+
+
+def _positive_int(text: str) -> int:
+    value = int(text)
+    if value <= 0:
+        raise argparse.ArgumentTypeError(f"must be a positive integer, got {text}")
+    return value
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -36,8 +45,8 @@ def _parser() -> argparse.ArgumentParser:
     s.add_argument("--formats", default=",".join(FORMATS), help=f"comma-separated subset of {', '.join(FORMATS)}")
     s.add_argument("--fail-on", choices=FAIL_LEVELS, default="none",
                    help="exit 1 if any finding is at this level or worse; order: classically-broken > quantum-broken > quantum-weakened")
-    s.add_argument("--max-file-size", type=int, default=DEFAULT_MAX_BYTES)
-    s.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES)
+    s.add_argument("--max-file-size", type=_positive_int, default=DEFAULT_MAX_BYTES, help="bytes; larger files are skipped")
+    s.add_argument("--max-files", type=_positive_int, default=DEFAULT_MAX_FILES, help="stop after this many files")
     s.add_argument("--timestamp", help="fixed ISO timestamp for reproducible reports")
     d = sub.add_parser("diff", help="compare two scan JSON files")
     d.add_argument("old", type=Path)
@@ -81,6 +90,11 @@ def _scan(args) -> int:
     print(reports.headline(doc))
     print("  " + ", ".join(f"{risk}: {s['by_risk'][risk]}" for risk in RISK_ORDER) + f"  (files scanned: {s['files_scanned']})")
     print(f"  reports written to {args.out}")
+    if s["files_scanned"] == 0:
+        reasons = sorted({item["reason"] for item in doc["skipped"]})
+        print(f"FAIL: nothing was scanned under {args.path} (skipped: {', '.join(reasons) or 'no files'}); "
+              "an empty scan is never a pass", file=sys.stderr)
+        return EXIT_NOTHING_SCANNED
     if _threshold_hit(doc["findings"], args.fail_on):
         print(f"FAIL: findings at or above {FAIL_LEVELS[args.fail_on]}", file=sys.stderr)
         return 1

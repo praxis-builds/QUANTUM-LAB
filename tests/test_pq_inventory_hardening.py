@@ -281,3 +281,33 @@ def test_sample_ci_workflow_gates_on_quantum_broken_and_says_so():
     (run,) = [line for line in scan_step.splitlines() if line.strip().startswith("run:")]
     assert run.strip().endswith("--fail-on quantum-broken")
     assert "QUANTUM-BROKEN or worse" in scan_step
+
+
+# --------------------------------------------- 6. a scan that read nothing fails every gate (exit 3)
+
+@pytest.mark.parametrize("level", list(LEVELS))
+def test_empty_scan_fails_every_gate_with_its_own_exit_code(tmp_path, level):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    (empty / "blob.bin").write_bytes(b"\x00\x01" * 10)  # skipped as binary: still nothing scanned
+    code, console = _run(["scan", str(empty), "--out", str(tmp_path / "out"), "--fail-on", level])
+    assert code == cli.EXIT_NOTHING_SCANNED == 3
+    assert "nothing was scanned" in console
+
+
+@pytest.mark.skipif(os.name == "nt", reason="symlinks")
+def test_symlinked_root_is_not_a_silent_pass(tmp_path):
+    real = tmp_path / "real"
+    real.mkdir()
+    (real / "a.py").write_text("import hashlib\nhashlib.md5(b'x')\n")
+    (tmp_path / "link").symlink_to(real, target_is_directory=True)
+    code, console = _run(["scan", str(tmp_path / "link"), "--out", str(tmp_path / "out"), "--fail-on", "quantum-broken"])
+    assert code == 3 and "symlink" in console
+
+
+@pytest.mark.parametrize("option", ["--max-file-size", "--max-files"])
+@pytest.mark.parametrize("value", ["0", "-1"])
+def test_non_positive_limits_are_usage_errors(tmp_path, option, value):
+    with pytest.raises(SystemExit) as error, contextlib.redirect_stderr(io.StringIO()):
+        cli.main(["scan", str(tmp_path), "--out", str(tmp_path / "out"), option, value])
+    assert error.value.code == 2
