@@ -25,18 +25,20 @@ def shor_preskill_rate(q: float) -> float:
     return max(0.0, 1 - 2 * binary_entropy(q))
 
 
-def distill(round_: dict, rng: np.random.Generator) -> dict:
+def distill(round_: dict, rng: np.random.Generator, sample_size: int = SAMPLE) -> dict:
+    """Sample -> estimate Q -> error correction -> privacy amplification (also used by the dashboard)."""
     keep = sift(round_)
     alice, bob = round_["alice_bits"][keep], round_["bob_bits"][keep]
-    sample = rng.choice(len(alice), size=SAMPLE, replace=False)
+    sample = rng.choice(len(alice), size=sample_size, replace=False)
     q_est = float(np.mean(alice[sample] != bob[sample]))
     # The sample only estimates Q. Privacy amplification must assume the worst plausible value:
     # a 3-sigma upper bound (a simple stand-in for a proper finite-key analysis).
-    q_bound = q_est + 3 * math.sqrt(max(q_est * (1 - q_est), 1 / SAMPLE) / SAMPLE)
+    q_bound = q_est + 3 * math.sqrt(max(q_est * (1 - q_est), 1 / sample_size) / sample_size)
     rest = np.setdiff1d(np.arange(len(alice)), sample)
     alice, bob = alice[rest], bob[rest]
     n = len(alice)
     row = {"sifted": int(keep.sum()), "n": n, "q_est": q_est, "q_bound": q_bound, "q_true": float(np.mean(alice != bob)),
+           "sample_errors": int(np.sum(round_["alice_bits"][keep][sample] != round_["bob_bits"][keep][sample])),
            "asymptotic_fraction": shor_preskill_rate(q_est)}
     if q_bound >= THRESHOLD:
         return {**row, "status": f"ABORT: QBER could be up to {q_bound:.3f} >= {THRESHOLD}", "m": 0}

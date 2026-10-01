@@ -67,3 +67,16 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 ## D14. Roadmap shows "overdue" instead of a start year in the past
 - **Decision:** when x + y > z, the report says "now (overdue by N years)" rather than a start year.
 - **Why:** "start by 2026" for a system 6 years late understates the urgency.
+
+## D15. Security Lab reuses the lessons' modules directly
+- **Decision:** `praxis_quantum_lab/security_lab.py` imports `lessons/_qkd.py`, lesson 28's `distill` (now taking a `sample_size`), `lessons/_shor.py`, lesson 18's cipher oracle and `lessons/_grover_n.py` through one loader, preloaded on the server's main thread.
+- **Alternatives:** copy the logic into the package; move the lesson helpers into `src/`.
+- **Why:** the brief asks to reuse the lesson code, and copying would let the dashboard and the lessons drift apart. Moving them would change 20+ lessons' imports. The dashboard already needs a repository checkout (it serves `results/` and `docs/`). Preloading follows the existing rule that Qiskit-related imports must not first happen in a request thread (the segfault documented in `docs/dashboard.md`).
+
+## D16. Mosca calculator runs in the browser
+- **Decision:** no server route; `SecurityCore.moscaVerdict` computes x + y > z client-side, unit-tested with Node.
+- **Why:** pure arithmetic needs no simulator, and every route is attack surface on a server that is meant to stay minimal.
+
+## D17. Security Lab limits
+- BB84 up to 20,000 qubits (about 0.3 s), Grover iterations up to 8 (12-qubit circuits, about 0.3 s), RSA N = 15 or 21 with at most 24 Shor runs, all bodies ≤ 256 bytes, sharing the single-simulation lock (429 when busy; the page retries a few times).
+- BB84 "errors seen" is reported as such, not as "Eve detected": channel noise produces errors too, and Alice and Bob cannot tell the two apart.

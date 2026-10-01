@@ -135,6 +135,25 @@ draws relative to that earlier run. All results are small classical
 simulations and do not demonstrate quantum advantage. The visualizations show
 mathematical representations, not literal particle motion.
 
+## Security Lab
+
+Four panels, each reusing the lessons' own code (the server imports `lessons/_qkd.py`,
+lesson 28's `distill`, `lessons/_shor.py`, lesson 18's cipher oracle and `lessons/_grover_n.py`
+once at start-up):
+
+- **BB84:** sliders for qubits sent (200–20,000), channel noise (0–0.2) and sample size
+  (10–2,000), and an Eve on/off toggle. Shows the sifted key, the QBER (sample estimate and
+  true), the probability that the sample shows errors, and the final key length after error
+  correction and Toeplitz privacy amplification (abort above the 11% Shor–Preskill limit,
+  using a 3σ upper bound on the sampled QBER).
+- **Toy RSA break:** N = 15 or 21. Each Shor run's measured fraction, continued-fraction
+  candidate and check, then the factors, φ, the private key d and the decrypted message.
+- **Grover key search:** the 4-bit toy cipher of lesson 18 with 1 or 2 known pairs, an
+  iteration slider (0–8) and the theory curve with the measured success marked: past the
+  optimum (3 iterations) success falls again.
+- **Mosca calculator:** x, y and z in years with a verdict. Computed in the browser (pure
+  arithmetic), so it adds no server route.
+
 ## Theme and accessibility
 
 Dark is the default. The page follows the operating system's light-mode
@@ -149,10 +168,10 @@ without a pointer.
 
 ## Local server boundaries
 
-The only GET routes are `/`, `/app.js`, `/playground.js`, `/style.css`,
+The only GET routes are `/`, `/app.js`, `/playground.js`, `/security.js`, `/style.css`,
 `/api/kernel-results`, `/api/kernel-repairs`, `/api/circuit-presets` and
-`/docs/higham-vs-clipping.md`. The only POST routes are `/api/bell` and
-`/api/circuit`.
+`/docs/higham-vs-clipping.md`. The only POST routes are `/api/bell`,
+`/api/circuit` and the three Security Lab routes below.
 
 `POST /api/bell` takes exactly these fields:
 
@@ -172,19 +191,33 @@ in [0,2147483647]; step is an integer in [0,3]. Body at most 1 KiB.
 
 `qubits` is an integer in [1,3]; `gates` is a list of at most 30 gates; shots
 is an integer in [1,8192]; seed is an integer in [0,2147483647]. Each gate has
-exactly `gate` and `qubits`, plus `angle` only for `rx`, `ry`, `rz`, where it
+exactly `gate` and `qubits`, plus `angle` only for `rx`, `ry`, `rz`, `cp`, where it
 is required, finite and in [−4π, 4π]. Allowed gates: `h x y z s t rx ry rz`
-(one qubit), `cx cz swap` (two different qubits) and `measure` (one qubit, at
+(one qubit), `cx cz cp swap` (two different qubits), `ccz ccx` (three different
+qubits; for `ccx` the last one is the target) and `measure` (one qubit, at
 most once per qubit, and no later gate on that qubit). Qubit indices must be
 integers inside the circuit; booleans are never accepted as numbers. Body at
 most 4 KiB.
 
-For both routes the server rejects extra keys, duplicate keys, non-finite JSON
+Security Lab routes (body at most 256 bytes each; booleans are never accepted as numbers):
+
+```json
+POST /api/security/bb84   {"qubits":4000,"noise":0.02,"sample":200,"eve":false,"seed":20260928}
+POST /api/security/rsa    {"n":21,"seed":3}
+POST /api/security/grover {"key":11,"iterations":3,"pairs":2,"seed":20260928}
+```
+
+BB84: qubits integer in [200, 20000], noise finite in [0, 0.2], sample integer in
+[10, 2000] (reduced to half the sifted key if larger), eve a boolean. RSA: n is 15 or 21.
+Grover: key integer in [0, 15], iterations integer in [0, 8], pairs 1 or 2. Seeds are
+integers in [0, 2147483647].
+
+For all POST routes the server rejects extra keys, duplicate keys, non-finite JSON
 values (including numbers too large for a float), traversal/query routes,
 nonlocal Host and cross-origin requests. Aggregate headers/target length are
 bounded, and reads time out after five seconds. There is at most one
-simulation (Bell or circuit) and eight accepted connections at once; a second
-simulation gets 429, and the Playground retries. The saved result files are
+simulation (Bell, circuit or Security Lab) and eight accepted connections at once; a second
+simulation gets 429, and the Playground and Security Lab retry. The saved result files are
 each bounded to 8 MiB and schema-checked. No arbitrary paths, directories,
 subprocesses, or long experiment endpoints are exposed. All responses carry
 the same Content-Security-Policy (`script-src 'self'`, `style-src 'self'`, no

@@ -38,11 +38,11 @@ def test_every_script_id_exists_exactly_once_in_index_html():
     ids = re.findall(r'\bid="([^"]+)"', html())
     duplicates = {i for i in ids if ids.count(i) > 1}
     assert not duplicates
-    for name in ("app.js", "playground.js"):
+    for name in ("app.js", "playground.js", "security.js"):
         missing = script_ids(name) - set(ids)
         assert not missing, f"{name} uses ids missing from index.html: {sorted(missing)}"
     # template ids built from the tab list
-    for area in ("playground", "bell", "kernel"):
+    for area in ("playground", "bell", "kernel", "security"):
         assert f"{area}-tab" in ids and f"{area}-area" in ids
 
 
@@ -50,10 +50,11 @@ def test_html_respects_the_content_security_policy():
     page = html()
     assert "style=" not in page, "inline style attributes are blocked by the CSP"
     assert "<style" not in page
-    assert re.findall(r"<script[^>]*>", page) == ['<script src="/app.js" defer>', '<script src="/playground.js" defer>']
+    assert re.findall(r"<script[^>]*>", page) == ['<script src="/app.js" defer>', '<script src="/playground.js" defer>',
+                                                   '<script src="/security.js" defer>']
     assert not re.search(r"\son[a-z]+=", page), "inline event handlers are blocked by the CSP"
     assert not re.search(r"(src|href)=\"(https?:)?//", page), "no external assets"
-    for name in ("app.js", "playground.js", "style.css"):
+    for name in ("app.js", "playground.js", "security.js", "style.css"):
         source = (ASSETS / name).read_text(encoding="utf-8")
         assert "http://" not in source.replace("http://www.w3.org/2000/svg", "") and "https://" not in source
         assert "setAttribute(\"style\"" not in source and "innerHTML" not in source and "eval(" not in source
@@ -129,4 +130,20 @@ def test_app_ui_smoke_bell_lab_and_observatory(dashboard_process, mode):
     run = subprocess.run([NODE, str(JS_TESTS / "app_ui_smoke.js"), str(port), *mode], capture_output=True, text=True, timeout=240)
     assert run.returncode == 0, run.stdout + run.stderr
     assert "APP-SMOKE-OK" in run.stdout
+    assert process.poll() is None
+
+
+@needs_node
+def test_security_core_logic():
+    run = subprocess.run([NODE, str(JS_TESTS / "security_core.test.js")], capture_output=True, text=True, timeout=60)
+    assert run.returncode == 0, run.stderr
+    assert "SECURITY-CORE-OK" in run.stdout
+
+
+@needs_node
+def test_security_ui_smoke_against_real_server(dashboard_process):
+    process, port = dashboard_process
+    run = subprocess.run([NODE, str(JS_TESTS / "security_ui_smoke.js"), str(port)], capture_output=True, text=True, timeout=240)
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert "SECURITY-UI-SMOKE-OK" in run.stdout
     assert process.poll() is None

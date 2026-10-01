@@ -35,7 +35,7 @@ async function requestJSON(url, options = {}) {
   return data;
 }
 
-const AREAS = ["playground", "bell", "kernel"];
+const AREAS = ["playground", "bell", "kernel", "security"];
 function chooseArea(area) {
   for (const name of AREAS) {
     const active = name === area;

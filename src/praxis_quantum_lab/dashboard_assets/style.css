@@ -1163,3 +1163,24 @@ footer p{
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 .theme-toggle[aria-pressed="true"] { background: var(--pressed-bg); color: var(--accent); border-color: var(--accent); }
+
+/* ---------------------------------------------------------------- Security Lab */
+.sec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.sec-form { display: grid; gap: 10px; margin-bottom: 8px; }
+.sec-form label { display: grid; gap: 4px; }
+.sec-form output { font-family: var(--mono); color: var(--accent); }
+.sec-check { display: flex !important; align-items: center; gap: 8px; }
+.sec-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+.sec-metrics div { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+.sec-metrics dt { font-size: .75rem; color: var(--label); }
+.sec-metrics dd { margin: 2px 0 0; font-family: var(--mono); font-size: .85rem; overflow-wrap: anywhere; }
+.sec-steps { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 6px; font-size: .88rem; }
+.sec-verdict { padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); }
+.sec-verdict.at-risk { background: var(--danger-bg); border-color: var(--danger-border); color: var(--danger); }
+.sec-verdict.ok { background: var(--good-bg); }
+#grover-chart { width: 100%; height: auto; max-height: 220px; }
+.sec-axis { stroke: var(--axis); stroke-width: 1; }
+.sec-curve { fill: none; stroke: var(--accent); stroke-width: 2; }
+.sec-point { fill: var(--warning); stroke: var(--text); stroke-width: 1; }
+.sec-label { fill: var(--text); font-size: 10px; font-family: var(--mono); }
+@media (max-width: 1100px) { .sec-grid { grid-template-columns: 1fr; } }

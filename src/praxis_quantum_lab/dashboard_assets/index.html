@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
   <script src="/playground.js" defer></script>
+  <script src="/security.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">Skip to lab</a>
@@ -20,6 +21,7 @@
       <button type="button" id="playground-tab" class="tab active" aria-pressed="true" aria-controls="playground-area"><span class="tab-number">01</span> Circuit Playground <span class="tab-kind">LIVE</span></button>
       <button type="button" id="bell-tab" class="tab" aria-pressed="false" aria-controls="bell-area"><span class="tab-number">02</span> Bell Lab <span class="tab-kind">LIVE</span></button>
       <button type="button" id="kernel-tab" class="tab" aria-pressed="false" aria-controls="kernel-area"><span class="tab-number">03</span> Kernel Observatory <span class="tab-kind">SAVED</span></button>
+      <button type="button" id="security-tab" class="tab" aria-pressed="false" aria-controls="security-area"><span class="tab-number">04</span> Security Lab <span class="tab-kind">LIVE</span></button>
     </nav>
 
     <section id="playground-area" aria-labelledby="playground-heading">
@@ -143,6 +145,62 @@
             </section>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section id="security-area" aria-labelledby="security-heading" hidden>
+      <div class="section-heading"><div><p class="eyebrow">KEYS · ATTACKS · DEADLINES</p><h2 id="security-heading">Security Lab</h2></div><p>Quantum key distribution, a toy RSA break, a toy key search and a migration deadline. Same code as lessons 13–18 and 26–28, on local Aer. Toy sizes: nothing here is real cryptography.</p></div>
+      <div class="sec-grid">
+        <section class="panel" aria-labelledby="bb84-heading">
+          <div class="panel-heading"><h3 id="bb84-heading">BB84 key distribution</h3><span class="small-label">LESSONS 26–28</span></div>
+          <form id="bb84-form" class="sec-form">
+            <label for="bb84-qubits">Qubits sent <output id="bb84-qubits-output" for="bb84-qubits">4000</output><input id="bb84-qubits" type="range" min="200" max="20000" step="200" value="4000"></label>
+            <label for="bb84-noise">Channel noise <output id="bb84-noise-output" for="bb84-noise">0.02</output><input id="bb84-noise" type="range" min="0" max="0.2" step="0.01" value="0.02"></label>
+            <label for="bb84-sample">Sample bits compared <output id="bb84-sample-output" for="bb84-sample">200</output><input id="bb84-sample" type="range" min="10" max="2000" step="10" value="200"></label>
+            <label class="sec-check" for="bb84-eve"><input id="bb84-eve" type="checkbox"> Eve intercepts every qubit</label>
+            <button type="submit" class="primary" id="bb84-run">Run BB84</button>
+          </form>
+          <p class="field-note" id="bb84-status" aria-live="polite">Nothing has been simulated yet.</p>
+          <dl class="sec-metrics" id="bb84-results" hidden>
+            <div><dt>Sifted key</dt><dd id="bb84-sifted">—</dd></div>
+            <div><dt>Error rate (QBER)</dt><dd id="bb84-qber">—</dd></div>
+            <div><dt>P(sample shows errors)</dt><dd id="bb84-detect">—</dd></div>
+            <div><dt>Final secret key</dt><dd id="bb84-key">—</dd></div>
+          </dl>
+          <p class="field-note" id="bb84-explain"></p>
+        </section>
+        <section class="panel" aria-labelledby="rsa-heading">
+          <div class="panel-heading"><h3 id="rsa-heading">Toy RSA break (Shor)</h3><span class="small-label">LESSONS 13–16</span></div>
+          <form id="rsa-form" class="sec-form">
+            <label for="rsa-n">Modulus N<select id="rsa-n"><option value="15">15 = ? × ?</option><option value="21" selected>21 = ? × ?</option></select></label>
+            <label for="rsa-seed">Seed<input id="rsa-seed" type="number" min="0" max="2147483647" step="1" value="3"></label>
+            <button type="submit" class="primary" id="rsa-run">Break the key</button>
+          </form>
+          <p class="field-note" id="rsa-status" aria-live="polite">Nothing has been simulated yet.</p>
+          <ol class="sec-steps" id="rsa-steps"></ol>
+        </section>
+        <section class="panel" aria-labelledby="grover-heading">
+          <div class="panel-heading"><h3 id="grover-heading">Grover key search (4-bit toy cipher)</h3><span class="small-label">LESSONS 17–18</span></div>
+          <form id="grover-form" class="sec-form">
+            <label for="grover-key">Secret key<select id="grover-key"></select></label>
+            <label for="grover-iterations">Grover iterations <output id="grover-iterations-output" for="grover-iterations">3</output><input id="grover-iterations" type="range" min="0" max="8" step="1" value="3"></label>
+            <label for="grover-pairs">Known plaintext/ciphertext pairs<select id="grover-pairs"><option value="1">1 (false positives possible)</option><option value="2" selected>2</option></select></label>
+            <button type="submit" class="primary" id="grover-run">Search</button>
+          </form>
+          <p class="field-note" id="grover-status" aria-live="polite">Nothing has been simulated yet.</p>
+          <svg id="grover-chart" viewBox="0 0 320 150" role="img" aria-label="Success probability against Grover iterations"></svg>
+          <p class="field-note" id="grover-explain"></p>
+        </section>
+        <section class="panel" aria-labelledby="mosca-heading">
+          <div class="panel-heading"><h3 id="mosca-heading">Mosca calculator</h3><span class="small-label">LESSON 30</span></div>
+          <form id="mosca-form" class="sec-form">
+            <label for="mosca-x">x: years the data must stay secret<input id="mosca-x" type="number" min="0" max="100" step="0.5" value="10"></label>
+            <label for="mosca-y">y: years to migrate the system<input id="mosca-y" type="number" min="0" max="50" step="0.5" value="5"></label>
+            <label for="mosca-z">z: years until a quantum computer breaks RSA/ECC (unknown: your assumption)<input id="mosca-z" type="number" min="0" max="100" step="0.5" value="9"></label>
+          </form>
+          <p class="sec-verdict" id="mosca-verdict" aria-live="polite">—</p>
+          <p class="field-note" id="mosca-explain"></p>
+        </section>
       </div>
     </section>
 

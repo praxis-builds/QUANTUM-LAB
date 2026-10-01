@@ -28,12 +28,16 @@ CHANNEL_NAMES = {"bit_flip", "amplitude_damping", "depolarizing"}
 POST_ROUTES = {
     "/api/bell": (MAX_BODY_BYTES, "Invalid Bell request. Check channel, strength, shots, seed, and step limits."),
     "/api/circuit": (MAX_CIRCUIT_BODY_BYTES, "Invalid circuit request. Check qubits, gates, shots, and seed limits."),
+    "/api/security/bb84": (256, "Invalid BB84 request. Check qubits (200-20000), noise (0-0.2), sample (10-2000), eve, and seed."),
+    "/api/security/rsa": (256, "Invalid RSA request. Use n = 15 or 21 and an integer seed."),
+    "/api/security/grover": (256, "Invalid Grover request. Check key (0-15), iterations (0-8), pairs (1 or 2), and seed."),
 }
 STATIC_ROUTES = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
     "/style.css": ("style.css", "text/css; charset=utf-8"),
     "/playground.js": ("playground.js", "text/javascript; charset=utf-8"),
+    "/security.js": ("security.js", "text/javascript; charset=utf-8"),
 }
 
 
@@ -227,6 +231,18 @@ def _reject_constant(value: str) -> None:
     raise ValueError("Non-finite JSON numbers are not accepted.")
 
 
+def _post_handlers() -> dict[str, tuple]:
+    from . import security_lab
+
+    return {
+        "/api/bell": (parse_bell_request, simulate_bell),
+        "/api/circuit": (parse_circuit_request, simulate_circuit),
+        "/api/security/bb84": (security_lab.parse_bb84_request, security_lab.simulate_bb84),
+        "/api/security/rsa": (security_lab.parse_rsa_request, security_lab.simulate_rsa),
+        "/api/security/grover": (security_lab.parse_grover_request, security_lab.simulate_grover),
+    }
+
+
 class DashboardHandler(BaseHTTPRequestHandler):
     """Exact route allowlist, bounded JSON requests, and local-origin checks."""
 
@@ -336,10 +352,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._error(415, "Use application/json.")
             return
         # Look the functions up now so each route uses its own validator and simulator.
-        parse, simulate = (
-            (parse_bell_request, simulate_bell) if self.path == "/api/bell"
-            else (parse_circuit_request, simulate_circuit)
-        )
+        parse, simulate = _post_handlers()[self.path]
         try:
             body = self.rfile.read(length)
             if len(body) != length:
@@ -406,7 +419,9 @@ def preload_simulators() -> None:
     import qiskit  # noqa: F401
     import qiskit_aer  # noqa: F401
 
-    from . import circuit_playground, density_matrix_noise, qiskit_experiments  # noqa: F401
+    from . import circuit_playground, density_matrix_noise, qiskit_experiments, security_lab  # noqa: F401
+
+    security_lab.preload()  # the lesson modules the Security Lab routes reuse
 
 
 def make_server(*, port: int = 8765) -> DashboardServer:
