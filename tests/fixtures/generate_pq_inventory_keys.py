@@ -1,8 +1,8 @@
 """Regenerate the key/certificate fixtures (TEST MATERIAL ONLY, never used anywhere else).
 
-No unencrypted private key is written here: the committed corpus holds public keys, certificates
-and one password-encrypted private key. Tests that need plain private keys generate them at run
-time in a temporary directory (see tests/test_pq_inventory.py).
+No private key is written here, not even an encrypted one: the committed corpus holds public keys
+and certificates only. Tests that need private keys (plain or encrypted) generate them at run time
+in a temporary directory (see tests/test_pq_inventory.py and tests/test_pq_inventory_hardening.py).
 Post-quantum fixtures (keys/pqc/, public material only) need cryptography >= 45 for ML-KEM/ML-DSA
 and liboqs for SLH-DSA; regenerate only them with --pqc-only.
 Run: .venv/bin/python tests/fixtures/generate_pq_inventory_keys.py [--pqc-only]
@@ -51,9 +51,6 @@ def main() -> None:
     (keys / "ec_p256_public.pem").write_bytes(ec_key.public_key().public_bytes(pem, spki))
     modern = certificate(ec_key, "api.test.invalid", hashes.SHA256())
     (keys / "ecdsa_cert.der").write_bytes(modern.public_bytes(serialization.Encoding.DER))
-    encrypted = rsa.generate_private_key(public_exponent=65537, key_size=3072).private_bytes(
-        pem, serialization.PrivateFormat.PKCS8, serialization.BestAvailableEncryption(b"test-only-password"))
-    (keys / "encrypted_private_key.pem").write_bytes(encrypted)
     ssh_rsa = rsa.generate_private_key(public_exponent=65537, key_size=3072).public_key().public_bytes(
         serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH)
     ssh_ed = ed25519.Ed25519PrivateKey.generate().public_key().public_bytes(

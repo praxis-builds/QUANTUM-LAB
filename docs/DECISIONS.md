@@ -43,7 +43,8 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 - **Why:** a comment such as "TODO drop md5" is not a use. The corpus includes such decoys. **Cost:** commented-out code is missed (arguably correct).
 
 ## D9. No private keys committed, even test ones
-- **Decision:** the committed fixtures contain public keys, certificates and one password-encrypted private key. Tests that need plain private keys generate them at run time in a temporary directory. The fixture generator is `tests/fixtures/generate_pq_inventory_keys.py`.
+- **Decision:** the committed fixtures contain public keys and certificates only. Tests that need private keys, plain or encrypted, generate them at run time in a temporary directory. The fixture generator is `tests/fixtures/generate_pq_inventory_keys.py`.
+- **Correction (review finding 14):** until commit `dd01576` the corpus also held `keys/encrypted_private_key.pem`, encrypted with a password committed in the generator, so in effect a readable private key. It was removed, and a test now fails if any PEM private-key block appears under `tests/fixtures/` or `examples/`. **It remains in git history.** It was test-only: a throwaway RSA-3072 key generated for the corpus, never used for anything else and not a credential, so no rotation is needed; rewriting the published history was judged not worth it.
 - **Why:** committed private keys can trip secret scanners on push and model bad hygiene. **Note:** `cryptography` 50 refuses to *create* SHA-1-signed certificates, so the SHA-1 test certificate is made with the `openssl` CLI and its key only ever exists in a temporary directory.
 
 ## D10. Fingerprints for `diff`

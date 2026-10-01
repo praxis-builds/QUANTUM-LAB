@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -268,9 +269,15 @@ def test_roadmap_orders_systems_by_mosca_and_labels_assumptions(tmp_path):
     assert default["assumptions"]["z_years"] == max(0, 2035 - default["assumptions"]["reference_year"])
 
 
-def test_without_cryptography_keys_are_named_from_labels_and_oids(monkeypatch):
+def test_without_cryptography_keys_are_named_from_labels_and_oids(monkeypatch, tmp_path):
     monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", False)
-    result = scan(CORPUS / "keys")
+    keys = tmp_path / "keys"
+    shutil.copytree(CORPUS / "keys", keys)
+    # an encrypted PKCS#8 block made of filler bytes: only its label matters here, and no key is committed
+    filler = base64.b64encode(bytes(range(256)) * 4).decode()
+    (keys / "encrypted_private_key.pem").write_text(
+        "-----BEGIN ENCRYPTED " + "PRIVATE KEY-----\n" + filler + "\n-----END ENCRYPTED " + "PRIVATE KEY-----\n")
+    result = scan(keys)
     by_file = {(f.file, f.rule.endswith("-hash")): f for f in result.findings}
     legacy = by_file[("legacy_sha1_cert.pem", False)]
     assert legacy.algorithm == "RSA-SIGNATURE" and "from its OID" in legacy.detail and "install the [pqc] extra" in legacy.detail

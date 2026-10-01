@@ -489,3 +489,15 @@ def test_an_internal_error_is_exit_4_not_1(tmp_path, monkeypatch):
     monkeypatch.setattr(cli, "scan", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     code, console = _run(["scan", str(tmp_path / "tree"), "--out", str(tmp_path / "o")])
     assert code == cli.EXIT_INTERNAL == 4 and "boom" in console
+
+
+# --------------------------------------------- 14. no private key is committed, not even an encrypted test key
+
+def test_no_private_key_block_is_committed_in_fixtures_or_examples():
+    root = Path(__file__).resolve().parents[1]
+    marker = b"-----BEGIN " + b"(?:[A-Z]+ )*PRIVATE KEY-----"
+    import re
+
+    offenders = [p.relative_to(root).as_posix() for base in (root / "tests" / "fixtures", root / "examples")
+                 for p in base.rglob("*") if p.is_file() and re.search(marker, p.read_bytes())]
+    assert offenders == []
