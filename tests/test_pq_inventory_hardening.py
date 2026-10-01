@@ -5,7 +5,10 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import os
 from pathlib import Path
+
+import pytest
 
 from pq_inventory import cli
 
@@ -92,3 +95,49 @@ def test_per_file_time_budget_stops_work_and_says_so(tmp_path):
     (tmp_path / "many.py").write_text("import hashlib\n" + "hashlib.md5(b'x')\n" * 20000)
     result = scan(tmp_path, time_budget=0.0)
     assert any(s["file"] == "many.py" and "time budget" in s["reason"] for s in result.skipped)
+
+
+# --------------------------------------------- 3. FIFOs, sockets and devices are skipped, not opened
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="needs POSIX FIFOs")
+def test_fifo_and_socket_are_skipped_and_the_scan_finishes(tmp_path):
+    import socket
+    import threading
+
+    from pq_inventory.scanner import scan
+
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    (tree / "a.py").write_text("import hashlib\nhashlib.md5(b'x')\n")
+    os.mkfifo(tree / "pipe")  # no writer: opening or reading it blocks forever
+    server = socket.socket(socket.AF_UNIX)
+    server.bind(str(tree / "sock"))
+    result: dict = {}
+    worker = threading.Thread(target=lambda: result.setdefault("scan", scan(tree)), daemon=True)
+    worker.start()
+    worker.join(timeout=10)
+    server.close()
+    assert not worker.is_alive(), "scan hung on a FIFO"
+    scanned = result["scan"]
+    assert [f.file for f in scanned.findings] == ["a.py"] and scanned.files_scanned == 1
+    reasons = {s["file"]: s["reason"] for s in scanned.skipped}
+    assert reasons["pipe"] == "not a regular file (FIFO)" and reasons["sock"] == "not a regular file (socket)"
+
+
+def test_read_is_capped_even_if_the_size_check_passes(tmp_path, monkeypatch):
+    """A file that grows between stat and read (or reports size 0) is still read only up to the limit."""
+    from pq_inventory import walker
+
+    (tmp_path / "grow.py").write_text("x" * 500)
+
+    def lying(real):
+        def call(*args, **kwargs):
+            st = real(*args, **kwargs)
+            return os.stat_result((st.st_mode, st.st_ino, st.st_dev, st.st_nlink, st.st_uid, st.st_gid, 0, *st[7:10]))
+        return call
+
+    for name in ("stat", "lstat", "fstat"):  # every way the walker could ask for the size reports 0
+        monkeypatch.setattr(os, name, lying(getattr(os, name)))
+    skipped: list = []
+    assert list(walker.walk(tmp_path, max_bytes=100, skipped=skipped)) == []
+    assert {"file": "grow.py", "reason": "larger than 100 bytes"} in skipped
