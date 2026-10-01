@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:acda5923-1772-52e7-9ccf-d89bc63ef6fe",
+  "serialNumber": "urn:uuid:5baacca7-188c-5a95-9fad-d29a7bbbb26a",
   "version": 1,
   "metadata": {
     "timestamp": "2026-10-01T09:00:00+00:00",
@@ -373,8 +373,8 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/certificate/24dbbce7f59798fe",
-      "name": "24dbbce7f59798fe",
+      "bom-ref": "crypto/certificate/0fb37c45c92106f9",
+      "name": "0fb37c45c92106f9",
       "cryptoProperties": {
         "assetType": "certificate",
         "certificateProperties": {
@@ -403,7 +403,7 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/key/public-key/EdDSA-unknown/45d60b5eb10022d7",
+      "bom-ref": "crypto/key/public-key/EdDSA-unknown/061fd8ceabd73f47",
       "name": "public-key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
@@ -416,7 +416,7 @@
       "evidence": {
         "occurrences": [
           {
-            "location": "ssh/deploy_key.pub",
+            "location": "ssh/authorized_keys",
             "line": 1
           }
         ]
@@ -434,7 +434,7 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/key/public-key/EdDSA-unknown/d324e6ecad77f26f",
+      "bom-ref": "crypto/key/public-key/EdDSA-unknown/2700edab16ca2ee4",
       "name": "public-key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
@@ -447,7 +447,7 @@
       "evidence": {
         "occurrences": [
           {
-            "location": "ssh/authorized_keys",
+            "location": "ssh/deploy_key.pub",
             "line": 1
           }
         ]

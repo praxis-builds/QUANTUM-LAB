@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:44dcb75e-8e94-5081-a7b6-a92fbf0b9d99",
+  "serialNumber": "urn:uuid:4a8b3ffb-52ea-5816-ab15-0e91d8bdb862",
   "version": 1,
   "metadata": {
     "timestamp": "2026-10-01T09:00:00+00:00",
@@ -430,38 +430,8 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/certificate/5d2f20b9d6f662c2",
-      "name": "5d2f20b9d6f662c2",
-      "cryptoProperties": {
-        "assetType": "certificate",
-        "certificateProperties": {
-          "subjectName": "O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
-          "signatureAlgorithmRef": "crypto/algorithm/RSA-SIGNATURE"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "certs/warehouse-api.pem",
-            "line": 1
-          }
-        ]
-      },
-      "properties": [
-        {
-          "name": "pq_inventory:risk",
-          "value": "QUANTUM-BROKEN"
-        },
-        {
-          "name": "pq_inventory:replacement",
-          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
-        }
-      ]
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "crypto/certificate/e54eda35286886c7",
-      "name": "e54eda35286886c7",
+      "bom-ref": "crypto/certificate/84fd988d285be757",
+      "name": "84fd988d285be757",
       "cryptoProperties": {
         "assetType": "certificate",
         "certificateProperties": {
@@ -490,7 +460,37 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/key/public-key/RSA-SIGNATURE-2048/07ee230f200284e8",
+      "bom-ref": "crypto/certificate/8fead074d6091460",
+      "name": "8fead074d6091460",
+      "cryptoProperties": {
+        "assetType": "certificate",
+        "certificateProperties": {
+          "subjectName": "O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
+          "signatureAlgorithmRef": "crypto/algorithm/RSA-SIGNATURE"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "certs/warehouse-api.pem",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/key/public-key/RSA-SIGNATURE-2048/a919257935f41221",
       "name": "public-key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",
@@ -521,7 +521,7 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/key/public-key/RSA-SIGNATURE-2048/d237c91a180b76b4",
+      "bom-ref": "crypto/key/public-key/RSA-SIGNATURE-2048/e55bf050131bbadf",
       "name": "public-key",
       "cryptoProperties": {
         "assetType": "related-crypto-material",

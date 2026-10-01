@@ -46,7 +46,7 @@ def scan(root: Path, *, rules=None, max_bytes: int = DEFAULT_MAX_BYTES, max_file
     result.findings.sort(key=lambda f: (f.file, f.line or 0, f.algorithm))
     repeats: Counter = Counter()
     for finding in result.findings:
-        base = (finding.file, finding.rule, finding.algorithm, finding.key_size, finding.detail, finding.evidence)
+        base = (finding.file, finding.rule, finding.algorithm, finding.key_size, finding.detail)
         finding.occurrence = repeats[base]
         repeats[base] += 1
     return result

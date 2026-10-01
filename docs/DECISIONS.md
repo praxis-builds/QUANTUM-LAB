@@ -47,8 +47,8 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 - **Why:** committed private keys can trip secret scanners on push and model bad hygiene. **Note:** `cryptography` 50 refuses to *create* SHA-1-signed certificates, so the SHA-1 test certificate is made with the `openssl` CLI and its key only ever exists in a temporary directory.
 
 ## D10. Fingerprints for `diff`
-- **Decision:** a finding's fingerprint hashes file, rule, algorithm, key size, detail, the redacted line text and an occurrence counter, but **not** the line number.
-- **Why:** inserting a line above a finding must not turn it into "fixed + new". **Cost:** editing the matched line itself counts as fixed + new.
+- **Decision:** a finding's fingerprint hashes file, rule, algorithm, key size, detail and an occurrence counter, but **not** the line number and (since D18) **not** the line text.
+- **Why:** inserting a line above a finding must not turn it into "fixed + new". **Cost:** inserting an *identical* finding (same rule, algorithm and detail) above an existing one in the same file renumbers the occurrences, which can show up as one fixed + one new.
 
 ## D11. CBOM: CycloneDX 1.6-shaped, not schema-validated
 - **Decision:** `cbom.cdx.json` uses CycloneDX 1.6 `cryptographic-asset` components with `cryptoProperties` (`assetType` algorithm / certificate / protocol / related-crypto-material, `algorithmProperties.primitive`, `parameterSetIdentifier`, `nistQuantumSecurityLevel`) and `evidence.occurrences` with file and line.
@@ -80,3 +80,8 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 ## D17. Security Lab limits
 - BB84 up to 20,000 qubits (about 0.3 s), Grover iterations up to 8 (12-qubit circuits, about 0.3 s), RSA N = 15 or 21 with at most 24 Shor runs, all bodies ≤ 256 bytes, sharing the single-simulation lock (429 when busy; the page retries a few times).
 - BB84 "errors seen" is reported as such, not as "Eve detected": channel noise produces errors too, and Alice and Bob cannot tell the two apart.
+
+## D18. Evidence is never stored (review finding 1)
+- **Decision:** a finding's `evidence` is only a marker (`"[redacted]"`); no source or config text is written to any output. Fingerprints no longer hash the line text either (D10). The committed warehouse-demo reports were regenerated, because every fingerprint changed; their counts did not.
+- **Alternatives:** better masking (all string literals, shorter base64/hex runs); an opt-in `--evidence` flag.
+- **Why:** the flagged line is often exactly where a hard-coded key or password sits, and unquoted secrets (`password: Tr0ub4dor&3` in a properties file) defeat any masking pattern. A truncated hash of the line would let anyone holding `scan.json` brute-force a short secret. File, line, rule and algorithm are enough to find the line. An opt-in flag was left out: the sample CI workflow uploads `scan.json`, and an unsafe mode one flag away is easy to switch on by accident.

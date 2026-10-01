@@ -3,19 +3,18 @@
 from __future__ import annotations
 
 import hashlib
-import re
 from dataclasses import asdict, dataclass, field
 
 from .algorithms import SEVERITY, classify
 
-_SECRETISH = re.compile(r"[A-Za-z0-9+/=_-]{40,}")
-MAX_EVIDENCE = 160
+REDACTED = "[redacted]"
 
 
 def redact(line: str) -> str:
-    """Evidence for a report: trimmed, with long base64/hex-like runs (possible key material) removed."""
-    text = _SECRETISH.sub("[redacted]", line.strip())
-    return text if len(text) <= MAX_EVIDENCE else text[: MAX_EVIDENCE - 3] + "..."
+    """Evidence for a report: never the source text itself. A flagged line is often exactly where a
+    hard-coded key or password sits, and no pattern-based masking catches every short secret, so
+    only a marker is kept (file, line, rule and algorithm locate the finding)."""
+    return REDACTED if line.strip() else ""
 
 
 @dataclass
@@ -31,7 +30,7 @@ class Finding:
     detail: str = ""
     key_size: int | None = None
     heuristic: bool = False
-    evidence: str = ""
+    evidence: str = ""  # always "" or REDACTED: matched literal values are never stored
     occurrence: int = 0  # 0, 1, 2 ... for identical findings in the same file (set by the scanner)
 
     @classmethod
@@ -40,13 +39,13 @@ class Finding:
         auto_risk, why, replacement = classify(algorithm, key_size)
         return cls(file=file, line=line, category=category, algorithm=algorithm, risk=risk or auto_risk, why=why,
                    replacement=replacement, rule=rule, detail=detail, key_size=key_size, heuristic=heuristic,
-                   evidence=redact(evidence) if evidence else "")
+                   evidence=redact(evidence))
 
     def fingerprint(self) -> str:
-        """Stable identity across scans. Ignores line numbers (they shift when other lines are edited);
-        uses the redacted line text, plus an occurrence counter for identical repeats."""
-        basis = "|".join([self.file, self.rule, self.algorithm, str(self.key_size), self.detail, self.evidence,
-                          str(self.occurrence)])
+        """Stable identity across scans. Ignores line numbers (they shift when other lines are edited)
+        and the line text (it may hold a secret, and a hash of a short secret can be brute-forced);
+        identical findings in one file are told apart by an occurrence counter."""
+        basis = "|".join([self.file, self.rule, self.algorithm, str(self.key_size), self.detail, str(self.occurrence)])
         return hashlib.sha256(basis.encode()).hexdigest()[:16]
 
     def to_dict(self) -> dict:

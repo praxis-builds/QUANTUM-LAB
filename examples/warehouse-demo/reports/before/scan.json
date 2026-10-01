@@ -55,9 +55,9 @@
       "detail": "key pair generator",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KeyPairGenerator kpg = KeyPairGenerator.getInstance(\"RSA\");",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "d005f599d7e92b4a",
+      "fingerprint": "37868ab6a8aa3bbc",
       "severity": 2
     },
     {
@@ -72,9 +72,9 @@
       "detail": "key size initialisation (2048-bit)",
       "key_size": 2048,
       "heuristic": false,
-      "evidence": "kpg.initialize(2048);",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "e60ea37e5a9bd381",
+      "fingerprint": "eabf67738d955c23",
       "severity": 2
     },
     {
@@ -89,9 +89,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return MessageDigest.getInstance(\"SHA-1\").digest(invoice);",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "cc74f6a117dcb3dc",
+      "fingerprint": "baa43773ca292d96",
       "severity": 3
     },
     {
@@ -106,9 +106,9 @@
       "detail": "signature algorithm",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return Signature.getInstance(\"SHA256withECDSA\");",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "c71e7f5feefe4d76",
+      "fingerprint": "70803057af525af8",
       "severity": 2
     },
     {
@@ -123,9 +123,9 @@
       "detail": "RSA key generation (2048-bit)",
       "key_size": 2048,
       "heuristic": false,
-      "evidence": "TOKEN_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "da76957fe99a9a50",
+      "fingerprint": "ba32728226448b2c",
       "severity": 2
     },
     {
@@ -140,9 +140,9 @@
       "detail": "AES key generated with an explicit length",
       "key_size": null,
       "heuristic": false,
-      "evidence": "STORAGE_KEY = AESGCM.generate_key(bit_length=128)",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "1701d5f2b65209f8",
+      "fingerprint": "9c19e041d27fc8c4",
       "severity": 1
     },
     {
@@ -157,9 +157,9 @@
       "detail": "RSA encryption/signature padding",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return TOKEN_KEY.sign(payload, padding.PKCS1v15(), hashes.SHA256())",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "a32d78d7fda6d0f5",
+      "fingerprint": "055e03c15a1a94fd",
       "severity": 2
     },
     {
@@ -174,9 +174,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return TOKEN_KEY.sign(payload, padding.PKCS1v15(), hashes.SHA256())",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "155624436a9f71a7",
+      "fingerprint": "41f45429b203a88c",
       "severity": 0
     },
     {
@@ -191,9 +191,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return hashlib.md5(body).hexdigest()",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "479d2980d1c237c1",
+      "fingerprint": "efa66945f5b1878f",
       "severity": 3
     },
     {
@@ -208,9 +208,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return hashlib.sha1(sku.encode()).hexdigest()[:8]",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "51ac18d6e304b5c1",
+      "fingerprint": "93681e887001c192",
       "severity": 3
     },
     {
@@ -225,9 +225,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return crypto.createHash(\"md5\").update(text).digest(\"hex\");",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "6ef96da40d804066",
+      "fingerprint": "1b8ac198056ba787",
       "severity": 3
     },
     {
@@ -242,9 +242,9 @@
       "detail": "symmetric cipher",
       "key_size": null,
       "heuristic": false,
-      "evidence": "const cipher = crypto.createCipheriv(\"des-ede3-cbc\", key24, iv8);",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "07f32a06a503358a",
+      "fingerprint": "379eb850525387c7",
       "severity": 3
     },
     {
@@ -261,7 +261,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "e54eda35286886c7",
+      "fingerprint": "84fd988d285be757",
       "severity": 2
     },
     {
@@ -278,7 +278,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "977a6438d6556dfe",
+      "fingerprint": "b7f14769ec55d0a7",
       "severity": 3
     },
     {
@@ -295,7 +295,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "5d2f20b9d6f662c2",
+      "fingerprint": "8fead074d6091460",
       "severity": 2
     },
     {
@@ -310,9 +310,9 @@
       "detail": "protocol TLSv1 enabled",
       "key_size": null,
       "heuristic": false,
-      "evidence": "ssl_protocols TLSv1 TLSv1.1 TLSv1.2;",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "cdbc05a7f8d8e9b3",
+      "fingerprint": "37c70b758dbe0f7f",
       "severity": 3
     },
     {
@@ -327,9 +327,9 @@
       "detail": "protocol TLSv1.1 enabled",
       "key_size": null,
       "heuristic": false,
-      "evidence": "ssl_protocols TLSv1 TLSv1.1 TLSv1.2;",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "29042bea214428af",
+      "fingerprint": "34ad83b26918f34e",
       "severity": 3
     },
     {
@@ -344,9 +344,9 @@
       "detail": "cipher suite DES-CBC3-SHA = RSA-KEX + RSA-SIGNATURE + 3DES + HMAC-SHA1",
       "key_size": null,
       "heuristic": false,
-      "evidence": "'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:AES128-SHA:DES-CBC3-SHA'",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "7e4c2647cad1a052",
+      "fingerprint": "32f9b3dc064bdbfc",
       "severity": 3
     },
     {
@@ -361,9 +361,9 @@
       "detail": "cipher suite ECDHE-RSA-AES128-GCM-SHA256 = ECDH + RSA-SIGNATURE + AES-128 + SHA-256",
       "key_size": null,
       "heuristic": false,
-      "evidence": "'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:AES128-SHA:DES-CBC3-SHA'",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "b67165bc8b12d701",
+      "fingerprint": "15217a4e98b5ef49",
       "severity": 2
     },
     {
@@ -378,9 +378,9 @@
       "detail": "cipher suite ECDHE-RSA-AES256-GCM-SHA384 = ECDH + RSA-SIGNATURE + AES-256 + SHA-384",
       "key_size": null,
       "heuristic": false,
-      "evidence": "'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:AES128-SHA:DES-CBC3-SHA'",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "580122b75e061290",
+      "fingerprint": "65858d93bb90ba47",
       "severity": 2
     },
     {
@@ -395,9 +395,9 @@
       "detail": "cipher suite AES128-SHA = RSA-KEX + RSA-SIGNATURE + AES-128 + HMAC-SHA1",
       "key_size": null,
       "heuristic": false,
-      "evidence": "'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:AES128-SHA:DES-CBC3-SHA'",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "6f8b2561f90030d7",
+      "fingerprint": "ca8de282be0686fb",
       "severity": 3
     },
     {
@@ -412,9 +412,9 @@
       "detail": "key-exchange group prime256v1",
       "key_size": null,
       "heuristic": false,
-      "evidence": "ssl_ecdh_curve prime256v1;",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "1e601f8f4df434d8",
+      "fingerprint": "b8dfd959669e2233",
       "severity": 2
     },
     {
@@ -429,9 +429,9 @@
       "detail": "new keys default to RSA 2048-bit",
       "key_size": 2048,
       "heuristic": false,
-      "evidence": "default_bits = 2048",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "8e2cdf27b2549cb3",
+      "fingerprint": "f62960a14d2b2cd3",
       "severity": 2
     },
     {
@@ -446,9 +446,9 @@
       "detail": "default digest sha256",
       "key_size": null,
       "heuristic": false,
-      "evidence": "default_md = sha256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "0fd85077cb07f6a6",
+      "fingerprint": "b1af36e5d71a3689",
       "severity": 0
     },
     {
@@ -463,9 +463,9 @@
       "detail": "KexAlgorithms diffie-hellman-group14-sha1",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KexAlgorithms diffie-hellman-group14-sha1,ecdh-sha2-nistp256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "be1f9742dc01e300",
+      "fingerprint": "a4dc1a2666fcd5b5",
       "severity": 2
     },
     {
@@ -480,9 +480,9 @@
       "detail": "KexAlgorithms ecdh-sha2-nistp256",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KexAlgorithms diffie-hellman-group14-sha1,ecdh-sha2-nistp256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "366850c85523ffbe",
+      "fingerprint": "79a64683af3a247c",
       "severity": 2
     },
     {
@@ -497,9 +497,9 @@
       "detail": "KexAlgorithms diffie-hellman-group14-sha1",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KexAlgorithms diffie-hellman-group14-sha1,ecdh-sha2-nistp256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "741ce44b98d02901",
+      "fingerprint": "c37376663d2250bc",
       "severity": 3
     },
     {
@@ -514,9 +514,9 @@
       "detail": "Ciphers 3des-cbc",
       "key_size": null,
       "heuristic": false,
-      "evidence": "Ciphers aes128-ctr,3des-cbc",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "50bcf496a951e2fe",
+      "fingerprint": "fc8b62435577f389",
       "severity": 3
     },
     {
@@ -531,9 +531,9 @@
       "detail": "Ciphers aes128-ctr",
       "key_size": null,
       "heuristic": false,
-      "evidence": "Ciphers aes128-ctr,3des-cbc",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "76b7eb27d69d479b",
+      "fingerprint": "d8d722a6efa49885",
       "severity": 1
     },
     {
@@ -548,9 +548,9 @@
       "detail": "MACs hmac-sha1",
       "key_size": null,
       "heuristic": false,
-      "evidence": "MACs hmac-sha1",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "3e26dcc4a390a9b9",
+      "fingerprint": "fb1b62cb77d4d869",
       "severity": 3
     },
     {
@@ -565,9 +565,9 @@
       "detail": "SAP profile TLS cipher suites (classical key exchange)",
       "key_size": null,
       "heuristic": true,
-      "evidence": "ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "f1bbc3e06eb3dcbb",
+      "fingerprint": "921b907dd53d1366",
       "severity": 2
     },
     {
@@ -582,9 +582,9 @@
       "detail": "SAP profile TLS cipher suites (classical key exchange)",
       "key_size": null,
       "heuristic": true,
-      "evidence": "ssl/client_ciphersuites = 150:PFS:HIGH::EC_P256:EC_HIGH",
-      "occurrence": 0,
-      "fingerprint": "7d3789cc01e15925",
+      "evidence": "[redacted]",
+      "occurrence": 1,
+      "fingerprint": "cd40cf23d0a6ead2",
       "severity": 2
     },
     {
@@ -599,9 +599,9 @@
       "detail": "SAP password hash algorithm",
       "key_size": null,
       "heuristic": true,
-      "evidence": "login/password_hash_algorithm = encoding=RFC2307, algorithm=iSSHA-1, iterations=1024, saltsize=96",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "6a706a57a0df51c0",
+      "fingerprint": "bed9dbd33d88ad9c",
       "severity": 3
     },
     {
@@ -616,9 +616,9 @@
       "detail": "EDI/AS2 encryption algorithm",
       "key_size": null,
       "heuristic": true,
-      "evidence": "as2.encryption=3des",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "64d236975d6d314e",
+      "fingerprint": "b1e21d4394382a01",
       "severity": 3
     },
     {
@@ -633,9 +633,9 @@
       "detail": "EDI/AS2 signing / MIC hash",
       "key_size": null,
       "heuristic": true,
-      "evidence": "as2.signing_algorithm=sha1",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "55713a7976df2f66",
+      "fingerprint": "c20efa81c82f4dab",
       "severity": 3
     },
     {
@@ -652,7 +652,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "d237c91a180b76b4",
+      "fingerprint": "e55bf050131bbadf",
       "severity": 2
     },
     {
@@ -669,7 +669,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "07ee230f200284e8",
+      "fingerprint": "a919257935f41221",
       "severity": 2
     }
   ],

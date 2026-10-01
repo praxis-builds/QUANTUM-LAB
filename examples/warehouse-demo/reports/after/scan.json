@@ -52,9 +52,9 @@
       "detail": "key pair generator",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KeyPairGenerator kpg = KeyPairGenerator.getInstance(\"RSA\");",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "d005f599d7e92b4a",
+      "fingerprint": "37868ab6a8aa3bbc",
       "severity": 2
     },
     {
@@ -69,9 +69,9 @@
       "detail": "key size initialisation (2048-bit)",
       "key_size": 2048,
       "heuristic": false,
-      "evidence": "kpg.initialize(2048);",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "e60ea37e5a9bd381",
+      "fingerprint": "eabf67738d955c23",
       "severity": 2
     },
     {
@@ -86,9 +86,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return MessageDigest.getInstance(\"SHA-1\").digest(invoice);",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "cc74f6a117dcb3dc",
+      "fingerprint": "baa43773ca292d96",
       "severity": 3
     },
     {
@@ -103,9 +103,9 @@
       "detail": "signature algorithm",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return Signature.getInstance(\"SHA256withECDSA\");",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "c71e7f5feefe4d76",
+      "fingerprint": "70803057af525af8",
       "severity": 2
     },
     {
@@ -120,9 +120,9 @@
       "detail": "post-quantum signature (ML-DSA)",
       "key_size": null,
       "heuristic": false,
-      "evidence": "TOKEN_SIGNER = oqs.Signature(\"ML-DSA-65\")  # post-quantum signatures for order tokens (FIPS 204)",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "1b994cfdd0c99922",
+      "fingerprint": "9e5632bbc640c386",
       "severity": 0
     },
     {
@@ -137,9 +137,9 @@
       "detail": "AES key generated with an explicit length",
       "key_size": null,
       "heuristic": false,
-      "evidence": "STORAGE_KEY = AESGCM.generate_key(bit_length=256)",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "13eb1c3e4ec7fdff",
+      "fingerprint": "ea2406c813368d7e",
       "severity": 0
     },
     {
@@ -154,9 +154,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return hashlib.sha256(body).hexdigest()",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "878aae568d435019",
+      "fingerprint": "f6cf0685144ed32c",
       "severity": 0
     },
     {
@@ -171,9 +171,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return hashlib.sha256(sku.encode()).hexdigest()[:8]",
-      "occurrence": 0,
-      "fingerprint": "e165967f7a71987f",
+      "evidence": "[redacted]",
+      "occurrence": 1,
+      "fingerprint": "add4bc61cd16d777",
       "severity": 0
     },
     {
@@ -188,9 +188,9 @@
       "detail": "hash function",
       "key_size": null,
       "heuristic": false,
-      "evidence": "return crypto.createHash(\"sha256\").update(text).digest(\"hex\");",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "9d54db181db7e5ab",
+      "fingerprint": "f6dd8a0002bb115e",
       "severity": 0
     },
     {
@@ -205,9 +205,9 @@
       "detail": "symmetric cipher",
       "key_size": null,
       "heuristic": false,
-      "evidence": "const cipher = crypto.createCipheriv(\"aes-256-gcm\", key32, iv12);",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "f4a4aa5c7f0c5a6b",
+      "fingerprint": "18a844d648032b2d",
       "severity": 0
     },
     {
@@ -224,7 +224,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "24dbbce7f59798fe",
+      "fingerprint": "0fb37c45c92106f9",
       "severity": 2
     },
     {
@@ -239,9 +239,9 @@
       "detail": "cipher suite ECDHE-ECDSA-AES256-GCM-SHA384 = ECDH + ECDSA + AES-256 + SHA-384",
       "key_size": null,
       "heuristic": false,
-      "evidence": "'ECDHE-ECDSA-AES256-GCM-SHA384'",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "1a52f83ab7636d03",
+      "fingerprint": "a309b29115c62b30",
       "severity": 2
     },
     {
@@ -256,9 +256,9 @@
       "detail": "key-exchange group X25519MLKEM768",
       "key_size": null,
       "heuristic": false,
-      "evidence": "ssl_ecdh_curve X25519MLKEM768:X25519;",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "66a2655f94c096a8",
+      "fingerprint": "47fe0cf586a430bc",
       "severity": 0
     },
     {
@@ -273,9 +273,9 @@
       "detail": "key-exchange group X25519",
       "key_size": null,
       "heuristic": false,
-      "evidence": "ssl_ecdh_curve X25519MLKEM768:X25519;",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "4b25cd5158a02975",
+      "fingerprint": "ffe0091604609550",
       "severity": 2
     },
     {
@@ -290,9 +290,9 @@
       "detail": "new keys default to RSA 2048-bit",
       "key_size": 2048,
       "heuristic": false,
-      "evidence": "default_bits = 2048",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "8e2cdf27b2549cb3",
+      "fingerprint": "f62960a14d2b2cd3",
       "severity": 2
     },
     {
@@ -307,9 +307,9 @@
       "detail": "default digest sha256",
       "key_size": null,
       "heuristic": false,
-      "evidence": "default_md = sha256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "0fd85077cb07f6a6",
+      "fingerprint": "b1af36e5d71a3689",
       "severity": 0
     },
     {
@@ -324,9 +324,9 @@
       "detail": "KexAlgorithms mlkem768x25519-sha256",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KexAlgorithms mlkem768x25519-sha256,sntrup761x25519-sha512@openssh.com",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "75d5da9d1424befd",
+      "fingerprint": "0741b408797141af",
       "severity": 0
     },
     {
@@ -341,9 +341,9 @@
       "detail": "KexAlgorithms sntrup761x25519-sha512@openssh.com",
       "key_size": null,
       "heuristic": false,
-      "evidence": "KexAlgorithms mlkem768x25519-sha256,sntrup761x25519-sha512@openssh.com",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "69edfaba830e4c9b",
+      "fingerprint": "4f54730fd85c2908",
       "severity": 0
     },
     {
@@ -358,9 +358,9 @@
       "detail": "Ciphers aes256-gcm@openssh.com",
       "key_size": null,
       "heuristic": false,
-      "evidence": "Ciphers aes256-gcm@openssh.com",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "72b0fab94d536a49",
+      "fingerprint": "15a372ad3e10cd37",
       "severity": 0
     },
     {
@@ -375,9 +375,9 @@
       "detail": "MACs hmac-sha2-256-etm@openssh.com",
       "key_size": null,
       "heuristic": false,
-      "evidence": "MACs hmac-sha2-256-etm@openssh.com",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "713ffe49e5ae80db",
+      "fingerprint": "6d51c0531b49fb8d",
       "severity": 0
     },
     {
@@ -392,9 +392,9 @@
       "detail": "SAP profile TLS cipher suites (classical key exchange)",
       "key_size": null,
       "heuristic": true,
-      "evidence": "ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "f1bbc3e06eb3dcbb",
+      "fingerprint": "921b907dd53d1366",
       "severity": 2
     },
     {
@@ -409,9 +409,9 @@
       "detail": "SAP profile TLS cipher suites (classical key exchange)",
       "key_size": null,
       "heuristic": true,
-      "evidence": "ssl/client_ciphersuites = 150:PFS:HIGH::EC_P256:EC_HIGH",
-      "occurrence": 0,
-      "fingerprint": "7d3789cc01e15925",
+      "evidence": "[redacted]",
+      "occurrence": 1,
+      "fingerprint": "cd40cf23d0a6ead2",
       "severity": 2
     },
     {
@@ -426,9 +426,9 @@
       "detail": "EDI/AS2 encryption algorithm",
       "key_size": null,
       "heuristic": true,
-      "evidence": "as2.encryption=aes256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "8ab6253738fa7357",
+      "fingerprint": "0eeb912913e871eb",
       "severity": 0
     },
     {
@@ -443,9 +443,9 @@
       "detail": "EDI/AS2 signing / MIC hash",
       "key_size": null,
       "heuristic": true,
-      "evidence": "as2.signing_algorithm=sha256",
+      "evidence": "[redacted]",
       "occurrence": 0,
-      "fingerprint": "0576a961cff31c14",
+      "fingerprint": "da3eaafbdd0fe8ee",
       "severity": 0
     },
     {
@@ -462,7 +462,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "d324e6ecad77f26f",
+      "fingerprint": "061fd8ceabd73f47",
       "severity": 2
     },
     {
@@ -479,7 +479,7 @@
       "heuristic": false,
       "evidence": "",
       "occurrence": 0,
-      "fingerprint": "45d60b5eb10022d7",
+      "fingerprint": "2700edab16ca2ee4",
       "severity": 2
     }
   ],
