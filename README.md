@@ -1,5 +1,10 @@
 # Praxis Quantum Lab: from qubits to post-quantum migration
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/praxis-builds/QUANTUM-LAB?quickstart=1)
+
+**Showcase site:** <https://praxis-builds.github.io/QUANTUM-LAB/> (lessons, case study and scanner reports; static, no simulation).
+**Run the live lab in your browser:** click the Codespaces button. GitHub builds the environment, starts the dashboard and opens it, private to you. Nothing to install.
+
 **What it is.** A local, simulator-only lab that goes from single qubits to Shor's and Grover's algorithms, error correction, quantum key distribution and NIST's post-quantum standards. Each step is a short lesson you can run and test. It ends in a practical tool: **`pq_inventory`**, a read-only scanner that finds quantum-vulnerable cryptography in code and configuration and turns it into a prioritised migration plan.
 
 **What it demonstrates.**
@@ -29,6 +34,10 @@
 Each lesson is a script, a plain-words page with "Predict first" questions and a spoiler, and a test. The local dashboard has a Circuit Playground with presets for most algorithms, plus a **Security Lab** tab (live BB84, toy RSA break, Grover key search, Mosca calculator).
 
 ## Quick start
+
+**In the browser (GitHub Codespaces).** Click the badge above. The first build takes a few minutes; the dashboard then opens in a new tab. If it doesn't, open the **Ports** panel and click the globe next to port 8765. Details and the security notes: [`docs/codespaces.md`](docs/codespaces.md).
+
+**On your own machine:**
 
 ```bash
 python3.12 -m venv .venv

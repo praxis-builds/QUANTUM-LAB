@@ -1,0 +1,24 @@
+{
+  // GitHub Codespaces / dev container for Praxis Quantum Lab.
+  // Builds the core environment, then starts the dashboard and opens it in your browser.
+  // The dashboard still binds 127.0.0.1; --codespaces only lets this codespace's own
+  // forwarded URL through its Host/Origin check. The forwarded port stays private to you.
+  "name": "Praxis Quantum Lab",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "20" }
+  },
+  "postCreateCommand": "python -m venv .venv && .venv/bin/pip install -e '.[dev]' cryptography",
+  "postAttachCommand": "nohup .venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765 --codespaces > /tmp/dashboard.log 2>&1 &",
+  "forwardPorts": [8765],
+  "portsAttributes": {
+    "8765": { "label": "Quantum Lab dashboard", "onAutoForward": "openBrowser" }
+  },
+  "customizations": {
+    "codespaces": { "openFiles": ["README.md", "lessons/README.md"] },
+    "vscode": {
+      "extensions": ["ms-python.python"],
+      "settings": { "python.defaultInterpreterPath": ".venv/bin/python" }
+    }
+  }
+}

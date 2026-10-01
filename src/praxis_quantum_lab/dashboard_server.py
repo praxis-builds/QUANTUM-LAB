@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
+import re
 import socket
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -276,12 +278,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if len(self.path) > 1024 or sum(len(k) + len(v) for k, v in self.headers.items()) > 8192:
             self._error(431, "Request headers or target too large.")
             return False
-        expected = f"127.0.0.1:{self.server.server_port}"
-        if self.headers.get_all("Host", []) != [expected]:
+        hosts = self.headers.get_all("Host", [])
+        allowed = self.server.allowed_origins()
+        if len(hosts) != 1 or hosts[0] not in allowed:
             self._error(403, "Only the local dashboard host is allowed.")
             return False
         origins = self.headers.get_all("Origin", [])
-        if (origins and origins != [f"http://{expected}"]) or self.headers.get("Sec-Fetch-Site") == "cross-site":
+        if (origins and origins != [allowed[hosts[0]]]) or self.headers.get("Sec-Fetch-Site") == "cross-site":
             self._error(403, "Cross-origin requests are not allowed.")
             return False
         if self.headers.get("Transfer-Encoding") is not None:
@@ -394,13 +397,46 @@ class DashboardHandler(BaseHTTPRequestHandler):
     do_HEAD = do_PUT = do_DELETE = do_PATCH = do_OPTIONS = _unsupported
 
 
+_CODESPACE_LABEL = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,98}[a-z0-9])?")
+_FORWARDING_DOMAIN = re.compile(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+")
+
+
+def codespaces_host(port: int, environ: dict[str, str] | None = None) -> str:
+    """The one forwarded host name GitHub Codespaces gives this port, read from its environment.
+
+    Codespaces forwards a port as https://<codespace-name>-<port>.<forwarding-domain>; the
+    forwarded URL is private to the codespace owner unless they change its visibility. The
+    server still binds 127.0.0.1 only; this just lets that single forwarded name through the
+    Host/Origin check. Raises ValueError outside Codespaces or on unexpected values.
+    """
+    env = os.environ if environ is None else environ
+    if env.get("CODESPACES") != "true":
+        raise ValueError("--codespaces works only inside a GitHub codespace (CODESPACES=true not set).")
+    name = env.get("CODESPACE_NAME", "")
+    domain = env.get("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "")
+    if not _CODESPACE_LABEL.fullmatch(name) or not _FORWARDING_DOMAIN.fullmatch(domain):
+        raise ValueError("Unexpected CODESPACE_NAME or GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN.")
+    if type(port) is not int or not 1 <= port <= 65535:
+        raise ValueError("--codespaces needs a fixed port from 1 to 65535.")
+    return f"{name}-{port}.{domain}"
+
+
 class DashboardServer(ThreadingHTTPServer):
     daemon_threads = True
 
-    def __init__(self, port: int):
+    def __init__(self, port: int, forwarded_host: str | None = None):
         self.simulation_lock = threading.Lock()
         self._connections = threading.BoundedSemaphore(8)
+        self.forwarded_host = forwarded_host
         super().__init__(("127.0.0.1", port), DashboardHandler)
+
+    def allowed_origins(self) -> dict[str, str]:
+        """Accepted Host header -> the only Origin accepted with it."""
+        local = f"127.0.0.1:{self.server_port}"
+        allowed = {local: f"http://{local}"}
+        if self.forwarded_host is not None:
+            allowed[self.forwarded_host] = f"https://{self.forwarded_host}"
+        return allowed
 
     def process_request(self, request: socket.socket, client_address: tuple) -> None:
         if not self._connections.acquire(blocking=False):
@@ -435,20 +471,33 @@ def preload_simulators() -> None:
     security_lab.preload()  # the lesson modules the Security Lab routes reuse (False: that tab is unavailable)
 
 
-def make_server(*, port: int = 8765) -> DashboardServer:
+def make_server(*, port: int = 8765, forwarded_host: str | None = None) -> DashboardServer:
     if type(port) is not int or not 0 <= port <= 65535:
         raise ValueError("port must be an integer from 0 to 65535.")
     preload_simulators()
-    return DashboardServer(port)
+    return DashboardServer(port, forwarded_host)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument(
+        "--codespaces",
+        action="store_true",
+        help="also accept this codespace's own forwarded URL (GitHub Codespaces only; still binds 127.0.0.1)",
+    )
     arguments = parser.parse_args()
+    forwarded = None
+    if arguments.codespaces:
+        try:
+            forwarded = codespaces_host(arguments.port)
+        except ValueError as error:
+            parser.error(str(error))
     print("Loading Qiskit and Aer…", flush=True)
-    with make_server(port=arguments.port) as server:
+    with make_server(port=arguments.port, forwarded_host=forwarded) as server:
         print(f"Praxis Quantum Lab: http://127.0.0.1:{server.server_port}", flush=True)
+        if forwarded:
+            print(f"Codespaces URL (private to you): https://{forwarded}", flush=True)
         print("Local Aer only. Ctrl+C stops the dashboard.", flush=True)
         try:
             server.serve_forever()
