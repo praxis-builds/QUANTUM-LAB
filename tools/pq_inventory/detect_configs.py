@@ -8,9 +8,10 @@ import time
 from .algorithms import SEVERITY, cipher_entries, classify, worst
 from .model import Finding
 
+PROTOCOL_ORDER = ["SSLv2", "SSLv3", "TLS1.0", "TLS1.1", "TLS1.2", "TLS1.3"]
 TLS_PROTOCOLS = {"SSLV2": "SSLv2", "SSLV3": "SSLv3", "TLSV1": "TLS1.0", "TLSV1.0": "TLS1.0", "TLSV1.1": "TLS1.1",
                  "TLSV1.2": "TLS1.2", "TLSV1.3": "TLS1.3"}
-GROUPS = {"X25519": "X25519", "X448": "X25519", "PRIME256V1": "ECDH", "SECP256R1": "ECDH", "P-256": "ECDH",
+GROUPS = {"X25519": "X25519", "X448": "X448", "PRIME256V1": "ECDH", "SECP256R1": "ECDH", "P-256": "ECDH",
           "SECP384R1": "ECDH", "P-384": "ECDH", "SECP521R1": "ECDH", "P-521": "ECDH",
           "X25519MLKEM768": "HYBRID-PQ", "SECP256R1MLKEM768": "HYBRID-PQ", "SECP384R1MLKEM1024": "HYBRID-PQ",
           "MLKEM768": "ML-KEM", "MLKEM1024": "ML-KEM", "FFDHE2048": "DH", "FFDHE3072": "DH", "FFDHE4096": "DH"}
@@ -29,8 +30,10 @@ SSH_MACS = {"hmac-md5": "HMAC-MD5", "hmac-md5-96": "HMAC-MD5", "hmac-md5-etm@ope
             "hmac-sha1": "HMAC-SHA1", "hmac-sha1-96": "HMAC-SHA1", "hmac-sha1-etm@openssh.com": "HMAC-SHA1",
             "hmac-sha2-256": "SHA-256", "hmac-sha2-512": "SHA-512", "hmac-sha2-256-etm@openssh.com": "SHA-256",
             "hmac-sha2-512-etm@openssh.com": "SHA-512"}
-SSH_HOSTKEYS = {"ssh-rsa": "RSA-SIGNATURE", "rsa-sha2-256": "RSA-SIGNATURE", "rsa-sha2-512": "RSA-SIGNATURE",
-                "ssh-dss": "DSA", "ecdsa-sha2-nistp256": "ECDSA", "ecdsa-sha2-nistp384": "ECDSA",
+# As a signature algorithm (these directives), ssh-rsa and ssh-dss sign with SHA-1 (RFC 8332 added
+# rsa-sha2-256/512 for that reason). As a key type in authorized_keys, "ssh-rsa" is only the key format.
+SSH_HOSTKEYS = {"ssh-rsa": ["RSA-SIGNATURE", "SHA-1"], "rsa-sha2-256": "RSA-SIGNATURE", "rsa-sha2-512": "RSA-SIGNATURE",
+                "ssh-dss": ["DSA", "SHA-1"], "ecdsa-sha2-nistp256": "ECDSA", "ecdsa-sha2-nistp384": "ECDSA",
                 "ecdsa-sha2-nistp521": "ECDSA", "ssh-ed25519": "EdDSA"}
 
 # directive regexes: (rule id, pattern) -- value in group "v"
@@ -96,6 +99,11 @@ def detect_tls(relative: str, text: str, deadline: float | None = None) -> list[
                     if name and name not in ("TLS1.2", "TLS1.3"):
                         findings.append(Finding.make(file=relative, line=number, category="tls-config", algorithm=name,
                                                      rule=rule, detail=f"protocol {token.lstrip('+')} enabled", evidence=line))
+                        if rule == "openssl-minprotocol":  # a minimum: every later version is enabled too
+                            for later in PROTOCOL_ORDER[PROTOCOL_ORDER.index(name) + 1:PROTOCOL_ORDER.index("TLS1.2")]:
+                                findings.append(Finding.make(file=relative, line=number, category="tls-config", algorithm=later,
+                                                             rule=rule, detail=f"MinProtocol {token} also enables {later.replace('TLS', 'TLS ')}",
+                                                             evidence=line))
                 if rule == "apache-sslprotocol" and any(t.lower() in ("all", "+all") for t in tokens):
                     excluded = {t.lstrip("-").upper() for t in _list(value) if t.startswith("-")}
                     for old in ("TLSV1", "TLSV1.1"):

@@ -3,7 +3,7 @@
 Safety: symbolic links are never followed (so no loops and no escaping the root), anything that is
 not a regular file (FIFOs, sockets, devices) is skipped before it is opened, files above a size
 limit and binary files are skipped (all with the reason recorded), reads are capped at the limit,
-and nothing is written.
+the walk stops at the file limit, and nothing is written.
 """
 
 from __future__ import annotations
@@ -76,6 +76,20 @@ def looks_binary(data: bytes) -> bool:
     return b"\x00" in data[:8192]
 
 
+def without_bom(data: bytes) -> bytes:
+    """UTF-16 text with a byte-order mark (common for Windows configuration files) re-encoded as UTF-8, and
+    a UTF-8 byte-order mark removed. UTF-16 is full of NUL bytes and would otherwise be skipped as binary.
+    UTF-16 without a mark is not recognised: it is still skipped as a binary file, with that reason."""
+    if data[:3] == b"\xef\xbb\xbf":
+        return data[3:]
+    if data[:2] in (b"\xff\xfe", b"\xfe\xff") and data[2:4] != b"\x00\x00":  # not a UTF-32 mark
+        try:
+            return data.decode("utf-16").encode("utf-8")
+        except UnicodeDecodeError:
+            return data
+    return data
+
+
 def walk(root: Path, *, max_bytes: int = DEFAULT_MAX_BYTES, max_files: int = DEFAULT_MAX_FILES, skipped: list | None = None):
     """Yield WalkedFile for every regular file under root (root itself may be a single file)."""
     skipped = skipped if skipped is not None else []
@@ -93,13 +107,11 @@ def walk(root: Path, *, max_bytes: int = DEFAULT_MAX_BYTES, max_files: int = DEF
 
     def visit(path: Path, relative: str):
         nonlocal count
-        if count >= max_files:
-            skipped.append({"file": relative, "reason": f"file limit {max_files} reached"})
-            return None
         data = read_regular_file(path, max_bytes)
         if isinstance(data, str):
             skipped.append({"file": relative, "reason": data})
             return None
+        data = without_bom(data)
         binary = looks_binary(data)
         if binary and path.suffix.lower() not in DER_SUFFIXES:
             skipped.append({"file": relative, "reason": "binary file"})
@@ -128,6 +140,10 @@ def walk(root: Path, *, max_bytes: int = DEFAULT_MAX_BYTES, max_files: int = DEF
         dirnames[:] = kept
         for name in sorted(filenames):
             path = current / name
+            if count >= max_files:  # stop here: one entry, not one per remaining file
+                skipped.append({"file": path.relative_to(base).as_posix(),
+                                "reason": f"file limit {max_files} reached; this and all later files were not read"})
+                return
             item = visit(path, path.relative_to(base).as_posix())
             if item:
                 yield item

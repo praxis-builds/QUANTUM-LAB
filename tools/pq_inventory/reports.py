@@ -28,9 +28,14 @@ def _by_file(findings: list[dict]) -> dict[str, list[dict]]:
     return dict(sorted(groups.items(), key=lambda kv: (-max(f["severity"] for f in kv[1]), kv[0])))
 
 
+def _shor_breaks(f: dict) -> bool:
+    """Quantum-broken, including keys rated CLASSICALLY-BROKEN only for their size (RSA-1024 falls to Shor too)."""
+    return f["risk"] == QUANTUM_BROKEN or (f["risk"] == CLASSICALLY_BROKEN and classify(f["algorithm"])[0] == QUANTUM_BROKEN)
+
+
 def headline(doc: dict) -> str:
     s = doc["summary"]
-    broken_files = len({f["file"] for f in doc["findings"] if f["risk"] == QUANTUM_BROKEN})
+    broken_files = len({f["file"] for f in doc["findings"] if _shor_breaks(f)})
     weak_files = len({f["file"] for f in doc["findings"] if f["risk"] == CLASSICALLY_BROKEN})
     return (f"{broken_files} of {s['files_scanned']} scanned files use cryptography that a future quantum computer "
             f"would break, and {weak_files} use cryptography that is already weak today.")
@@ -43,33 +48,47 @@ def write_json(doc: dict, roadmap: dict | None, path: Path) -> None:
 
 # ------------------------------------------------------------------- Markdown
 
+_MD_SPECIAL = str.maketrans({c: "\\" + c for c in "\\`*_[]<>|"} | {"\n": " ", "\r": " "})
+
+
+def md_text(text: str) -> str:
+    """Text from the scanned tree (file names, certificate subjects) as inert Markdown: it cannot open a
+    link, an HTML tag, a code span or a table cell."""
+    return str(text).translate(_MD_SPECIAL)
+
+
+def md_code(text: str) -> str:
+    """A code span, or escaped plain text when the text itself contains a backtick or a line break."""
+    return f"`{text}`" if not set(str(text)) & set("`\n\r") else md_text(text)
+
+
 def write_markdown(doc: dict, roadmap: dict | None, path: Path) -> None:
     s = doc["summary"]
-    out = [f"# Cryptography inventory: `{doc['root']}`", "", f"_Generated {doc['generated_at']} by pq_inventory {doc['version']} "
+    out = [f"# Cryptography inventory: {md_code(doc['root'])}", "", f"_Generated {doc['generated_at']} by pq_inventory {doc['version']} "
            "(read-only scan; no key material included)._", "", "## Executive summary", "", headline(doc), "",
            "| Risk | Findings | What it means |", "|---|---:|---|"]
     out += [f"| {risk} | {s['by_risk'][risk]} | {RISK_TEXT[risk]} |" for risk in RISK_ORDER]
     out += ["", f"{s['files_scanned']} files scanned, {s['files_with_findings']} with findings, {s['findings']} findings "
             f"({s['heuristic_findings']} heuristic), {s['skipped']} files skipped."]
     if doc["notes"]:
-        out += [""] + [f"> Note: {note}" for note in doc["notes"]]
+        out += [""] + [f"> Note: {md_text(note)}" for note in doc["notes"]]
     if roadmap:
         out += ["", "## Migration roadmap (Mosca: at risk if x + y > z)", "", f"_{roadmap['assumptions']['z_source']}_ "
                 f"z = {roadmap['assumptions']['z_years']} years.", "",
                 "| Priority | System | x | y | z | Slack (years) | Findings | Start by | Actions |", "|---|---|---:|---:|---:|---:|---:|---|---|"]
         for item in roadmap["items"]:
-            actions = "; ".join(f"{a['algorithm']} ({a['count']}) → {a['replacement']}" for a in item["actions"]) or "none"
-            out.append(f"| {item['tier']}. {item['tier_label']} | {item['system']} | {item['x']:g} | {item['y']:g} | "
+            actions = "; ".join(f"{md_text(a['algorithm'])} ({a['count']}) → {a['replacement']}" for a in item["actions"]) or "none"
+            out.append(f"| {item['tier']}. {item['tier_label']} | {md_text(item['system'])} | {item['x']:g} | {item['y']:g} | "
                        f"{item['z']:g} | {item['slack_years']:+g} | {item['findings']} | {start_text(item)} | {actions} |")
     out += ["", "## Findings by file", ""]
     for file, findings in _by_file(doc["findings"]).items():
-        out += [f"### `{file}`", "", "| Line | Risk | Algorithm | Detail | Recommended replacement |", "|---:|---|---|---|---|"]
+        out += [f"### {md_code(file)}", "", "| Line | Risk | Algorithm | Detail | Recommended replacement |", "|---:|---|---|---|---|"]
         for f in findings:
             flag = " (heuristic)" if f["heuristic"] else ""
-            out.append(f"| {f['line'] or '-'} | {f['risk']} | {f['algorithm']}{flag} | {f['detail'].replace('|', '/')} | {f['replacement']} |")
+            out.append(f"| {f['line'] or '-'} | {f['risk']} | {md_text(f['algorithm'])}{flag} | {md_text(f['detail'])} | {f['replacement']} |")
         out.append("")
     if doc["skipped"]:
-        out += ["## Skipped files", ""] + [f"- `{s['file']}`: {s['reason']}" for s in doc["skipped"]] + [""]
+        out += ["## Skipped files", ""] + [f"- {md_code(s['file'])}: {md_text(s['reason'])}" for s in doc["skipped"]] + [""]
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
@@ -163,7 +182,7 @@ def write_html(doc: dict, roadmap: dict | None, path: Path) -> None:
 
 PRIMITIVE = {"RSA": "pke", "RSA-KEX": "pke", "RSA-SIGNATURE": "signature", "DSA": "signature", "ECDSA": "signature",
              "EdDSA": "signature", "ML-DSA": "signature", "SLH-DSA": "signature", "DH": "key-agree", "ECDH": "key-agree",
-             "EC": "key-agree", "X25519": "key-agree", "ML-KEM": "kem", "HYBRID-PQ": "kem", "AES": "block-cipher",
+             "EC": "key-agree", "X25519": "key-agree", "X448": "key-agree", "ML-KEM": "kem", "HYBRID-PQ": "kem", "AES": "block-cipher",
              "AES-128": "block-cipher", "AES-192": "block-cipher", "AES-256": "block-cipher", "DES": "block-cipher",
              "3DES": "block-cipher", "RC2": "block-cipher", "CAMELLIA-128": "block-cipher", "CAMELLIA-256": "block-cipher",
              "RC4": "stream-cipher", "CHACHA20": "ae", "MD5": "hash", "SHA-1": "hash", "SHA-224": "hash", "SHA-256": "hash",
@@ -202,6 +221,8 @@ def _occurrence(f: dict) -> dict:
 
 def cbom(doc: dict) -> dict:
     components: dict[str, dict] = {}
+    # the issuer's signature scheme, where the scanner reported one that differs from the certificate's own key
+    issuer_signature = {(f["file"], f["line"]): f["algorithm"] for f in doc["findings"] if f["rule"].endswith("certificate-signature")}
     for f in doc["findings"]:
         refs = []
         if f["algorithm"].startswith(("TLS", "SSL")):
@@ -220,7 +241,8 @@ def cbom(doc: dict) -> dict:
         elif f["category"] == "certificate" and f["rule"].endswith("certificate"):
             subject = f["detail"].split(";")[0].removeprefix("certificate ")
             ref, name = f"crypto/certificate/{f['fingerprint']}", f"certificate {subject}"
-            signature_ref = _algorithm_ref(components, f, f["algorithm"], f["key_size"])
+            issuer = issuer_signature.get((f["file"], f["line"]))  # else self-family: the key's algorithm and size
+            signature_ref = _algorithm_ref(components, f, issuer or f["algorithm"], None if issuer else f["key_size"])
             body = {"assetType": "certificate", "certificateProperties": {"subjectName": subject,
                                                                             "signatureAlgorithmRef": signature_ref}}
             refs.append(signature_ref)

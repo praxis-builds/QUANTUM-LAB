@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 
 from .algorithms import RISK_ORDER
+from .reports import md_code, md_text
 
 
 def compare(old: dict, new: dict) -> dict:
@@ -31,7 +32,8 @@ def compare(old: dict, new: dict) -> dict:
 def write_markdown(result: dict, path: Path) -> None:
     c = result["counts"]
     out = ["# Cryptography inventory: progress", "",
-           f"Before: `{result['old']['root']}` ({result['old']['generated_at']})  ", f"After: `{result['new']['root']}` ({result['new']['generated_at']})", "",
+           f"Before: {md_code(result['old']['root'])} ({md_text(result['old']['generated_at'])})  ",
+           f"After: {md_code(result['new']['root'])} ({md_text(result['new']['generated_at'])})", "",
            "| Risk | Before | After | Fixed | New | Unchanged |", "|---|---:|---:|---:|---:|---:|"]
     for risk in RISK_ORDER:
         out.append(f"| {risk} | {result['old']['by_risk'][risk]} | {result['new']['by_risk'][risk]} | {c['fixed'][risk]} | "
@@ -40,7 +42,7 @@ def write_markdown(result: dict, path: Path) -> None:
                        ("Still open (risky findings in both scans)", "unchanged")):
         items = [f for f in result[key] if f["risk"] != "OK"] if key != "new_findings" else result[key]
         out += ["", f"## {title}: {len(items)}", ""]
-        out += [f"- `{f['file']}`:{f['line'] or '-'} {f['risk']} {f['algorithm']}: {f['detail']}" for f in items] or ["- none"]
+        out += [f"- {md_code(f['file'])}:{f['line'] or '-'} {f['risk']} {md_text(f['algorithm'])}: {md_text(f['detail'])}" for f in items] or ["- none"]
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 

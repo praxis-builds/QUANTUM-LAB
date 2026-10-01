@@ -96,7 +96,7 @@ def key_facts(key) -> tuple[str, int | None, str]:
     if isinstance(key, (x25519.X25519PublicKey, x25519.X25519PrivateKey)):
         return "X25519", 256, "X25519"
     if isinstance(key, (x448.X448PublicKey, x448.X448PrivateKey)):
-        return "X25519", 448, "X448"
+        return "X448", 448, "X448"
     for module, family, sets in ((mldsa, "ML-DSA", (44, 65, 87)), (mlkem, "ML-KEM", (512, 768, 1024))):
         for number in sets if module is not None else ():
             classes = tuple(getattr(module, f"{family.replace('-', '')}{number}{kind}Key", None) for kind in ("Public", "Private"))
@@ -108,7 +108,7 @@ def key_facts(key) -> tuple[str, int | None, str]:
 
 
 INSTALL_HINT = "; install the [pqc] extra for size, subject and expiry"
-SIGNATURE_NAME = {"RSA": "RSA-SIGNATURE", "EC": "ECDSA"}  # certificate findings name the signature scheme
+SIGNATURE_NAME = {"RSA": "RSA-SIGNATURE", "EC": "ECDSA"}  # a certificate's key is named as a signature key
 WEAK_SIGNATURE_OIDS = {"1.2.840.113549.1.1.5": "SHA-1", "1.2.840.10045.4.1": "SHA-1", "1.2.840.10040.4.3": "SHA-1",
                        "1.2.840.113549.1.1.4": "MD5"}  # sha1WithRSA, ecdsa-with-SHA1, dsa-with-sha1, md5WithRSA
 OPENSSH_TYPES = {b"ssh-rsa": "RSA", b"ssh-dss": "DSA", b"ssh-ed25519": "EdDSA", b"ssh-ed448": "EdDSA",
@@ -149,8 +149,9 @@ def _subject_and_expiry(cert) -> tuple[str, str]:
 
 
 def _certificate(der_bytes: bytes | None, relative: str, line: int, rule: str) -> list[Finding]:
-    """Certificate findings. Order: post-quantum OID; cryptography's full parse; the key OID (classical
-    names, no size); otherwise UNKNOWN with the reason. The algorithm is never guessed."""
+    """Certificate findings: one for the certificate's own key, one for a SHA-1/MD5 signature hash, and
+    one for the issuer's signature scheme when it is a different algorithm from the key (an EC leaf
+    signed by an RSA CA is both ECDSA and RSA-SIGNATURE)."""
     if der_bytes is None:
         return _unknown(relative, line, rule, "certificate", "certificate could not be parsed: not valid base64")
     try:
@@ -158,8 +159,23 @@ def _certificate(der_bytes: bytes | None, relative: str, line: int, rule: str) -
     except der.DerError as error:
         key_oid = signature_oid = None
         reason = str(error)
+    else:
+        reason = ""
     cert = _loaded_certificate(der_bytes)
     subject, expiry = _subject_and_expiry(cert)
+    findings = _certificate_key_findings(cert, key_oid, signature_oid, reason, subject, expiry, relative, line, rule)
+    signed_with = der.SIGNATURE_OIDS.get(signature_oid)
+    if signed_with and signed_with[0] != findings[0].algorithm:
+        findings.append(Finding.make(file=relative, line=line, category="certificate", algorithm=signed_with[0],
+                                     rule=rule + "-signature",
+                                     detail=f"certificate {subject} is signed by its issuer with {signed_with[1]}"))
+    return findings
+
+
+def _certificate_key_findings(cert, key_oid, signature_oid, reason: str, subject: str, expiry: str,
+                              relative: str, line: int, rule: str) -> list[Finding]:
+    """Order: post-quantum OID; cryptography's full parse; the key OID (classical names, no size);
+    otherwise UNKNOWN with the reason. The algorithm is never guessed."""
     if key_oid in der.PQC_OIDS:
         family, parameter_set = der.PQC_OIDS[key_oid]
         return [Finding.make(file=relative, line=line, category="certificate", algorithm=family, rule=rule,

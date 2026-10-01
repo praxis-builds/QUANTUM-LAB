@@ -4,7 +4,7 @@ Risk classes (most to least severe, see SEVERITY):
 - CLASSICALLY-BROKEN: weak today, without any quantum computer (MD5, SHA-1, DES, 3DES, RC4,
   RSA below 2048 bits, TLS 1.0/1.1).
 - QUANTUM-BROKEN: secure today, broken by Shor's algorithm on a large quantum computer
-  (RSA, DSA, DH, ECDH, ECDSA, EdDSA, X25519 ...).
+  (RSA, DSA, DH, ECDH, ECDSA, EdDSA, X25519, X448 ...).
 - QUANTUM-WEAKENED: Grover roughly halves the security (AES-128 and other 128-bit keys).
 - OK: no known quantum break (AES-256, SHA-256 and up, ML-KEM, ML-DSA, SLH-DSA, ChaCha20).
 """
@@ -38,6 +38,7 @@ ALGORITHMS: dict[str, tuple[str, str, str]] = {
     "EC": (QUANTUM_BROKEN, "elliptic-curve cryptography falls to Shor's algorithm", f"{KEM_REPLACEMENT} / {SIG_REPLACEMENT}"),
     "EdDSA": (QUANTUM_BROKEN, "Ed25519/Ed448 signatures fall to Shor's algorithm", SIG_REPLACEMENT),
     "X25519": (QUANTUM_BROKEN, "X25519/X448 key agreement falls to Shor's algorithm", KEM_REPLACEMENT),
+    "X448": (QUANTUM_BROKEN, "X448 key agreement falls to Shor's algorithm", KEM_REPLACEMENT),
     "AES-128": (QUANTUM_WEAKENED, "Grover's algorithm roughly halves a 128-bit key's strength", CIPHER_REPLACEMENT),
     "AES-192": (OK, "192-bit key: still about 96 bits against Grover", "AES-256-GCM for margin"),
     "AES-256": (OK, "256-bit key: no known quantum break", "none needed"),

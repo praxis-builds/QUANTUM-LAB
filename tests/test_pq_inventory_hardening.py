@@ -440,7 +440,7 @@ def test_unreadable_certificates_are_unknown_with_a_reason(tmp_path, monkeypatch
     monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", have_cryptography)
     (tmp_path / "odd_key.pem").write_bytes(_pem("CERTIFICATE", _odd_oid_certificate()))
     (tmp_path / "garbage.pem").write_bytes(b"-----BEGIN CERTIFICATE-----\nTm90IGEgY2VydGlmaWNhdGU=\n-----END CERTIFICATE-----\n")
-    by_file = {f.file: f for f in scan(tmp_path).findings}
+    by_file = {f.file: f for f in scan(tmp_path).findings if not f.rule.endswith("-signature")}
     odd, garbage = by_file["odd_key.pem"], by_file["garbage.pem"]
     assert (odd.algorithm, odd.category, odd.heuristic) == ("UNKNOWN", "certificate", True)
     assert "1.2.840.10045.2.9" in odd.detail
@@ -576,3 +576,165 @@ def test_cbom_references_resolve_and_names_are_readable():
     for component in bom["components"]:
         assert component["name"] not in ("public-key", "private-key") and not re.fullmatch(r"[0-9a-f]{16}", component["name"])
         assert component["evidence"]["occurrences"]
+
+
+# --------------------------------------------- Info items (the table after finding 18)
+
+def _scan(tree):
+    from pq_inventory.scanner import scan
+
+    return scan(tree)
+
+
+def test_certificate_signed_by_another_algorithm_reports_the_issuer_signature(tmp_path):
+    """An EC leaf under an RSA CA: the key is ECDSA, the signature on it is RSA."""
+    import datetime
+
+    x509 = pytest.importorskip("cryptography.x509")
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, rsa
+    from cryptography.x509.oid import NameOID
+
+    from pq_inventory import reports
+    from pq_inventory.scanner import to_document
+
+    ca_key, leaf_key = rsa.generate_private_key(public_exponent=65537, key_size=2048), ec.generate_private_key(ec.SECP256R1())
+    start = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+
+    def certificate(subject, issuer, public_key, signer):
+        names = [x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, cn)]) for cn in (subject, issuer)]
+        return (x509.CertificateBuilder().subject_name(names[0]).issuer_name(names[1]).public_key(public_key).serial_number(1)
+                .not_valid_before(start).not_valid_after(start + datetime.timedelta(days=30)).sign(signer, hashes.SHA256()))
+
+    pem = serialization.Encoding.PEM
+    (tmp_path / "leaf.pem").write_bytes(certificate("leaf.test.invalid", "ca.test.invalid", leaf_key.public_key(), ca_key).public_bytes(pem))
+    (tmp_path / "ca.pem").write_bytes(certificate("ca.test.invalid", "ca.test.invalid", ca_key.public_key(), ca_key).public_bytes(pem))
+    result = _scan(tmp_path)
+    facts = sorted((f.file, f.algorithm, f.rule) for f in result.findings)
+    assert facts == [("ca.pem", "RSA-SIGNATURE", "pem-certificate"),  # self-signed: one finding, as before
+                     ("leaf.pem", "ECDSA", "pem-certificate"), ("leaf.pem", "RSA-SIGNATURE", "pem-certificate-signature")]
+    signature = next(f for f in result.findings if f.rule.endswith("-signature"))
+    assert "signed by its issuer with sha256WithRSAEncryption" in signature.detail
+    bom = reports.cbom(to_document(result, generated_at="2026-10-01T00:00:00+00:00"))
+    refs = {c["bom-ref"]: c for c in bom["components"]}
+    leaf = next(c for c in bom["components"] if c["name"] == "certificate CN=leaf.test.invalid")
+    assert leaf["cryptoProperties"]["certificateProperties"]["signatureAlgorithmRef"] == "crypto/algorithm/RSA-SIGNATURE"
+    assert "crypto/algorithm/RSA-SIGNATURE" in refs
+
+
+def test_issuer_signature_is_read_from_the_oid_without_cryptography(monkeypatch, tmp_path):
+    from pq_inventory import der, detect_keys
+
+    monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", False)
+    assert der.SIGNATURE_OIDS["1.2.840.10045.4.3.2"] == ("ECDSA", "ecdsa-with-SHA256")
+    assert der.SIGNATURE_OIDS["2.16.840.1.101.3.4.3.18"] == ("ML-DSA", "ML-DSA-65")
+    (tmp_path / "odd.der").write_bytes(_odd_oid_certificate())  # key OID unknown, still signed with ECDSA
+    assert sorted((f.algorithm, f.rule) for f in _scan(tmp_path).findings) == [
+        ("ECDSA", "der-certificate-signature"), ("UNKNOWN", "der-certificate")]
+
+
+def test_x448_is_named_x448(tmp_path):
+    serialization = pytest.importorskip("cryptography.hazmat.primitives.serialization")
+    from cryptography.hazmat.primitives.asymmetric import x448
+
+    from pq_inventory import algorithms, der
+
+    (tmp_path / "x448.pem").write_bytes(x448.X448PrivateKey.generate().public_key().public_bytes(
+        serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo))
+    (finding,) = _scan(tmp_path).findings
+    assert (finding.algorithm, finding.key_size, finding.risk) == ("X448", 448, "QUANTUM-BROKEN")
+    assert der.CLASSICAL_OIDS["1.3.101.111"] == "X448" and algorithms.classify("X448")[0] == "QUANTUM-BROKEN"
+
+
+def test_ssh_rsa_as_a_signature_algorithm_is_sha1_but_not_as_a_key_type(tmp_path):
+    (tmp_path / "sshd_config").write_text("HostKeyAlgorithms ssh-rsa,rsa-sha2-512,ssh-ed25519\nPubkeyAcceptedAlgorithms ssh-dss\n")
+    (tmp_path / "authorized_keys").write_text("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAgQC7 user@host\n")
+    found = sorted((f.file, f.line, f.algorithm, f.risk) for f in _scan(tmp_path).findings)
+    assert found == [("authorized_keys", 1, "RSA-SIGNATURE", "QUANTUM-BROKEN"),
+                     ("sshd_config", 1, "EdDSA", "QUANTUM-BROKEN"), ("sshd_config", 1, "RSA-SIGNATURE", "QUANTUM-BROKEN"),  # ssh-rsa
+                     ("sshd_config", 1, "RSA-SIGNATURE", "QUANTUM-BROKEN"),  # rsa-sha2-512: RSA, but not SHA-1
+                     ("sshd_config", 1, "SHA-1", "CLASSICALLY-BROKEN"),
+                     ("sshd_config", 2, "DSA", "QUANTUM-BROKEN"), ("sshd_config", 2, "SHA-1", "CLASSICALLY-BROKEN")]
+
+
+def test_sshd_config_drop_ins_are_read_as_ssh_configuration(tmp_path):
+    drop_in = tmp_path / "etc" / "ssh" / "sshd_config.d"
+    drop_in.mkdir(parents=True)
+    (drop_in / "50-crypto.conf").write_text("Ciphers 3des-cbc\n")
+    (tmp_path / "etc" / "other.conf").write_text("Ciphers 3des-cbc\n")  # not SSH: the same line means nothing here
+    assert [(f.file, f.algorithm) for f in _scan(tmp_path).findings] == [("etc/ssh/sshd_config.d/50-crypto.conf", "3DES")]
+
+
+@pytest.mark.parametrize("minimum,expected", [("SSLv3", ["SSLv3", "TLS1.0", "TLS1.1"]), ("TLSv1", ["TLS1.0", "TLS1.1"]),
+                                              ("TLSv1.1", ["TLS1.1"]), ("TLSv1.2", []), ("TLSv1.3", [])])
+def test_minprotocol_enables_every_version_from_the_minimum_up(tmp_path, minimum, expected):
+    (tmp_path / "openssl.cnf").write_text(f"[system_default_sect]\nMinProtocol = {minimum}\n")
+    findings = _scan(tmp_path).findings
+    assert sorted(f.algorithm for f in findings) == expected
+    assert all(f.risk == "CLASSICALLY-BROKEN" and f.line == 2 for f in findings)
+
+
+def test_utf16_and_utf8_bom_text_files_are_scanned(tmp_path):
+    line = "ssl_protocols TLSv1;\n"
+    (tmp_path / "le.conf").write_bytes(b"\xff\xfe" + line.encode("utf-16-le"))
+    (tmp_path / "be.conf").write_bytes(b"\xfe\xff" + line.encode("utf-16-be"))
+    (tmp_path / "utf8bom.conf").write_bytes(b"\xef\xbb\xbf" + line.encode())
+    (tmp_path / "nobom.conf").write_bytes(line.encode("utf-16-le"))  # no mark: cannot be told from binary
+    result = _scan(tmp_path)
+    assert sorted((f.file, f.line, f.algorithm) for f in result.findings) == [
+        ("be.conf", 1, "TLS1.0"), ("le.conf", 1, "TLS1.0"), ("utf8bom.conf", 1, "TLS1.0")]
+    assert {"file": "nobom.conf", "reason": "binary file"} in result.skipped
+
+
+def test_the_walk_stops_at_the_file_limit_with_one_skipped_entry(tmp_path):
+    for index in range(40):
+        (tmp_path / f"f{index:02}.py").write_text("x = 1\n")
+    result = _scan_limited(tmp_path, 3)
+    assert result.files_scanned == 3
+    assert result.skipped == [{"file": "f03.py", "reason": "file limit 3 reached; this and all later files were not read"}]
+
+
+def _scan_limited(tree, max_files):
+    from pq_inventory.scanner import scan
+
+    return scan(tree, max_files=max_files)
+
+
+def test_markdown_reports_cannot_be_injected_from_file_names_or_details(tmp_path):
+    import re
+
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    hostile = "a`[click](http:evil.example)<b>|x.py"
+    (tree / hostile).write_text("import hashlib\nhashlib.md5(b'x')\n")
+    code, _ = _run(["scan", str(tree), "--out", str(tmp_path / "a"), "--formats", "json,md"])
+    (tree / "b.py").write_text("import hashlib\nhashlib.sha1(b'x')\n")
+    _run(["scan", str(tree), "--out", str(tmp_path / "b"), "--formats", "json"])
+    _run(["diff", str(tmp_path / "b" / "scan.json"), str(tmp_path / "a" / "scan.json"), "--out", str(tmp_path / "d")])
+    assert code == 0
+    for report in (tmp_path / "a" / "report.md", tmp_path / "d" / "diff.md"):
+        text = report.read_text()
+        assert "click" in text, report
+        for line in text.splitlines():
+            if "click" in line:  # every special character of the hostile name is backslash-escaped, in or out of a table
+                assert not re.search(r"(?<!\\)[`\[\]<>|]", line.strip("| ").replace(" | ", " ")), line
+
+
+def test_markdown_escaping_helpers():
+    from pq_inventory.reports import md_code, md_text
+
+    assert md_text("[x](y) <b> a|b *c* _d_ `e` \\") == "\\[x\\](y) \\<b\\> a\\|b \\*c\\* \\_d\\_ \\`e\\` \\\\"
+    assert md_text("two\nlines") == "two lines"
+    assert md_code("certs/api.pem") == "`certs/api.pem`" and md_code("a`b") == "a\\`b"
+
+
+def test_headline_counts_short_rsa_as_quantum_breakable_too(tmp_path):
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    (tree / "old.py").write_text("from cryptography.hazmat.primitives.asymmetric import rsa\n"
+                                 "rsa.generate_private_key(public_exponent=65537, key_size=1024)\n")
+    (tree / "hash.py").write_text("import hashlib\nhashlib.md5(b'x')\n")
+    code, console = _run(["scan", str(tree), "--out", str(tmp_path / "out"), "--formats", "json"])
+    risks = {f["file"]: f["risk"] for f in json.loads((tmp_path / "out" / "scan.json").read_text())["findings"]}
+    assert risks == {"old.py": "CLASSICALLY-BROKEN", "hash.py": "CLASSICALLY-BROKEN"}
+    assert console.startswith("1 of 2 scanned files use cryptography that a future quantum computer would break, and 2 use")

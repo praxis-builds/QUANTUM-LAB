@@ -28,8 +28,8 @@ def _may_hold_tls_config(relative: str) -> bool:
 
 
 def _is_ssh_config(relative: str) -> bool:
-    name = relative.rsplit("/", 1)[-1].lower()
-    return "ssh" in name or "/.ssh/" in f"/{relative.lower()}"
+    """"ssh" in the file name or in a directory name (.ssh/config, sshd_config.d/50-crypto.conf)."""
+    return "ssh" in relative.lower()
 
 
 def scan(root: Path, *, rules=None, max_bytes: int = DEFAULT_MAX_BYTES, max_files: int = DEFAULT_MAX_FILES,

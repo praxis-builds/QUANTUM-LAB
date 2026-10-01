@@ -23,9 +23,24 @@ PQC_OIDS.update({_SIG + str(20 + i): ("SLH-DSA", f"SLH-DSA-{name}") for i, name 
 # Classical public-key algorithm OIDs (for naming keys cryptography cannot load).
 CLASSICAL_OIDS: dict[str, str] = {
     "1.2.840.113549.1.1.1": "RSA", "1.2.840.113549.1.1.10": "RSA", "1.2.840.10045.2.1": "EC", "1.2.840.10040.4.1": "DSA",
-    "1.3.101.110": "X25519", "1.3.101.111": "X25519", "1.3.101.112": "EdDSA", "1.3.101.113": "EdDSA",
+    "1.3.101.110": "X25519", "1.3.101.111": "X448", "1.3.101.112": "EdDSA", "1.3.101.113": "EdDSA",
     "1.2.840.113549.1.3.1": "DH", "1.2.840.10046.2.1": "DH",
 }
+# Certificate signature algorithm OIDs -> (algorithm, name): the scheme the ISSUER signed with, which
+# need not be the family of the certificate's own key (an EC leaf under an RSA CA).
+_RSA, _ECDSA = "1.2.840.113549.1.1.", "1.2.840.10045.4."
+SIGNATURE_OIDS: dict[str, tuple[str, str]] = {
+    _RSA + "4": ("RSA-SIGNATURE", "md5WithRSAEncryption"), _RSA + "5": ("RSA-SIGNATURE", "sha1WithRSAEncryption"),
+    _RSA + "10": ("RSA-SIGNATURE", "RSASSA-PSS"), _RSA + "11": ("RSA-SIGNATURE", "sha256WithRSAEncryption"),
+    _RSA + "12": ("RSA-SIGNATURE", "sha384WithRSAEncryption"), _RSA + "13": ("RSA-SIGNATURE", "sha512WithRSAEncryption"),
+    _RSA + "14": ("RSA-SIGNATURE", "sha224WithRSAEncryption"),
+    _ECDSA + "1": ("ECDSA", "ecdsa-with-SHA1"), _ECDSA + "3.1": ("ECDSA", "ecdsa-with-SHA224"),
+    _ECDSA + "3.2": ("ECDSA", "ecdsa-with-SHA256"), _ECDSA + "3.3": ("ECDSA", "ecdsa-with-SHA384"),
+    _ECDSA + "3.4": ("ECDSA", "ecdsa-with-SHA512"),
+    "1.2.840.10040.4.3": ("DSA", "dsa-with-sha1"), _SIG + "1": ("DSA", "dsa-with-sha224"), _SIG + "2": ("DSA", "dsa-with-sha256"),
+    "1.3.101.112": ("EdDSA", "Ed25519"), "1.3.101.113": ("EdDSA", "Ed448"),
+}
+SIGNATURE_OIDS.update({oid: names for oid, names in PQC_OIDS.items() if oid.startswith(_SIG)})
 MAX_DER = 1 << 20
 
 
