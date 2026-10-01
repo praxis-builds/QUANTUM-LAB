@@ -93,13 +93,24 @@ def parse_bb84_request(payload: object) -> dict[str, Any]:
             "seed": _int_in(payload, "seed", 0, MAX_SEED)}
 
 
+BB84_RUNS_PER_SEED = 40  # bb84_round starts at most 32 Aer runs (base_run + 0..31)
+
+
+def bb84_base_run(seed: int) -> int:
+    """First Aer run index for a user seed. Each seed owns its own block of run indices, and
+    run_seed() puts consecutive indices 10**7 apart (CLAUDE.md: Aer seeds shot i as seed + i, so
+    independent runs need seeds at least `shots` apart). No two user seeds share an Aer run: the
+    largest index, for seed 2**31 - 1, still gives an Aer seed below 2**63."""
+    return 10_000 + seed * BB84_RUNS_PER_SEED
+
+
 def simulate_bb84(parameters: dict[str, Any]) -> dict[str, Any]:
     import numpy as np
 
     qkd = lesson_module("_qkd")
     distill = lesson_module("28_raw_to_secret_key").distill
     rng = np.random.default_rng(parameters["seed"])
-    round_ = qkd.bb84_round(parameters["qubits"], rng, base_run=10_000 + (parameters["seed"] % 100_000) * 40,
+    round_ = qkd.bb84_round(parameters["qubits"], rng, base_run=bb84_base_run(parameters["seed"]),
                             noise_p=parameters["noise"], eve_fraction=1.0 if parameters["eve"] else 0.0)
     sifted = int(qkd.sift(round_).sum())
     sample = min(parameters["sample"], sifted // 2)

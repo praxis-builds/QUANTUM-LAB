@@ -46,6 +46,49 @@ def test_grover_validation_rejects(payload):
         lab.parse_grover_request(payload)
 
 
+def test_distinct_bb84_seeds_never_share_an_aer_run(monkeypatch):
+    """Review Info item: seed % 100_000 made seeds 100,000 apart reuse the same Aer runs. Every seed now
+    owns its own run indices, spaced by lessons/_qec.run_seed (CLAUDE.md: seeds at least `shots` apart)."""
+    qkd, qec = lab.lesson_module("_qkd"), lab.lesson_module("_qec")
+    used: dict[int, list[int]] = {}
+
+    def recording(seed):
+        def run_seed(index):
+            value = qec.run_seed(index)
+            used.setdefault(seed, []).append(value)
+            return value
+        return run_seed
+
+    seeds = [0, 1, 7, 100_000, 100_007, 200_007, lab.MAX_SEED - 100_000, lab.MAX_SEED]
+    for seed in seeds:
+        monkeypatch.setattr(qkd, "run_seed", recording(seed))
+        lab.simulate_bb84(lab.parse_bb84_request({**BB84, "qubits": 400, "sample": 20, "eve": True, "noise": 0.05, "seed": seed}))
+    assert all(len(used[seed]) <= lab.BB84_RUNS_PER_SEED and len(used[seed]) > 8 for seed in seeds)
+    every = sorted(value for values in used.values() for value in values)
+    assert len(every) == len(set(every))
+    assert min(b - a for a, b in zip(every, every[1:])) >= 20_000  # the largest shot count of one run
+    assert every[-1] < 2**63  # Aer takes a signed 64-bit seed
+    # the arithmetic, for every seed: blocks of run indices never overlap
+    assert lab.bb84_base_run(1) - lab.bb84_base_run(0) == lab.BB84_RUNS_PER_SEED >= 32
+    assert qec.run_seed(lab.bb84_base_run(lab.MAX_SEED) + lab.BB84_RUNS_PER_SEED) < 2**63
+
+
+def test_bb84_seeds_100000_apart_give_different_measurements():
+    """Same Alice bits and bases would be needed to compare outcomes, so compare the Aer memory directly:
+    the two seeds' first runs use different simulator seeds and different results."""
+    from qiskit_aer import AerSimulator
+
+    qkd, qec = lab.lesson_module("_qkd"), lab.lesson_module("_qec")
+    simulator = AerSimulator(method="stabilizer", noise_model=qkd.channel_noise(0.1))
+    circuit = qkd.qubit_circuit(1, qkd.X, qkd.Z, qkd.X)
+
+    def memory(seed):
+        return simulator.run(circuit, shots=400, seed_simulator=qec.run_seed(lab.bb84_base_run(seed)), memory=True).result().get_memory()
+
+    assert memory(7) == memory(7)
+    assert memory(7) != memory(100_007) and memory(lab.MAX_SEED) != memory(lab.MAX_SEED - 100_000)
+
+
 def test_bb84_results_match_the_lessons():
     clean = lab.simulate_bb84(lab.parse_bb84_request(BB84))
     assert clean["qber_true"] == 0 and clean["status"] == "key" and clean["keys_equal"] and clean["key_bits"] > 0
