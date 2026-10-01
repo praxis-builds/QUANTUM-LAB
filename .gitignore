@@ -8,3 +8,4 @@ build/
 dist/
 *.egg-info/
 lessons/out/
+lessons/c/build/
