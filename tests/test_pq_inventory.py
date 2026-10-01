@@ -166,6 +166,42 @@ def test_scanner_has_no_network_code():
         assert forbidden not in code, forbidden
 
 
+def test_a_full_scan_and_diff_never_touch_the_network_or_start_a_process(tmp_path, monkeypatch):
+    """The grep above misses `from socket import ...` or `os.popen`; this one fails on the act itself."""
+    import socket
+    import subprocess
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("the scanner tried to open a connection or start a process")
+
+    for owner, name in ((socket.socket, "connect"), (socket.socket, "connect_ex"), (socket, "create_connection"),
+                        (socket, "getaddrinfo"), (subprocess, "Popen"), (os, "system"), (os, "popen")):
+        monkeypatch.setattr(owner, name, forbidden)
+    for name in ("posix_spawn", "posix_spawnp", "fork", "execv", "execve"):
+        if hasattr(os, name):
+            monkeypatch.setattr(os, name, forbidden)
+    with pytest.raises(AssertionError):
+        socket.create_connection(("127.0.0.1", 9))  # the guard is live
+    systems = tmp_path / "systems.json"
+    systems.write_text(json.dumps({"systems": [{"name": "all", "paths": ["*"]}]}))
+    for out in ("a", "b"):
+        assert cli.main(["scan", str(CORPUS), "--out", str(tmp_path / out), "--systems", str(systems)]) == 0
+    assert cli.main(["diff", str(tmp_path / "a" / "scan.json"), str(tmp_path / "b" / "scan.json"), "--out", str(tmp_path / "d")]) == 0
+    assert json.loads((tmp_path / "a" / "scan.json").read_text())["summary"]["findings"] > 50
+
+
+def test_evidence_is_only_ever_a_marker():
+    """Review #1: no masking pattern is trusted; whatever the line holds, only a marker is kept."""
+    from pq_inventory.model import REDACTED, Finding, redact
+
+    lines = ['DES3.new(b"Sup3rS3cretKey!!24bytes!")', 'bytes.fromhex("00112233445566778899aabbccddeeff")', "pw: Tr0ub4dor&3",
+             "x" * 39, "A" * 64, "hashlib.md5(data)"]
+    assert [redact(line) for line in lines] == [REDACTED] * len(lines)
+    assert redact("") == "" and redact("   \t") == ""
+    finding = Finding.make(file="a.py", line=1, category="source", algorithm="3DES", rule="r", evidence=lines[0])
+    assert finding.evidence == REDACTED and "Sup3r" not in json.dumps(finding.to_dict())
+
+
 # ------------------------------------------------------------------- CLI and reports
 
 @needs_cryptography

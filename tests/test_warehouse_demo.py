@@ -25,6 +25,27 @@ def test_committed_reports_match_a_fresh_scan(state):
     assert {f["fingerprint"] for f in committed["findings"]} == {f["fingerprint"] for f in fresh(state)["findings"]}
 
 
+@needs_cryptography
+def test_every_committed_report_file_is_what_the_documented_commands_write(tmp_path, monkeypatch):
+    """Byte for byte: scan.json, report.md, report.html, cbom.cdx.json for both states, diff.json and diff.md.
+    Fingerprints alone would let risk, replacement, detail, roadmap or the rendered reports drift."""
+    from pq_inventory import cli
+
+    monkeypatch.chdir(DEMO.parents[1])  # the README commands run from the repository root with relative paths
+    demo = "examples/warehouse-demo"
+    for state in ("before", "after"):
+        assert cli.main(["scan", f"{demo}/{state}", "--out", str(tmp_path / state), "--systems", f"{demo}/systems.json",
+                         "--timestamp", "2026-10-01T09:00:00+00:00"]) == 0
+    fresh_diff = tmp_path / "diff"
+    cli.main(["diff", str(tmp_path / "before" / "scan.json"), str(tmp_path / "after" / "scan.json"), "--out", str(fresh_diff)])
+    committed = sorted(p.relative_to(DEMO / "reports").as_posix() for p in (DEMO / "reports").rglob("*") if p.is_file())
+    assert committed == ["after/cbom.cdx.json", "after/report.html", "after/report.md", "after/scan.json",
+                         "before/cbom.cdx.json", "before/report.html", "before/report.md", "before/scan.json",
+                         "diff/diff.json", "diff/diff.md"]
+    stale = [name for name in committed if (tmp_path / name).read_bytes() != (DEMO / "reports" / name).read_bytes()]
+    assert stale == [], "regenerate with the commands in examples/warehouse-demo/README.md"
+
+
 def test_demo_contains_no_private_keys():
     for path in DEMO.rglob("*"):
         if path.is_file():

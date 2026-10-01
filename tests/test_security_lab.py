@@ -110,6 +110,9 @@ def post(server, path, body, headers=None):
 def test_http_routes_happy_path(server, path, body, key):
     status, result = post(server, path, body)
     assert status == 200 and key in result
+    name = path.rsplit("/", 1)[-1]
+    direct = getattr(lab, f"simulate_{name}")(getattr(lab, f"parse_{name}_request")(body))
+    assert result == json.loads(json.dumps(direct))  # the route returns exactly what the checked function computes
 
 
 @pytest.mark.parametrize("path", ["/api/security/bb84", "/api/security/rsa", "/api/security/grover"])
