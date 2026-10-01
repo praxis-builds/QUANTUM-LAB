@@ -77,12 +77,13 @@ def build(findings: list[dict], config: dict) -> dict:
                 actions.setdefault(f["algorithm"], {"replacement": f["replacement"], "risk": f["risk"], "count": 0})
                 actions[f["algorithm"]]["count"] += 1
         start_by = int(a["reference_year"] + max(0.0, slack)) if counts[QUANTUM_BROKEN] else None
+        overdue = round(-slack, 2) if counts[QUANTUM_BROKEN] and slack < 0 else 0.0
         items.append({
             "system": system.get("name", "unnamed"), "paths": patterns, "notes": system.get("notes", ""),
             "x": x, "y": y, "z": z, "x_from": "config" if "data_lifetime_years" in system else "default assumption",
             "y_from": "config" if "migration_years" in system else "default assumption",
             "slack_years": slack, "mosca_at_risk": mosca_at_risk, "tier": tier, "tier_label": TIERS[tier],
-            "counts": counts, "findings": len(mine), "start_migration_by": start_by,
+            "counts": counts, "findings": len(mine), "start_migration_by": start_by, "overdue_years": overdue,
             "actions": [{"algorithm": alg, **info} for alg, info in actions.items()],
         })
     items.sort(key=lambda i: (i["tier"], i["slack_years"], -i["counts"][QUANTUM_BROKEN]))

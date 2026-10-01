@@ -1,0 +1,467 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:acda5923-1772-52e7-9ccf-d89bc63ef6fe",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-01T09:00:00+00:00",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "pq_inventory",
+          "version": "0.1.0"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "name": "after",
+      "bom-ref": "scanned-root"
+    }
+  },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/AES-256",
+      "name": "AES-256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "block-cipher",
+          "nistQuantumSecurityLevel": 5
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/inventory_api.py",
+            "line": 9
+          },
+          {
+            "location": "app/label_printer.js",
+            "line": 9
+          },
+          {
+            "location": "config/sshd_config",
+            "line": 5
+          },
+          {
+            "location": "erp/as2_partner_acme.properties",
+            "line": 3
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "OK"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "none needed"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ECDH",
+      "name": "ECDH",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "config/nginx.conf",
+            "line": 8
+          },
+          {
+            "location": "erp/DEFAULT.PFL",
+            "line": 3
+          },
+          {
+            "location": "erp/DEFAULT.PFL",
+            "line": 4
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ECDSA",
+      "name": "ECDSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/SupplierFeed.java",
+            "line": 16
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/HYBRID-PQ",
+      "name": "HYBRID-PQ",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "config/nginx.conf",
+            "line": 10
+          },
+          {
+            "location": "config/sshd_config",
+            "line": 4
+          },
+          {
+            "location": "config/sshd_config",
+            "line": 4
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "OK"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "none needed"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ML-DSA",
+      "name": "ML-DSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/inventory_api.py",
+            "line": 7
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "OK"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "none needed"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/RSA",
+      "name": "RSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/SupplierFeed.java",
+            "line": 6
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/RSA-2048",
+      "name": "RSA-2048",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "parameterSetIdentifier": "2048",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/SupplierFeed.java",
+            "line": 7
+          },
+          {
+            "location": "config/openssl.cnf",
+            "line": 3
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/SHA-1",
+      "name": "SHA-1",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/SupplierFeed.java",
+            "line": 12
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "CLASSICALLY-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/SHA-256",
+      "name": "SHA-256",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "nistQuantumSecurityLevel": 2
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "app/inventory_api.py",
+            "line": 17
+          },
+          {
+            "location": "app/inventory_api.py",
+            "line": 21
+          },
+          {
+            "location": "app/label_printer.js",
+            "line": 5
+          },
+          {
+            "location": "config/openssl.cnf",
+            "line": 4
+          },
+          {
+            "location": "config/sshd_config",
+            "line": 6
+          },
+          {
+            "location": "erp/as2_partner_acme.properties",
+            "line": 4
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "OK"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "none needed"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/X25519",
+      "name": "X25519",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "config/nginx.conf",
+            "line": 10
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/certificate/24dbbce7f59798fe",
+      "name": "24dbbce7f59798fe",
+      "cryptoProperties": {
+        "assetType": "certificate",
+        "certificateProperties": {
+          "subjectName": "O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test",
+          "signatureAlgorithmRef": "crypto/algorithm/ECDSA"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "certs/warehouse-api.pem",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/key/public-key/EdDSA-unknown/45d60b5eb10022d7",
+      "name": "public-key",
+      "cryptoProperties": {
+        "assetType": "related-crypto-material",
+        "relatedCryptoMaterialProperties": {
+          "type": "public-key",
+          "size": null,
+          "algorithmRef": "crypto/algorithm/EdDSA"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "ssh/deploy_key.pub",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/key/public-key/EdDSA-unknown/d324e6ecad77f26f",
+      "name": "public-key",
+      "cryptoProperties": {
+        "assetType": "related-crypto-material",
+        "relatedCryptoMaterialProperties": {
+          "type": "public-key",
+          "size": null,
+          "algorithmRef": "crypto/algorithm/EdDSA"
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "ssh/authorized_keys",
+            "line": 1
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "pq_inventory:risk",
+          "value": "QUANTUM-BROKEN"
+        },
+        {
+          "name": "pq_inventory:replacement",
+          "value": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots"
+        }
+      ]
+    }
+  ]
+}

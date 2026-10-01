@@ -1,0 +1,4 @@
+# Used by ops to issue internal certificates (demo)
+[ req ]
+default_bits = 2048
+default_md = sha256

@@ -58,3 +58,12 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 - **Decision:** default z = years until 2035, labelled "ASSUMPTION ... a regulatory planning horizon, NOT a forecast". x = 10 and y = 5 are also labelled assumptions, and the reports mark which values are assumed per system.
 - **Alternatives:** an expert-survey probability of a CRQC; no default at all.
 - **Why:** 2035 comes from a published (draft) NIST document I could cite; I could not verify a survey figure here and did not want to invent one. Users are expected to replace all three numbers.
+
+## D13. Warehouse demo: honest "after" state, reproducible reports
+- **Decision:** the migrated copy (`after/`) fixes everything the stack allows today and **keeps** realistic interim choices: an ECDSA certificate, Ed25519 SSH keys, an X25519 TLS fallback, one ECDHE suite for TLS 1.2 clients, SAP's EC-only TLS suites and the unmigrated Java supplier feed. Reports are generated with a fixed `--timestamp`, and `tests/test_warehouse_demo.py` fails if they drift from a fresh scan.
+- **Alternatives:** an "after" state with every finding fixed.
+- **Why:** a fully green "after" would be fiction. Post-quantum certificates and SSH signature keys are not deployable in this scenario, and vendor or partner dependencies take longer. The diff then shows 5 *new* quantum-broken findings, which the case study explains instead of hiding.
+
+## D14. Roadmap shows "overdue" instead of a start year in the past
+- **Decision:** when x + y > z, the report says "now (overdue by N years)" rather than a start year.
+- **Why:** "start by 2026" for a system 6 years late understates the urgency.

@@ -1,0 +1,6 @@
+# Bastion host SSH daemon (demo)
+Port 22
+PermitRootLogin no
+KexAlgorithms diffie-hellman-group14-sha1,ecdh-sha2-nistp256
+Ciphers aes128-ctr,3des-cbc
+MACs hmac-sha1

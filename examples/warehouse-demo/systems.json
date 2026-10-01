@@ -1,0 +1,18 @@
+{
+  "assumptions": {
+    "z_years": 9,
+    "z_source": "ASSUMPTION for this case study: z = 9 years (2026 to 2035, the year NIST IR 8547's initial public draft proposes for disallowing quantum-vulnerable public-key algorithms). A planning horizon, NOT a forecast of when a quantum computer will exist.",
+    "reference_year": 2026
+  },
+  "systems": [
+    {"name": "Inventory API (customer orders)", "paths": ["app/inventory_api.py", "config/nginx.conf", "config/openssl.cnf", "certs/warehouse-api.pem"],
+     "data_lifetime_years": 7, "migration_years": 3, "notes": "Orders and invoices kept 7 years (assumed retention)."},
+    {"name": "Supplier EDI feed", "paths": ["app/SupplierFeed.java", "erp/as2_*", "certs/legacy-edi.pem"],
+     "data_lifetime_years": 10, "migration_years": 4, "notes": "Contracts and pricing; partner coordination slows migration."},
+    {"name": "ERP (SAP)", "paths": ["erp/DEFAULT.PFL"], "data_lifetime_years": 10, "migration_years": 5,
+     "notes": "Depends on vendor support for post-quantum TLS."},
+    {"name": "Admin access (SSH)", "paths": ["config/sshd_config", "ssh/*"], "data_lifetime_years": 1, "migration_years": 1,
+     "notes": "Sessions are short-lived; host and user keys are the long-lived part."},
+    {"name": "Label printing", "paths": ["app/label_printer.js"], "data_lifetime_years": 0.5, "migration_years": 1}
+  ]
+}

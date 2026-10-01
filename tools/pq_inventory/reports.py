@@ -60,7 +60,7 @@ def write_markdown(doc: dict, roadmap: dict | None, path: Path) -> None:
         for item in roadmap["items"]:
             actions = "; ".join(f"{a['algorithm']} ({a['count']}) → {a['replacement']}" for a in item["actions"]) or "none"
             out.append(f"| {item['tier']}. {item['tier_label']} | {item['system']} | {item['x']:g} | {item['y']:g} | "
-                       f"{item['z']:g} | {item['slack_years']:+g} | {item['findings']} | {item['start_migration_by'] or '-'} | {actions} |")
+                       f"{item['z']:g} | {item['slack_years']:+g} | {item['findings']} | {start_text(item)} | {actions} |")
     out += ["", "## Findings by file", ""]
     for file, findings in _by_file(doc["findings"]).items():
         out += [f"### `{file}`", "", "| Line | Risk | Algorithm | Detail | Recommended replacement |", "|---:|---|---|---|---|"]
@@ -89,6 +89,15 @@ table{width:100%;border-collapse:collapse;background:var(--card);font-size:.92re
 details{background:var(--card);border:1px solid var(--line);border-radius:8px;margin:8px 0;padding:6px 10px}summary{cursor:pointer;font-weight:600}
 code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.88em}.heur{font-size:.75rem;color:var(--muted)}
 """
+
+
+def start_text(item: dict) -> str:
+    if item["start_migration_by"] is None:
+        return "-"
+    if item["overdue_years"] > 0:
+        years = item["overdue_years"]
+        return f"now (overdue by {years:g} year{'' if years == 1 else 's'})"
+    return str(item["start_migration_by"])
 
 
 def _pill(risk: str) -> str:
@@ -127,7 +136,7 @@ def write_html(doc: dict, roadmap: dict | None, path: Path) -> None:
             y_note = "" if item["y_from"] == "config" else " <span class=heur>(assumed)</span>"
             parts.append(f"<tr><td><b>{item['tier']}</b>. {e(item['tier_label'])}</td><td>{e(item['system'])}</td>"
                          f"<td>{item['x']:g}{x_note}</td><td>{item['y']:g}{y_note}</td><td>{item['z']:g}</td>"
-                         f"<td>{item['slack_years']:+g}</td><td>{item['start_migration_by'] or '-'}</td><td>{actions}</td></tr>")
+                         f"<td>{item['slack_years']:+g}</td><td>{e(start_text(item))}</td><td>{actions}</td></tr>")
         parts.append("</table></div>")
     parts.append("<h2>Findings by file</h2>")
     for file, findings in _by_file(doc["findings"]).items():

@@ -1,0 +1,5 @@
+# SAP-style system profile (demo, heuristic rules). Migrated: wave 1 (password hashing only).
+SAPSYSTEMNAME = NWH
+ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH
+ssl/client_ciphersuites = 150:PFS:HIGH::EC_P256:EC_HIGH
+login/password_hash_algorithm = encoding=RFC2307, algorithm=iSSHA-512, iterations=20000, saltsize=128
