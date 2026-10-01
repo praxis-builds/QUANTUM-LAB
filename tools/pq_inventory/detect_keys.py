@@ -10,6 +10,7 @@ from __future__ import annotations
 import bisect
 import re
 import time
+import warnings
 
 from . import der
 from .model import Finding
@@ -295,7 +296,18 @@ def _certificate_findings(cert, relative: str, line: int, rule: str) -> list[Fin
 
 
 def detect(relative: str, data: bytes, is_text: bool, deadline: float | None = None) -> list[Finding]:
-    """Findings for one file. Stops early (raising TimeoutError) once time.monotonic() passes deadline."""
+    """Findings for one file. Stops early (raising TimeoutError) once time.monotonic() passes deadline.
+
+    Reading deprecated cryptography is this scanner's job, so the library's deprecation warnings are
+    silenced here: they must not reach the user's console, and under warnings-as-errors they must not
+    turn a parsed key into a label-only one (cryptography warns whenever a finite-field DH key is touched).
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return _detect(relative, data, is_text, deadline)
+
+
+def _detect(relative: str, data: bytes, is_text: bool, deadline: float | None) -> list[Finding]:
     findings: list[Finding] = []
     if not is_text:  # DER: a certificate or a public key, recognised by structure; anything else is not reported
         try:
