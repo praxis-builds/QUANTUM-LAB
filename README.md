@@ -49,7 +49,17 @@ python -m pq_inventory scan path/to/code --out reports/ --fail-on quantum-broken
 python -m pq_inventory diff before/scan.json after/scan.json --out progress/    # fixed / new / unchanged
 ```
 
-Read-only and offline: no network code, nothing written outside `--out`, symlinks never followed, private keys reported by type and size only. Details, risk classes, rule format and honest accuracy numbers: [`docs/pq-inventory.md`](docs/pq-inventory.md). Every non-obvious choice in this build is logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); the final review is [`docs/REVIEW.md`](docs/REVIEW.md).
+Exit codes (the same for `scan` and `diff`):
+
+| Code | Meaning |
+|---|---|
+| 0 | Done; no `--fail-on` threshold reached |
+| 1 | A finding at the `--fail-on` level **or worse** (order: CLASSICALLY-BROKEN > QUANTUM-BROKEN > QUANTUM-WEAKENED); for `diff`, a *new* finding |
+| 2 | Usage or input error (bad option, missing path, malformed `scan.json` or systems config, `--out` not a directory) |
+| 3 | Nothing was scanned (empty tree, only skipped files, symlinked root): never a pass |
+| 4 | Internal error (a bug; please report it) |
+
+Read-only and offline: no network code, nothing written outside `--out`, symlinks never followed, private keys reported by type and size only, and no source text in any output. Details, risk classes, rule format and honest accuracy numbers: [`docs/pq-inventory.md`](docs/pq-inventory.md). Every non-obvious choice in this build is logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); the final review is [`docs/REVIEW.md`](docs/REVIEW.md).
 
 ## Completed study: classical vs quantum-kernel classification (frozen)
 

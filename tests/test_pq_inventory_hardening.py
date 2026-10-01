@@ -448,3 +448,44 @@ def test_encrypted_private_key_type_is_unknown_not_rsa(tmp_path):
     (finding,) = scan(tmp_path).findings
     assert (finding.algorithm, finding.category, finding.heuristic) == ("UNKNOWN", "private-key", True)
     assert "encrypted" in finding.detail
+
+
+# --------------------------------------------- 10. exit codes: 1 only for a threshold, 2 for bad input, 4 for a crash
+
+def _corpus_scan_json(tmp_path) -> Path:
+    tree = tmp_path / "tree"
+    tree.mkdir(exist_ok=True)
+    (tree / "a.py").write_text("import hashlib\nhashlib.md5(b'x')\n")
+    assert _run(["scan", str(tree), "--out", str(tmp_path / "s"), "--formats", "json"])[0] == 0
+    return tmp_path / "s" / "scan.json"
+
+
+@pytest.mark.parametrize("bad", ['{"root": "x"}', '[]', '{"findings": "nope", "root": "x", "generated_at": "t", "summary": {}}'])
+def test_diff_with_a_malformed_scan_is_an_input_error(tmp_path, bad):
+    good = _corpus_scan_json(tmp_path)
+    (tmp_path / "bad.json").write_text(bad)
+    code, console = _run(["diff", str(good), str(tmp_path / "bad.json"), "--out", str(tmp_path / "d")])
+    assert code == 2 and "error" in console and "Traceback" not in console
+
+
+@pytest.mark.parametrize("config", ['{"assumptions": {"z_years": "soon"}}', '{"systems": [{"name": "x", "migration_years": "two"}]}',
+                                    '{"systems": "all"}'])
+def test_bad_systems_config_is_an_input_error(tmp_path, config):
+    _corpus_scan_json(tmp_path)
+    (tmp_path / "systems.json").write_text(config)
+    code, console = _run(["scan", str(tmp_path / "tree"), "--out", str(tmp_path / "o"), "--systems", str(tmp_path / "systems.json")])
+    assert code == 2 and "error" in console
+
+
+def test_out_that_is_a_file_is_an_input_error(tmp_path):
+    _corpus_scan_json(tmp_path)
+    (tmp_path / "not-a-dir").write_text("")
+    code, console = _run(["scan", str(tmp_path / "tree"), "--out", str(tmp_path / "not-a-dir")])
+    assert code == 2 and "not a directory" in console
+
+
+def test_an_internal_error_is_exit_4_not_1(tmp_path, monkeypatch):
+    _corpus_scan_json(tmp_path)
+    monkeypatch.setattr(cli, "scan", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
+    code, console = _run(["scan", str(tmp_path / "tree"), "--out", str(tmp_path / "o")])
+    assert code == cli.EXIT_INTERNAL == 4 and "boom" in console

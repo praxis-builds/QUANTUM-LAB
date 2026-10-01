@@ -36,8 +36,34 @@ TIERS = {
 }
 
 
+def _number(value, where: str) -> None:
+    if value is not None and (type(value) not in (int, float) or value < 0):
+        raise ValueError(f"{where} must be a non-negative number, got {value!r}")
+
+
+def validate_config(config) -> None:
+    """Raise ValueError (an input error, exit code 2) unless config has the documented shape."""
+    if not isinstance(config, dict):
+        raise ValueError("systems config must be a JSON object")
+    assumptions = config.get("assumptions", {})
+    if not isinstance(assumptions, dict):
+        raise ValueError("'assumptions' must be an object")
+    for key in ("z_years", "z_deadline_year", "x_default_years", "y_default_years", "reference_year"):
+        _number(assumptions.get(key), f"assumptions.{key}")
+    systems = config.get("systems", [])
+    if not isinstance(systems, list) or not all(isinstance(system, dict) for system in systems):
+        raise ValueError("'systems' must be a list of objects")
+    for index, system in enumerate(systems):
+        paths = system.get("paths", ["*"])
+        if not isinstance(paths, list) or not all(isinstance(path, str) for path in paths):
+            raise ValueError(f"systems[{index}].paths must be a list of glob strings")
+        for key in ("data_lifetime_years", "migration_years"):
+            _number(system.get(key), f"systems[{index}].{key}")
+
+
 def load_config(path: Path | None) -> dict:
     config = json.loads(Path(path).read_text(encoding="utf-8")) if path else {}
+    validate_config(config)
     assumptions = {**DEFAULT_ASSUMPTIONS, **config.get("assumptions", {})}
     reference_year = int(assumptions.get("reference_year") or date.today().year)
     if assumptions.get("z_years") is None:

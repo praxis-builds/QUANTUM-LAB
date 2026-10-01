@@ -44,5 +44,16 @@ def write_markdown(result: dict, path: Path) -> None:
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
 
+FINDING_KEYS = ("fingerprint", "file", "line", "risk", "algorithm", "detail")
+
+
 def load(path: Path) -> dict:
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    """A scan.json written by `pq_inventory scan`; ValueError (an input error) if it is not one."""
+    doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    findings = doc.get("findings") if isinstance(doc, dict) else None
+    by_risk = doc.get("summary", {}).get("by_risk") if isinstance(doc, dict) and isinstance(doc.get("summary"), dict) else None
+    if (not isinstance(findings, list) or not isinstance(by_risk, dict) or set(by_risk) != set(RISK_ORDER)
+            or not all(isinstance(f, dict) and all(k in f for k in FINDING_KEYS) and f["risk"] in RISK_ORDER for f in findings)
+            or not isinstance(doc.get("root"), str) or not isinstance(doc.get("generated_at"), str)):
+        raise ValueError(f"{path} is not a pq_inventory scan.json")
+    return doc

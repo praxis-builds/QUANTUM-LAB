@@ -1,7 +1,9 @@
 """Command line: python -m pq_inventory scan <path> --out <dir> | diff <old.json> <new.json> --out <dir>.
 
-Exit codes: 0 = done, 1 = --fail-on threshold reached (for CI), 2 = usage or input error,
-3 = nothing was scanned (no readable file under the path): never a pass, whatever --fail-on says.
+Exit codes (also in README.md and docs/pq-inventory.md):
+  0 = done; 1 = --fail-on threshold reached (for CI); 2 = usage or input error;
+  3 = nothing was scanned (no readable file under the path): never a pass, whatever --fail-on says;
+  4 = internal error (a bug: please report it). Only 1 means "findings at or above the threshold".
 """
 
 from __future__ import annotations
@@ -23,7 +25,7 @@ from .walker import DEFAULT_MAX_BYTES, DEFAULT_MAX_FILES
 FAIL_LEVELS = {"none": None, "quantum-weakened": "QUANTUM-WEAKENED", "quantum-broken": "QUANTUM-BROKEN",
                "classically-broken": "CLASSICALLY-BROKEN"}
 FORMATS = ("json", "html", "md", "cbom")
-EXIT_OK, EXIT_THRESHOLD, EXIT_USAGE, EXIT_NOTHING_SCANNED = 0, 1, 2, 3
+EXIT_OK, EXIT_THRESHOLD, EXIT_USAGE, EXIT_NOTHING_SCANNED, EXIT_INTERNAL = 0, 1, 2, 3, 4
 
 
 def _positive_int(text: str) -> int:
@@ -62,21 +64,22 @@ def _threshold_hit(findings: list[dict], level: str) -> bool:
 
 
 def _scan(args) -> int:
-    if not args.path.exists():
+    if not args.path.exists() and not args.path.is_symlink():
         print(f"error: {args.path} does not exist", file=sys.stderr)
-        return 2
+        return EXIT_USAGE
     formats = [f.strip() for f in args.formats.split(",") if f.strip()]
     unknown = set(formats) - set(FORMATS)
     if unknown:
         print(f"error: unknown format(s) {sorted(unknown)}", file=sys.stderr)
-        return 2
+        return EXIT_USAGE
     try:
         rules = load_rules(args.rules)
         config = roadmap.load_config(args.systems)
     except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
         print(f"error: {error}", file=sys.stderr)
-        return 2
-    args.out.mkdir(parents=True, exist_ok=True)
+        return EXIT_USAGE
+    if not _prepare_out(args.out):
+        return EXIT_USAGE
     result = scan(args.path, rules=rules, max_bytes=args.max_file_size, max_files=args.max_files, exclude=[args.out])
     doc = to_document(result, generated_at=args.timestamp)
     plan = roadmap.build(doc["findings"], config)
@@ -97,17 +100,30 @@ def _scan(args) -> int:
         return EXIT_NOTHING_SCANNED
     if _threshold_hit(doc["findings"], args.fail_on):
         print(f"FAIL: findings at or above {FAIL_LEVELS[args.fail_on]}", file=sys.stderr)
-        return 1
-    return 0
+        return EXIT_THRESHOLD
+    return EXIT_OK
+
+
+def _prepare_out(out: Path) -> bool:
+    if out.exists() and not out.is_dir():
+        print(f"error: --out {out} exists and is not a directory", file=sys.stderr)
+        return False
+    try:
+        out.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        print(f"error: cannot create --out {out}: {error}", file=sys.stderr)
+        return False
+    return True
 
 
 def _diff(args) -> int:
     try:
         old, new = diff.load(args.old), diff.load(args.new)
-    except (OSError, json.JSONDecodeError) as error:
+    except (OSError, ValueError) as error:  # json.JSONDecodeError is a ValueError
         print(f"error: {error}", file=sys.stderr)
-        return 2
-    args.out.mkdir(parents=True, exist_ok=True)
+        return EXIT_USAGE
+    if not _prepare_out(args.out):
+        return EXIT_USAGE
     result = diff.compare(old, new)
     (args.out / "diff.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     diff.write_markdown(result, args.out / "diff.md")
@@ -115,10 +131,14 @@ def _diff(args) -> int:
           f"written to {args.out}")
     if _threshold_hit(result["new_findings"], args.fail_on):
         print(f"FAIL: new findings at or above {FAIL_LEVELS[args.fail_on]}", file=sys.stderr)
-        return 1
-    return 0
+        return EXIT_THRESHOLD
+    return EXIT_OK
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = _parser().parse_args(argv)
-    return _scan(args) if args.command == "scan" else _diff(args)
+    args = _parser().parse_args(argv)  # argparse exits with 2 on usage errors
+    try:
+        return _scan(args) if args.command == "scan" else _diff(args)
+    except Exception as error:  # noqa: BLE001 - a crash must not look like "threshold reached" (exit 1)
+        print(f"internal error: {error.__class__.__name__}: {error} (please report this)", file=sys.stderr)
+        return EXIT_INTERNAL
