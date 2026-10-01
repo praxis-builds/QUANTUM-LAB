@@ -159,6 +159,7 @@
             <label for="bb84-noise">Channel noise <output id="bb84-noise-output" for="bb84-noise">0.02</output><input id="bb84-noise" type="range" min="0" max="0.2" step="0.01" value="0.02"></label>
             <label for="bb84-sample">Sample bits compared <output id="bb84-sample-output" for="bb84-sample">200</output><input id="bb84-sample" type="range" min="10" max="2000" step="10" value="200"></label>
             <label class="sec-check" for="bb84-eve"><input id="bb84-eve" type="checkbox"> Eve intercepts every qubit</label>
+            <div class="sec-seed"><label for="bb84-seed">Seed<input id="bb84-seed" type="number" min="0" max="2147483647" step="1" value="20260928" inputmode="numeric"></label><button type="button" id="bb84-new-seed">New seed</button></div>
             <button type="submit" class="primary" id="bb84-run">Run BB84</button>
           </form>
           <p class="field-note" id="bb84-status" aria-live="polite">Nothing has been simulated yet.</p>
@@ -174,7 +175,7 @@
           <div class="panel-heading"><h3 id="rsa-heading">Toy RSA break (Shor)</h3><span class="small-label">LESSONS 13–16</span></div>
           <form id="rsa-form" class="sec-form">
             <label for="rsa-n">Modulus N<select id="rsa-n"><option value="15">15 = ? × ?</option><option value="21" selected>21 = ? × ?</option></select></label>
-            <label for="rsa-seed">Seed<input id="rsa-seed" type="number" min="0" max="2147483647" step="1" value="3"></label>
+            <div class="sec-seed"><label for="rsa-seed">Seed<input id="rsa-seed" type="number" min="0" max="2147483647" step="1" value="3" inputmode="numeric"></label><button type="button" id="rsa-new-seed">New seed</button></div>
             <button type="submit" class="primary" id="rsa-run">Break the key</button>
           </form>
           <p class="field-note" id="rsa-status" aria-live="polite">Nothing has been simulated yet.</p>
@@ -186,6 +187,7 @@
             <label for="grover-key">Secret key<select id="grover-key"></select></label>
             <label for="grover-iterations">Grover iterations <output id="grover-iterations-output" for="grover-iterations">3</output><input id="grover-iterations" type="range" min="0" max="8" step="1" value="3"></label>
             <label for="grover-pairs">Known plaintext/ciphertext pairs<select id="grover-pairs"><option value="1">1 (false positives possible)</option><option value="2" selected>2</option></select></label>
+            <div class="sec-seed"><label for="grover-seed">Seed<input id="grover-seed" type="number" min="0" max="2147483647" step="1" value="20260928" inputmode="numeric"></label><button type="button" id="grover-new-seed">New seed</button></div>
             <button type="submit" class="primary" id="grover-run">Search</button>
           </form>
           <p class="field-note" id="grover-status" aria-live="polite">Nothing has been simulated yet.</p>

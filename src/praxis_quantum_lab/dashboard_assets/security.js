@@ -21,6 +21,17 @@ const SecurityCore = (() => {
     return {key: clampInt(values.key, 0, 15), iterations: clampInt(values.iterations, 0, 8),
             pairs: Number(values.pairs) === 1 ? 1 : 2, seed: clampInt(values.seed, 0, MAX_SEED)};
   }
+  // A seed exactly as the API accepts it: a whole number from 0 to MAX_SEED. Anything else is refused
+  // (null), not clamped, so the run shown is always the run of the seed in the field.
+  function parseSeed(text) {
+    const trimmed = String(text).trim();
+    if (!/^\d{1,10}$/.test(trimmed)) return null;
+    const seed = Number(trimmed);
+    return seed <= MAX_SEED ? seed : null;
+  }
+  function newSeed(random = Math.random) {
+    return Math.min(MAX_SEED, Math.floor(random() * (MAX_SEED + 1)));
+  }
   // Mosca's inequality: data is at risk if x + y > z.
   function moscaVerdict(x, y, z) {
     const values = [x, y, z].map(Number);
@@ -46,7 +57,7 @@ const SecurityCore = (() => {
       return [Number(x.toFixed(2)), Number(y.toFixed(2))];
     });
   }
-  return {MAX_SEED, bb84Request, rsaRequest, groverRequest, moscaVerdict, percent, chartPoints};
+  return {MAX_SEED, bb84Request, rsaRequest, groverRequest, parseSeed, newSeed, moscaVerdict, percent, chartPoints};
 })();
 if (typeof module !== "undefined" && module.exports) module.exports = SecurityCore;
 
@@ -87,10 +98,20 @@ if (typeof document !== "undefined") (() => {
     finally { busy[kind] = false; $(button).disabled = false; }
   }
 
+  // The seed typed into a form, or an error the form shows instead of simulating.
+  function seedFrom(id) {
+    const seed = C.parseSeed($(id).value);
+    if (seed === null) throw new Error(`Seed must be a whole number from 0 to ${C.MAX_SEED}.`);
+    return seed;
+  }
+  $("bb84-new-seed").addEventListener("click", () => { $("bb84-seed").value = String(C.newSeed()); });
+  $("rsa-new-seed").addEventListener("click", () => { $("rsa-seed").value = String(C.newSeed()); });
+  $("grover-new-seed").addEventListener("click", () => { $("grover-seed").value = String(C.newSeed()); });
+
   // ------------------------------------------------------------------- BB84
   function bb84Values() {
     return {qubits: $("bb84-qubits").value, noise: $("bb84-noise").value, sample: $("bb84-sample").value,
-            eve: $("bb84-eve").checked, seed: 20260928};
+            eve: $("bb84-eve").checked, seed: $("bb84-seed").value};
   }
   function bb84Outputs() {
     $("bb84-qubits-output").textContent = String(C.bb84Request(bb84Values()).qubits);
@@ -101,7 +122,7 @@ if (typeof document !== "undefined") (() => {
   $("bb84-form").addEventListener("submit", (event) => {
     event.preventDefault();
     run("bb84", "bb84-run", "bb84-status", async () => {
-      const r = await post("/api/security/bb84", C.bb84Request(bb84Values()));
+      const r = await post("/api/security/bb84", {...C.bb84Request(bb84Values()), seed: seedFrom("bb84-seed")});
       $("bb84-results").hidden = false;
       $("bb84-sifted").textContent = `${r.sifted} of ${r.qubits} qubits`;
       $("bb84-qber").textContent = `${C.percent(r.qber_estimate)} in the sample (true ${C.percent(r.qber_true)})`;
@@ -118,7 +139,7 @@ if (typeof document !== "undefined") (() => {
   $("rsa-form").addEventListener("submit", (event) => {
     event.preventDefault();
     run("rsa", "rsa-run", "rsa-status", async () => {
-      const r = await post("/api/security/rsa", C.rsaRequest({n: $("rsa-n").value, seed: $("rsa-seed").value}));
+      const r = await post("/api/security/rsa", C.rsaRequest({n: $("rsa-n").value, seed: seedFrom("rsa-seed")}));
       const list = $("rsa-steps");
       list.replaceChildren();
       const step = (text) => list.append(element("li", null, text));
@@ -164,7 +185,7 @@ if (typeof document !== "undefined") (() => {
     event.preventDefault();
     run("grover", "grover-run", "grover-status", async () => {
       const r = await post("/api/security/grover", C.groverRequest({key: $("grover-key").value, iterations: $("grover-iterations").value,
-                                                                  pairs: $("grover-pairs").value, seed: 20260928}));
+                                                                  pairs: $("grover-pairs").value, seed: seedFrom("grover-seed")}));
       drawGrover(r);
       const over = r.iterations > r.optimal_iterations;
       $("grover-status").textContent = `${r.iterations} iterations on ${r.qubits} qubits: the secret key came out in ${C.percent(r.measured_secret)} of ${r.shots} shots (theory ${C.percent(r.curve[r.iterations].p_secret)}).`;

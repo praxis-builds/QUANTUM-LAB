@@ -212,11 +212,12 @@ BB84: qubits integer in [200, 20000], noise finite in [0, 0.2], sample integer i
 Grover: key integer in [0, 15], iterations integer in [0, 8], pairs 1 or 2. Seeds are
 integers in [0, 2147483647].
 
-Two limits of the seeds here. The page's BB84 and Grover forms have no seed field and always send
-20260928, so pressing Run again with the same settings gives the same numbers (the RSA form has a
-seed field; the API accepts any seed). And BB84 derives its Aer seeds from `seed % 100000`, so two
-seeds 100,000 apart share the simulator's measurement randomness; Alice's bits, the bases and Eve's
-choices still come from the full seed, so the rounds differ.
+Each of the three forms has a seed field (BB84 and Grover default to 20260928, RSA to 3) and a
+**New seed** button that fills in a random one. The same seed gives the same numbers again; a seed
+the API would reject (empty, negative, fractional, above 2147483647) is refused in the form with a
+message and nothing is sent. BB84 gives every seed its own block of Aer run indices
+(`security_lab.bb84_base_run`), spaced by `lessons/_qec.run_seed`, so no two seeds share
+simulator randomness.
 
 `GET /api/security/status` returns `{"available": true, "reason": null}`. The three routes
 reuse the lessons' code, so they need a repository checkout. Without `lessons/` (for example

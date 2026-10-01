@@ -1172,6 +1172,7 @@ footer p{
 .sec-form output { font-family: var(--mono); color: var(--accent); }
 .sec-check { display: flex !important; align-items: center; gap: 8px; }
 .sec-check input { width: auto; margin: 0; flex: 0 0 auto; }
+.sec-seed { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
 .sec-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
 .sec-metrics div { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
 .sec-metrics dt { font-size: .75rem; color: var(--label); }
