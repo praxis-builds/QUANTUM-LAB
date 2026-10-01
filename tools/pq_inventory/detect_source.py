@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import re
+import time
 from dataclasses import dataclass
 from importlib import resources
 from pathlib import Path
@@ -78,33 +79,51 @@ def load_rules(extra: list[Path] | None = None) -> list[Rule]:
     return rules
 
 
-def detect(relative: str, text: str, rules: list[Rule]) -> list[Finding]:
+def _line_matches(line: str, rules: list[Rule]) -> list[tuple[Rule, str, int | None]]:
+    """(rule, algorithm, key size) for every rule match on one line, in rule order."""
+    hits = []
+    for rule in rules:
+        for match in rule.pattern.finditer(line):
+            algorithm = rule.algorithm
+            if rule.algorithm_map:
+                algorithm = rule.algorithm_map.get((match.group(rule.map_group) or "").lower())
+                if algorithm is None:
+                    continue
+            size = None
+            if rule.key_size_group and match.groupdict().get(rule.key_size_group):
+                size = int(match.group(rule.key_size_group))
+            hits.append((rule, algorithm, size))
+    return hits
+
+
+MAX_CACHED_LINES = 20_000
+
+
+def detect(relative: str, text: str, rules: list[Rule], deadline: float | None = None) -> list[Finding]:
     applicable = [rule for rule in rules if rule.applies_to(relative)]
     if not applicable:
         return []
     is_source = Path(relative).suffix.lower() in SOURCE_SUFFIXES
     findings: list[Finding] = []
     seen: set[tuple[int, str]] = set()
+    cache: dict[str, list] = {}  # identical lines (generated or crafted files) are matched once
     for number, line in enumerate(text.splitlines(), start=1):
+        if deadline is not None and time.monotonic() > deadline:
+            raise TimeoutError
         if len(line) > MAX_LINE:
             line = line[:MAX_LINE]  # minified or generated: bound the regex work
         if is_source and line.lstrip().startswith(COMMENT_PREFIXES):
             continue
-        for rule in applicable:
-            for match in rule.pattern.finditer(line):
-                algorithm = rule.algorithm
-                if rule.algorithm_map:
-                    key = (match.group(rule.map_group) or "").lower()
-                    algorithm = rule.algorithm_map.get(key)
-                    if algorithm is None:
-                        continue
-                size = None
-                if rule.key_size_group and match.groupdict().get(rule.key_size_group):
-                    size = int(match.group(rule.key_size_group))
-                if (number, algorithm) in seen:
-                    continue  # a more specific rule earlier in the list already reported this
-                seen.add((number, algorithm))
-                findings.append(Finding.make(file=relative, line=number, category=rule.category, algorithm=algorithm,
-                                             rule=rule.id, key_size=size, heuristic=rule.heuristic,
-                                             detail=rule.description + (f" ({size}-bit)" if size else ""), evidence=line))
+        hits = cache.get(line)
+        if hits is None:
+            hits = _line_matches(line, applicable)
+            if len(cache) < MAX_CACHED_LINES:
+                cache[line] = hits
+        for rule, algorithm, size in hits:
+            if (number, algorithm) in seen:
+                continue  # a more specific rule earlier in the list already reported this
+            seen.add((number, algorithm))
+            findings.append(Finding.make(file=relative, line=number, category=rule.category, algorithm=algorithm,
+                                         rule=rule.id, key_size=size, heuristic=rule.heuristic,
+                                         detail=rule.description + (f" ({size}-bit)" if size else ""), evidence=line))
     return findings

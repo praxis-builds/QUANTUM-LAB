@@ -7,11 +7,15 @@ PEM headers still give the key type.
 
 from __future__ import annotations
 
+import bisect
 import re
+import time
 
 from .model import Finding
 
-PEM_BLOCK = re.compile(rb"-----BEGIN ([A-Z0-9 ]+)-----\s*(.*?)-----END \1-----", re.S)
+PEM_BEGIN = re.compile(rb"-----BEGIN ([A-Z0-9 ]{1,64})-----")
+PEM_END = re.compile(rb"-----END ([A-Z0-9 ]{1,64})-----")
+MAX_PEM_BLOCK = 1024 * 1024  # bytes between BEGIN and END; larger "blocks" are not PEM
 SSH_PUBLIC = re.compile(rb"(?:^|\s)(ssh-rsa|ssh-dss|ssh-ed25519|ssh-ed448|ecdsa-sha2-nistp(?:256|384|521)|sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com)\s+(AAAA[0-9A-Za-z+/=]+)")
 SSH_TYPES = {b"ssh-rsa": "RSA-SIGNATURE", b"ssh-dss": "DSA", b"ssh-ed25519": "EdDSA", b"ssh-ed448": "EdDSA",
              b"sk-ssh-ed25519@openssh.com": "EdDSA", b"sk-ecdsa-sha2-nistp256@openssh.com": "ECDSA"}
@@ -26,6 +30,39 @@ try:  # optional dependency ([pqc] extra)
     HAVE_CRYPTOGRAPHY = True
 except ImportError:  # pragma: no cover - exercised only without the extra
     HAVE_CRYPTOGRAPHY = False
+
+
+def pem_blocks(data: bytes):
+    """Yield (label, body, offset) for each PEM block: a BEGIN marker paired with the next END marker of
+    the same label, with no other BEGIN marker in between (a PEM body never contains one).
+
+    The markers are found with bounded regexes (labels of at most 64 characters, no nested
+    quantifiers); pairing uses a binary search and a forward `find` that stops at the next BEGIN, so
+    the regions scanned do not overlap and the work is O(n log n). The old single regex
+    `BEGIN (X)(.*?)END \\1` rescanned to the end of the file for every unterminated BEGIN (quadratic).
+    """
+    ends: dict[bytes, list[int]] = {}
+    for match in PEM_END.finditer(data):
+        ends.setdefault(match.group(1), []).append(match.start())
+    if not ends:
+        return
+    cursor = 0
+    for match in PEM_BEGIN.finditer(data):
+        start = match.start()
+        if start < cursor:
+            continue  # inside the previous block
+        candidates = ends.get(match.group(1))
+        if not candidates:
+            continue
+        after = match.end()
+        index = bisect.bisect_left(candidates, after)
+        if index == len(candidates):
+            continue
+        end_start = candidates[index]
+        if end_start - after > MAX_PEM_BLOCK or data.find(b"-----BEGIN ", after, end_start) >= 0:
+            continue
+        yield match.group(1).decode(), data[after:end_start], start
+        cursor = end_start
 
 
 def _line_of(data: bytes, offset: int) -> int:
@@ -106,7 +143,8 @@ def _pem_findings(label: str, block: bytes, relative: str, line: int) -> list[Fi
                          heuristic=algorithm is None, detail=f"{label.lower()} (header only)")]
 
 
-def detect(relative: str, data: bytes, is_text: bool) -> list[Finding]:
+def detect(relative: str, data: bytes, is_text: bool, deadline: float | None = None) -> list[Finding]:
+    """Findings for one file. Stops early (raising TimeoutError) once time.monotonic() passes deadline."""
     findings: list[Finding] = []
     if not is_text:
         if HAVE_CRYPTOGRAPHY:
@@ -120,9 +158,13 @@ def detect(relative: str, data: bytes, is_text: bool) -> list[Finding]:
                 except Exception:  # noqa: BLE001
                     return []
         return []
-    for match in PEM_BLOCK.finditer(data):
-        findings += _pem_findings(match.group(1).decode(), match.group(2), relative, _line_of(data, match.start()))
+    for label, body, offset in pem_blocks(data):
+        if deadline is not None and time.monotonic() > deadline:
+            raise TimeoutError
+        findings += _pem_findings(label, body, relative, _line_of(data, offset))
     for match in SSH_PUBLIC.finditer(data):
+        if deadline is not None and time.monotonic() > deadline:
+            raise TimeoutError
         kind = match.group(1)
         line = _line_of(data, match.start(1))
         size, detail = None, kind.decode()

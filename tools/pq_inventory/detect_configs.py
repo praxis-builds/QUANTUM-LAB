@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import time
 
 from .algorithms import SEVERITY, classify, parse_cipher_string, suite_algorithms, worst
 from .model import Finding
@@ -47,6 +48,9 @@ TLS_DIRECTIVES = [
     ("openssl-default-bits", re.compile(r"^\s*default_bits\s*=\s*(?P<v>\d+)", re.I)),
     ("openssl-default-md", re.compile(r"^\s*default_md\s*=\s*(?P<v>[\w-]+)", re.I)),
 ]
+# Literal prefilter: a file without any of these words cannot match a TLS directive (plain substring search).
+TLS_KEYWORDS = ("ssl_protocols", "ssl_ciphers", "ssl_ecdh_curve", "sslprotocol", "sslciphersuite", "sslopensslconfcmd",
+                "cipherstring", "ciphersuites", "minprotocol", "groups", "curves", "default_bits", "default_md")
 SSH_DIRECTIVES = re.compile(r"^\s*(?P<k>KexAlgorithms|Ciphers|MACs|HostKeyAlgorithms|PubkeyAcceptedAlgorithms|PubkeyAcceptedKeyTypes)\s+(?P<v>\S+)", re.I)
 DIGESTS = {"md5": "MD5", "sha1": "SHA-1", "sha224": "SHA-224", "sha256": "SHA-256", "sha384": "SHA-384", "sha512": "SHA-512"}
 
@@ -70,9 +74,14 @@ def _suite_findings(relative: str, line: int, rule: str, raw: str) -> list[Findi
     return findings
 
 
-def detect_tls(relative: str, text: str) -> list[Finding]:
+def detect_tls(relative: str, text: str, deadline: float | None = None) -> list[Finding]:
     findings: list[Finding] = []
+    lowered = text.lower()
+    if not any(keyword in lowered for keyword in TLS_KEYWORDS):
+        return findings
     for number, line in enumerate(text.splitlines(), start=1):
+        if deadline is not None and time.monotonic() > deadline:
+            raise TimeoutError
         if line.lstrip().startswith(("#", ";")):
             continue
         for rule, pattern in TLS_DIRECTIVES:

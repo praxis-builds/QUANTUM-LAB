@@ -53,3 +53,42 @@ def test_no_literal_value_reaches_any_output(tmp_path):
     findings = json.loads(outputs["a/scan.json"])["findings"]
     assert len(findings) >= 5
     assert all(f["evidence"] in ("", "[redacted]") for f in findings)
+
+
+# --------------------------------------------- 2. PEM parsing is linear, with a time budget
+
+def _crafted_pem(size: int) -> bytes:
+    """BEGIN headers with no END: the old lazy regex rescanned to the end of the file for each one."""
+    unit = b"-----BEGIN A-----\n"
+    return unit * (size // len(unit))
+
+
+def test_crafted_2mib_pem_file_scans_in_under_two_seconds(tmp_path):
+    import time
+
+    from pq_inventory.scanner import scan
+
+    (tmp_path / "evil.pem").write_bytes(_crafted_pem(2 * 1024 * 1024 - 64))
+    # the same with one matching END at the very bottom: every BEGIN now has a candidate partner
+    (tmp_path / "evil2.pem").write_bytes(_crafted_pem(2 * 1024 * 1024 - 256) + b"-----END A-----\n")
+    for name in ("evil.pem", "evil2.pem"):
+        start = time.perf_counter()
+        result = scan(tmp_path / name)
+        assert time.perf_counter() - start < 2.0, name
+        assert result.files_scanned == 1
+
+
+def test_pem_blocks_still_pair_begin_and_end_markers():
+    from pq_inventory.detect_keys import pem_blocks
+
+    data = (b"junk\n-----BEGIN A-----\n-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----\n"
+            b"-----BEGIN PUBLIC KEY-----\nBBBB\n-----END PUBLIC KEY-----\n-----END A-----\n")
+    assert [(label, body.strip()) for label, body, _ in pem_blocks(data)] == [("CERTIFICATE", b"AAAA"), ("PUBLIC KEY", b"BBBB")]
+
+
+def test_per_file_time_budget_stops_work_and_says_so(tmp_path):
+    from pq_inventory.scanner import scan
+
+    (tmp_path / "many.py").write_text("import hashlib\n" + "hashlib.md5(b'x')\n" * 20000)
+    result = scan(tmp_path, time_budget=0.0)
+    assert any(s["file"] == "many.py" and "time budget" in s["reason"] for s in result.skipped)
