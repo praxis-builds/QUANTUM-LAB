@@ -320,6 +320,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._error(503, "Saved repair results unavailable or inconsistent.")
         elif self.path == "/api/circuit-presets":
             self._json(200, circuit_presets())
+        elif self.path == "/api/security/status":
+            from . import security_lab
+
+            reason = security_lab.unavailable_reason()
+            self._json(200, {"available": reason is None, "reason": reason})
         elif self.path == "/api/kernel-results":
             try:
                 report = load_kernel_results()
@@ -337,6 +342,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._error(404, "Route not found.")
             return
         limit, invalid_message = route
+        if self.path.startswith("/api/security/"):
+            from . import security_lab
+
+            if security_lab.unavailable_reason():
+                self._error(503, security_lab.unavailable_reason())
+                return
         lengths = self.headers.get_all("Content-Length", [])
         if len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdecimal():
             self._error(400, "One valid Content-Length is required.")
@@ -421,7 +432,7 @@ def preload_simulators() -> None:
 
     from . import circuit_playground, density_matrix_noise, qiskit_experiments, security_lab  # noqa: F401
 
-    security_lab.preload()  # the lesson modules the Security Lab routes reuse
+    security_lab.preload()  # the lesson modules the Security Lab routes reuse (False: that tab is unavailable)
 
 
 def make_server(*, port: int = 8765) -> DashboardServer:

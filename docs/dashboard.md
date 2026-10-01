@@ -212,6 +212,11 @@ BB84: qubits integer in [200, 20000], noise finite in [0, 0.2], sample integer i
 Grover: key integer in [0, 15], iterations integer in [0, 8], pairs 1 or 2. Seeds are
 integers in [0, 2147483647].
 
+`GET /api/security/status` returns `{"available": true, "reason": null}`. The three routes
+reuse the lessons' code, so they need a repository checkout. Without `lessons/` (for example
+a wheel install) the dashboard still starts; the status says why, the three routes answer
+503 with that reason, and the tab disables them and keeps the Mosca calculator.
+
 For all POST routes the server rejects extra keys, duplicate keys, non-finite JSON
 values (including numbers too large for a float), traversal/query routes,
 nonlocal Host and cross-origin requests. Aggregate headers/target length are

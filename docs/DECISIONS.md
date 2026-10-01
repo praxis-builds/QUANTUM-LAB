@@ -71,7 +71,7 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 ## D15. Security Lab reuses the lessons' modules directly
 - **Decision:** `praxis_quantum_lab/security_lab.py` imports `lessons/_qkd.py`, lesson 28's `distill` (now taking a `sample_size`), `lessons/_shor.py`, lesson 18's cipher oracle and `lessons/_grover_n.py` through one loader, preloaded on the server's main thread.
 - **Alternatives:** copy the logic into the package; move the lesson helpers into `src/`.
-- **Why:** the brief asks to reuse the lesson code, and copying would let the dashboard and the lessons drift apart. Moving them would change 20+ lessons' imports. The dashboard already needs a repository checkout (it serves `results/` and `docs/`). Preloading follows the existing rule that Qiskit-related imports must not first happen in a request thread (the segfault documented in `docs/dashboard.md`).
+- **Why:** the brief asks to reuse the lesson code, and copying would let the dashboard and the lessons drift apart. Moving them would change 20+ lessons' imports. The dashboard already needs a repository checkout (it serves `results/` and `docs/`). Preloading follows the existing rule that Qiskit-related imports must not first happen in a request thread (the segfault documented in `docs/dashboard.md`). **Update (review finding 11):** if the lesson modules cannot be loaded (no checkout), only this tab is disabled, with the reason, instead of the whole dashboard failing to start.
 
 ## D16. Mosca calculator runs in the browser
 - **Decision:** no server route; `SecurityCore.moscaVerdict` computes x + y > z client-side, unit-tested with Node.

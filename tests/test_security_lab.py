@@ -138,3 +138,47 @@ def test_security_script_is_served(server):
         assert b"SecurityCore" in response.read()
     finally:
         connection.close()
+
+
+# ------------------------------------------------- review #11: no lessons/ directory (e.g. a wheel install)
+
+def test_dashboard_starts_without_lessons_and_the_security_lab_degrades(monkeypatch, tmp_path):
+    monkeypatch.setattr(lab, "LESSONS_DIR", tmp_path / "no-lessons")
+    monkeypatch.setattr(lab, "_modules", {})
+    monkeypatch.setattr(lab, "_unavailable", None)
+    srv = dashboard.make_server(port=0)  # used to raise FileNotFoundError: every tab went down
+    thread = Thread(target=srv.serve_forever, daemon=True)
+    thread.start()
+    try:
+        connection = HTTPConnection("127.0.0.1", srv.server_port, timeout=30)
+        connection.request("GET", "/api/security/status")
+        response = connection.getresponse()
+        status = json.loads(response.read())
+        assert response.status == 200 and status["available"] is False and "lessons" in status["reason"]
+        connection.request("GET", "/api/circuit-presets")  # the other tabs still work
+        response = connection.getresponse()
+        assert response.status == 200 and json.loads(response.read())
+        connection.close()
+        code, body = post(srv, "/api/security/rsa", RSA)
+        assert code == 503 and "lessons" in body["error"]
+    finally:
+        srv.shutdown()
+        srv.server_close()
+        thread.join(timeout=5)
+
+
+def test_security_status_reports_available_with_a_checkout(server):
+    connection = HTTPConnection("127.0.0.1", server.server_port, timeout=10)
+    try:
+        connection.request("GET", "/api/security/status")
+        response = connection.getresponse()
+        assert response.status == 200 and json.loads(response.read()) == {"available": True, "reason": None}
+    finally:
+        connection.close()
+
+
+def test_security_tab_shows_the_unavailable_reason_and_disables_simulations():
+    assets = dashboard.ASSET_ROOT
+    assert 'id="security-unavailable"' in (assets / "index.html").read_text()
+    script = (assets / "security.js").read_text()
+    assert '"/api/security/status"' in script and '["bb84-run", "rsa-run", "grover-run"]' in script

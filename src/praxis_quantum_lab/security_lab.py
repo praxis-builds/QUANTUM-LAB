@@ -2,7 +2,8 @@
 
 Each simulation reuses the lessons' own code (lessons/_qkd.py, lesson 28's distill, lessons/_shor.py,
 lesson 18's cipher oracle, lessons/_grover_n.py), so the dashboard shows exactly what the lessons
-teach. That needs a repository checkout, like the rest of the dashboard (results/, docs/).
+teach. That needs a repository checkout. Without one (e.g. a wheel install), preload() records why,
+the dashboard still starts, and the three routes answer 503 with that reason.
 Every parser validates all limits before any simulator is touched.
 """
 
@@ -18,6 +19,8 @@ LESSONS_DIR = Path(__file__).resolve().parents[2] / "lessons"
 MAX_SEED = 2**31 - 1
 MAX_SECURITY_BODY_BYTES = 256
 _modules: dict[str, Any] = {}
+_unavailable: str | None = None  # why the lesson modules could not be loaded, if they could not
+LESSON_NAMES = ("_qkd", "28_raw_to_secret_key", "_shor", "_grover_n", "18_toy_key_search")
 
 
 def lesson_module(name: str):
@@ -34,10 +37,26 @@ def lesson_module(name: str):
     return _modules[name]
 
 
-def preload() -> None:
-    """Import every lesson module the routes use (on the server's main thread; see preload_simulators)."""
-    for name in ("_qkd", "28_raw_to_secret_key", "_shor", "_grover_n", "18_toy_key_search"):
-        lesson_module(name)
+def preload() -> bool:
+    """Import every lesson module the routes use (on the server's main thread; see preload_simulators).
+    Returns False, and remembers the reason, if they cannot be loaded: the Security Lab is then
+    unavailable but the rest of the dashboard keeps working."""
+    global _unavailable
+    try:
+        if not LESSONS_DIR.is_dir():
+            raise FileNotFoundError(f"no lessons/ directory at {LESSONS_DIR}")
+        for name in LESSON_NAMES:
+            lesson_module(name)
+    except Exception as error:  # noqa: BLE001 - any failure only disables this tab
+        _unavailable = (f"The Security Lab needs a repository checkout: it reuses the lessons' code, and loading it "
+                        f"failed ({error.__class__.__name__}: {error}). The other tabs work.")
+        return False
+    _unavailable = None
+    return True
+
+
+def unavailable_reason() -> str | None:
+    return _unavailable
 
 
 def _is_int(value: object) -> bool:

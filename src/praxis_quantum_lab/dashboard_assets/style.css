@@ -1165,6 +1165,7 @@ footer p{
 .theme-toggle[aria-pressed="true"] { background: var(--pressed-bg); color: var(--accent); border-color: var(--accent); }
 
 /* ---------------------------------------------------------------- Security Lab */
+.sec-unavailable { border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; background: var(--surface); padding: 10px 14px; margin: 0 0 16px; }
 .sec-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .sec-form { display: grid; gap: 10px; margin-bottom: 8px; }
 .sec-form label { display: grid; gap: 4px; }

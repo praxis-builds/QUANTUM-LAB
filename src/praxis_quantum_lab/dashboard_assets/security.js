@@ -183,6 +183,16 @@ if (typeof document !== "undefined") (() => {
   for (const id of ["mosca-x", "mosca-y", "mosca-z"]) $(id).addEventListener("input", mosca);
   $("mosca-form").addEventListener("submit", (event) => { event.preventDefault(); mosca(); });
 
+  // Without a repository checkout the server cannot load the lessons' code: say so and keep only
+  // the Mosca calculator (pure arithmetic in the browser) usable.
+  fetch("/api/security/status", {cache: "no-store"}).then((response) => response.json()).then((status) => {
+    if (status.available) return;
+    const note = $("security-unavailable");
+    note.textContent = `${status.reason} The Mosca calculator below still works.`;
+    note.hidden = false;
+    for (const id of ["bb84-run", "rsa-run", "grover-run"]) $(id).disabled = true;
+  }).catch(() => {});
+
   bb84Outputs();
   mosca();
 })();
