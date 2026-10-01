@@ -18,26 +18,52 @@ LIBOQS_HINT = ("liboqs not found. Build liboqs 0.16.0 as a shared library into ~
 CRYPTOGRAPHY_HINT = "the 'cryptography' package is missing: pip install -e '.[pqc]'"
 
 
+def _loadable(path: Path) -> bool:
+    try:
+        ctypes.CDLL(str(path))
+    except OSError:
+        return False
+    return True
+
+
 def liboqs_library_path() -> Path | None:
-    """Where liboqs-python would load liboqs from, without triggering its auto-installer."""
-    roots = [Path(os.environ["OQS_INSTALL_PATH"])] if "OQS_INSTALL_PATH" in os.environ else [Path.home() / "_oqs"]
-    for root in roots:
-        for sub in ("lib", "lib64"):
-            for candidate in sorted((root / sub).glob("liboqs.so*")) if (root / sub).is_dir() else []:
-                return candidate
+    """The liboqs shared library that liboqs-python 0.16 *will* load, or None.
+
+    liboqs-python tries exactly <OQS_INSTALL_PATH or ~/_oqs>/lib/liboqs.so, .../lib64/liboqs.so and
+    ctypes.util.find_library("oqs"); if none loads, `import oqs` clones and builds liboqs from GitHub.
+    So this accepts only those candidates, and only if they really load (a versioned liboqs.so.9
+    without the liboqs.so link, a dangling link or a foreign file would all send oqs to the network).
+    """
+    root = Path(os.environ["OQS_INSTALL_PATH"]) if "OQS_INSTALL_PATH" in os.environ else Path.home() / "_oqs"
+    for sub in ("lib", "lib64"):
+        candidate = root / sub / "liboqs.so"
+        if candidate.is_file() and _loadable(candidate):
+            return candidate
     found = ctypes.util.find_library("oqs")
-    return Path(found) if found else None
+    if found and _loadable(Path(found)):
+        return Path(found)
+    return None
+
+
+def _import_oqs():
+    import oqs  # noqa: PLC0415  (only ever reached through load_oqs, after the guard)
+
+    return oqs
 
 
 def load_oqs():
-    """The oqs module, or None if liboqs or liboqs-python is missing (never auto-installs)."""
-    if liboqs_library_path() is None:
+    """The oqs module, or None if liboqs or liboqs-python is missing. Never auto-installs: oqs is
+    imported only when the library it will load is known to load, and OQS_INSTALL_PATH (the variable
+    liboqs-python documents) is set to the directory that was checked, so oqs looks exactly there."""
+    path = liboqs_library_path()
+    if path is None:
         return None
+    if path.parent.name in ("lib", "lib64") and path.name == "liboqs.so":
+        os.environ["OQS_INSTALL_PATH"] = str(path.parent.parent)
     try:
-        import oqs  # noqa: PLC0415  (imported only once the library is known to exist)
+        return _import_oqs()
     except ImportError:
         return None
-    return oqs
 
 
 def missing_reason() -> str | None:
