@@ -266,3 +266,13 @@ def test_roadmap_orders_systems_by_mosca_and_labels_assumptions(tmp_path):
     default = roadmap.load_config(None)
     assert "ASSUMPTION" in default["assumptions"]["z_source"] and "NOT a forecast" in default["assumptions"]["z_source"]
     assert default["assumptions"]["z_years"] == max(0, 2035 - default["assumptions"]["reference_year"])
+
+
+def test_without_cryptography_keys_fall_back_to_pem_headers(monkeypatch):
+    monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", False)
+    result = scan(CORPUS / "keys")
+    by_file = {f.file: f for f in result.findings}
+    assert by_file["legacy_sha1_cert.pem"].heuristic and "not parsed" in by_file["legacy_sha1_cert.pem"].detail
+    assert by_file["encrypted_private_key.pem"].category == "private-key"
+    assert "ecdsa_cert.der" not in by_file  # DER needs the parser; reported nowhere rather than guessed
+    assert any("'cryptography' package is not installed" in note for note in result.notes)

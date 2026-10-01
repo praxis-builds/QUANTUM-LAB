@@ -1,6 +1,6 @@
 # Lessons
 
-Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation); 13–16 are step 4 (Shor and a toy RSA break); 17–20 are step 5 (Grover in depth); 21–25 are step 6 (noise and error correction); 26–29 are step 7 (quantum security). Run every script from the repo root with `.venv/bin/python`.
+Short lessons, one idea each, using this repo's own code and local Aer only (no cloud, no hardware). Do them in order; each builds on the last. Lessons 01–06 are program step 1 (foundations); 07–10 are step 2 (first quantum algorithms); 11–12 are step 3 (QFT and phase estimation); 13–16 are step 4 (Shor and a toy RSA break); 17–20 are step 5 (Grover in depth); 21–25 are step 6 (noise and error correction); 26–29 are step 7 (quantum security); 30–33 are step 8 (post-quantum cryptography, which needs the optional `[pqc]` extra for 31–33). Run every script from the repo root with `.venv/bin/python`.
 
 Each lesson has a `.py` script and a `.md` page: the idea in plain words, three "predict first" questions, how to run, and what you should see. **Answer the questions before you run the script.** The answers sit at the bottom of the `.md` page under "Spoiler". Plots go to `lessons/out/` (git-ignored).
 
@@ -35,6 +35,10 @@ Each lesson has a `.py` script and a `.md` page: the idea in plain words, three 
 | 27 | [Intercept-resend attack](27_intercept_resend.md) | Eve causes 25% errors; k sample bits miss her with probability (3/4)^k | `_qkd.py`, Aer |
 | 28 | [Raw key to secret key](28_raw_to_secret_key.md) | Parity error correction plus Toeplitz privacy amplification; abort above 11%; what QKD does not give you | `_qkd.py`, Aer |
 | 29 | [Quantum randomness](29_quantum_randomness.md) | Same seed, same "quantum" bits; statistical tests and a von Neumann extractor; why passing tests proves nothing | `_qkd.py`, Aer |
+| 30 | [Why RSA and ECC must go](30_why_rsa_and_ecc_must_go.md) | Shor recovers a toy RSA key; ECC needs only a few thousand logical qubits; harvest now, decrypt later (Mosca); FIPS 203/204/205 | `_shor.py`, Aer |
+| 31 | [ML-KEM hands-on](31_ml_kem.md) | Keygen, encapsulate, decapsulate; 1,184-byte keys and 1,088-byte ciphertexts vs RSA and X25519; implicit rejection | `_pqc.py`, liboqs |
+| 32 | [Hybrid key exchange](32_hybrid_key_exchange.md) | X25519 + ML-KEM-768 through HKDF: an attacker must break both (educational, not production) | `_pqc.py`, liboqs |
+| 33 | [ML-DSA signatures](33_ml_dsa.md) | Sign and verify; tampering fails; 3,309-byte signatures vs 71 for ECDSA; SLH-DSA for comparison | `_pqc.py`, liboqs |
 
 Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their checks: `.venv/bin/python -m pytest tests/test_lesson_*.py tests/test_oracles.py`.
 
@@ -52,7 +56,7 @@ Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their che
 | A first quantum algorithm (Grover) | 05 |
 | Noise (usually a later topic, so this is extra) | 06 |
 
-Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Lessons 13–16 add Shor and a toy RSA break. Lessons 17–20 cover Grover in depth, 21–25 error-correction basics, 26–29 BB84 and randomness. Not covered yet: post-quantum cryptography (step 8), fault-tolerant codes, post-quantum crypto, real hardware, and programming-language basics.
+Lessons 07–10 (oracle algorithms) go beyond that description. Lessons 11–12 add the QFT and phase estimation. Lessons 13–16 add Shor and a toy RSA break. Lessons 17–20 cover Grover in depth, 21–25 error-correction basics, 26–29 BB84 and randomness. Lessons 30–33 cover post-quantum cryptography, with a C companion in [`c/`](c/README.md). Not covered: fault-tolerant codes, post-quantum crypto, real hardware, and programming-language basics.
 
 ## Honest limits
 

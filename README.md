@@ -1,23 +1,55 @@
-# Praxis Quantum Lab — quantum computing, toward post-quantum security
+# Praxis Quantum Lab: from qubits to post-quantum migration
 
-Praxis Quantum Lab is a local, simulator-only learning lab for **quantum computing**: circuits, gates and algorithms, built by hand and run on local Qiskit Aer. The goal is cybersecurity: understand exactly what Shor's and Grover's algorithms threaten, and then move on to post-quantum cryptography. It runs on a laptop, with no cloud account, provider token or quantum hardware.
+**What it is.** A local, simulator-only lab that goes from single qubits to Shor's and Grover's algorithms, error correction, quantum key distribution and NIST's post-quantum standards. Each step is a short lesson you can run and test. It ends in a practical tool: **`pq_inventory`**, a read-only scanner that finds quantum-vulnerable cryptography in code and configuration and turns it into a prioritised migration plan.
 
-The method for every step: predict, build the circuit, run it on local Aer, explain any mismatch. Nothing here claims a quantum speed-up; every quantum result is set against an honestly counted classical baseline.
+**What it demonstrates.**
+- How Shor's period finding breaks RSA (a toy 5-bit key is recovered from its public key on local Aer), and why the same idea threatens elliptic curves.
+- How Grover's search only *weakens* symmetric crypto (a measured square-root scaling on toy sizes), and why AES-256 remains safe.
+- Why real attacks need error-corrected machines (noise experiments, repetition and Shor codes, thresholds), tied to published RSA-2048 resource estimates.
+- What BB84 quantum key distribution does and doesn't give you, and why security agencies favour post-quantum cryptography.
+- ML-KEM, ML-DSA and a hybrid X25519 + ML-KEM-768 exchange through liboqs, with sizes and timings against RSA and elliptic curves.
+- A consulting-style case study: inventory, risk classes, a Mosca-based roadmap and a before/after diff ([`docs/case-study.md`](docs/case-study.md)).
 
-## Main path: the quantum computing program
+**Honest limits.** Everything quantum runs on a **classical simulator** (Qiskit Aer) on a laptop: no cloud, no quantum hardware, no provider tokens. **No quantum advantage is claimed anywhere.** Every quantum result sits next to an honestly counted classical baseline, and at these toy sizes the classical method usually wins. The toy RSA keys, ciphers and hashes are for teaching only. Resource estimates for real attacks are quoted from published papers with sources and years, and unverified figures are marked as such.
+
+## Program map
 
 | Step | Topic | Where |
 |---|---|---|
 | 1 | Foundations: qubits, interference, phase, entanglement, Grover on 2 qubits, noise | [`lessons/`](lessons/README.md) 01–06 |
-| 2 | First quantum algorithms: oracles, Deutsch–Jozsa, Bernstein–Vazirani, Simon | [`lessons/`](lessons/README.md) 07–10 |
-| 3 | Quantum Fourier transform and phase estimation (the engine of Shor) | [`lessons/`](lessons/README.md) 11–12 |
-| 4 | Shor: factor 15 and 21 on Aer, order finding plus classical post-processing; break a toy RSA key | [`lessons/`](lessons/README.md) 13–16 |
-| 5 | Grover in depth: toy key search, hash preimages, and why it only halves key strength | [`lessons/`](lessons/README.md) 17–20 |
-| 6 | Noise and error-correction basics: bit-flip, phase-flip and Shor's 9-qubit codes, thresholds | [`lessons/`](lessons/README.md) 21–25 |
-| 7 | Quantum security: BB84 key distribution, eavesdropping, key distillation, quantum randomness | [`lessons/`](lessons/README.md) 26–29 |
-| 8 | Bridge to post-quantum cryptography (ML-KEM / Kyber); needs a dependency decision | planned |
+| 2 | First quantum algorithms: oracles, Deutsch–Jozsa, Bernstein–Vazirani, Simon | 07–10 |
+| 3 | Quantum Fourier transform and phase estimation (the engine of Shor) | 11–12 |
+| 4 | Shor: factor 15 and 21 on Aer; break a toy RSA key | 13–16 |
+| 5 | Grover in depth: toy key search, hash preimages, why it only halves key strength | 17–20 |
+| 6 | Noise and error correction: bit-flip, phase-flip and Shor's 9-qubit codes, thresholds | 21–25 |
+| 7 | Quantum security: BB84, intercept-resend, key distillation, quantum randomness | 26–29 |
+| 8 | Post-quantum cryptography: why RSA/ECC must go, ML-KEM, hybrid key exchange, ML-DSA (plus a C demo via liboqs) | 30–33, [`lessons/c/`](lessons/c/README.md) |
+| → | **Crypto-inventory scanner** and a case study | [`tools/pq_inventory`](docs/pq-inventory.md), [`examples/warehouse-demo`](examples/warehouse-demo/README.md) |
 
-Each algorithm is a lesson (script, plain-words page, test) plus a preset in the dashboard's Circuit Playground.
+Each lesson is a script, a plain-words page with "Predict first" questions and a spoiler, and a test. The local dashboard has a Circuit Playground with presets for most algorithms, plus a **Security Lab** tab (live BB84, toy RSA break, Grover key search, Mosca calculator).
+
+## Quick start
+
+```bash
+python3.12 -m venv .venv
+.venv/bin/pip install -e '.[dev]'           # core: lessons 01-30, dashboard, scanner (without key parsing)
+.venv/bin/pip install -e '.[dev,pqc]'       # optional: lessons 31-33 and certificate/key parsing
+                                            # (needs the liboqs C library: docs/DECISIONS.md, D1)
+.venv/bin/python -m pytest                  # post-quantum tests skip cleanly without the extra
+.venv/bin/python lessons/16_toy_rsa_break.py
+.venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765   # http://127.0.0.1:8765
+```
+
+## Scanner usage
+
+```bash
+python -m pq_inventory scan path/to/code --out reports/            # JSON, HTML, Markdown, CycloneDX CBOM
+python -m pq_inventory scan path/to/code --out reports/ --systems systems.json   # Mosca roadmap per system
+python -m pq_inventory scan path/to/code --out reports/ --fail-on quantum-broken # exit 1 for CI
+python -m pq_inventory diff before/scan.json after/scan.json --out progress/    # fixed / new / unchanged
+```
+
+Read-only and offline: no network code, nothing written outside `--out`, symlinks never followed, private keys reported by type and size only. Details, risk classes, rule format and honest accuracy numbers: [`docs/pq-inventory.md`](docs/pq-inventory.md). Every non-obvious choice in this build is logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); the final review is [`docs/REVIEW.md`](docs/REVIEW.md).
 
 ## Completed study: classical vs quantum-kernel classification (frozen)
 

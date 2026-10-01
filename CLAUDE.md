@@ -15,7 +15,7 @@ The repo (code, tests, `results/`) is the source of truth; `docs/history/` is ba
 5. Grover in depth — toy key search, hash preimages; why it only halves key strength (lessons 17–20).
 6. Noise + error-correction basics — bit-flip/phase-flip/Shor-9 codes, thresholds (lessons 21–25).
 7. Quantum security — BB84, intercept-resend, key distillation, quantum randomness (lessons 26–29).
-8. Bridge to post-quantum crypto — ML-KEM (Kyber); needs a dependency decision first.
+8. Post-quantum crypto — why RSA/ECC must go, ML-KEM, hybrid X25519+ML-KEM, ML-DSA (lessons 30–33, `lessons/c/`; optional `[pqc]` extra).
 
 Each algorithm = a lesson (script + plain-words doc + test) + a Circuit Playground preset.
 The kernel/PSD work is a **completed, frozen study** (`docs/studies/README.md`):
@@ -46,16 +46,21 @@ kept, not moved, not extended.
 - `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Circuit Playground, Bell Lab, Kernel Observatory); loads Qiskit at start-up (lazy import in a request thread segfaults)
 - `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
 - `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
-- `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon), 11–12 (QFT, phase estimation), 13–16 (Shor, toy RSA), 17–20 (Grover in depth), 21–25 (noise, error correction) and 26–29 (BB84, randomness); script + .md + test each; shared helpers `_grover.py`, `_grover_n.py`, `_oracles.py`, `_qec.py`, `_qft.py`, `_qkd.py`, `_shor.py` (checked in `tests/test_grover_n.py`, `tests/test_oracles.py`, `tests/test_qec.py`, `tests/test_qft.py`, `tests/test_qkd.py`, `tests/test_shor.py`); see `lessons/README.md`
+- `security_lab.py` – Security Lab routes (BB84, toy RSA break, Grover key search); reuses lesson modules via one loader, preloaded at start-up
+- `tools/pq_inventory/` – read-only crypto-inventory scanner (`python -m pq_inventory scan|diff`); rules in `rules/default_rules.json`; docs in `docs/pq-inventory.md`
+- `examples/warehouse-demo/` – fictional case-study app (before/after) and committed reports; `docs/case-study.md`
+- `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon), 11–12 (QFT, phase estimation), 13–16 (Shor, toy RSA), 17–20 (Grover in depth), 21–25 (noise, error correction) 26–29 (BB84, randomness) and 30–33 (post-quantum crypto; C demo in `lessons/c/`); script + .md + test each; shared helpers `_grover.py`, `_grover_n.py`, `_oracles.py`, `_pqc.py`, `_qec.py`, `_qft.py`, `_qkd.py`, `_shor.py` (checked in `tests/test_grover_n.py`, `tests/test_oracles.py`, `tests/test_qec.py`, `tests/test_qft.py`, `tests/test_qkd.py`, `tests/test_shor.py`); see `lessons/README.md`
 
 ## Commands (from repo root; use `.venv/bin/python`)
-- Setup: `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'`
+- Setup: `python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'`; optional `.[dev,pqc]` (liboqs-python + cryptography; liboqs 0.16.0 built into `~/_oqs` without OpenSSL, see `docs/DECISIONS.md` D1)
 - Tests: `.venv/bin/python -m pytest`
 - Verify same-seed reproducibility: `experiments/verify_reproducibility.py`, `verify_repeated_classification.py`, `verify_extended_kernel_evaluation.py`
 - Dashboard: `.venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765` (http://127.0.0.1:8765)
+- Scanner: `.venv/bin/python -m pq_inventory scan <path> --out <dir>`; demo reports regenerate with the commands in `examples/warehouse-demo/README.md`
 
 ## Conventions
 - Basis ordering is `|q1 q0>` (Qiskit little-endian).
 - Results are JSON + PNG in `results/`.
+- Never `import oqs` directly: if liboqs is missing it clones and builds it from GitHub. Use `lessons/_pqc.load_oqs()` / `missing_reason()`, and mark tests with `tests/_pqc_skip.needs_pqc`.
 - Aer seeds shot i as `seed_simulator + i` for noisy or mid-circuit-measured runs, so runs meant to be independent need seeds at least `shots` apart (`lessons/_qec.run_seed`). Never pool runs whose seeds are close.
 - Each experiment has a runner in `experiments/`, a test in `tests/`, and a doc in `docs/`.
