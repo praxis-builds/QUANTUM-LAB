@@ -11,6 +11,7 @@ import bisect
 import re
 import time
 
+from . import der
 from .model import Finding
 
 PEM_BEGIN = re.compile(rb"-----BEGIN ([A-Z0-9 ]{1,64})-----")
@@ -26,10 +27,20 @@ HEADER_TYPES = {"RSA PRIVATE KEY": "RSA", "RSA PUBLIC KEY": "RSA", "EC PRIVATE K
 try:  # optional dependency ([pqc] extra)
     from cryptography import x509
     from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric import dh, dsa, ec, ed448, ed25519, rsa, x448, x25519
+    from cryptography.hazmat.primitives.asymmetric import dsa, ec, ed448, ed25519, rsa, x448, x25519
     HAVE_CRYPTOGRAPHY = True
 except ImportError:  # pragma: no cover - exercised only without the extra
     HAVE_CRYPTOGRAPHY = False
+# Imported separately, so that one module disappearing from a future cryptography release cannot
+# switch off all key parsing (finite-field DH is already deprecated there; ML-KEM/ML-DSA are recent).
+try:
+    from cryptography.hazmat.primitives.asymmetric import dh
+except ImportError:  # pragma: no cover
+    dh = None
+try:
+    from cryptography.hazmat.primitives.asymmetric import mldsa, mlkem
+except ImportError:  # pragma: no cover - cryptography < 45
+    mldsa = mlkem = None
 
 
 def pem_blocks(data: bytes):
@@ -85,9 +96,54 @@ def key_facts(key) -> tuple[str, int | None, str]:
         return "X25519", 256, "X25519"
     if isinstance(key, (x448.X448PublicKey, x448.X448PrivateKey)):
         return "X25519", 448, "X448"
-    if isinstance(key, (dh.DHPublicKey, dh.DHPrivateKey)):
+    for module, family, sets in ((mldsa, "ML-DSA", (44, 65, 87)), (mlkem, "ML-KEM", (512, 768, 1024))):
+        for number in sets if module is not None else ():
+            classes = tuple(getattr(module, f"{family.replace('-', '')}{number}{kind}Key", None) for kind in ("Public", "Private"))
+            if any(cls is not None and isinstance(key, cls) for cls in classes):
+                return family, None, f"{family}-{number}"
+    if dh is not None and isinstance(key, (dh.DHPublicKey, dh.DHPrivateKey)):  # last: touching dh warns (deprecated)
         return "DH", key.key_size, f"DH {key.key_size}-bit"
     return "UNKNOWN", None, type(key).__name__
+
+
+def _certificate_subject(der_bytes: bytes) -> tuple[str, str]:
+    """(subject, expiry) via cryptography when it can load the certificate (even if not its key)."""
+    if not HAVE_CRYPTOGRAPHY:
+        return "(subject not parsed: install the [pqc] extra)", "unknown"
+    try:
+        cert = x509.load_der_x509_certificate(der_bytes)
+        return cert.subject.rfc4514_string(), cert.not_valid_after_utc.date().isoformat()
+    except Exception:  # noqa: BLE001
+        return "(unreadable subject)", "unknown"
+
+
+def _pqc_findings(label: str | None, der_bytes: bytes, relative: str, line: int, rule: str) -> list[Finding] | None:
+    """Findings for a post-quantum key or certificate recognised by its algorithm OID, else None.
+
+    Reads only the DER structure (no key material), so it works without `cryptography` and for
+    algorithms `cryptography` cannot load yet (SLH-DSA)."""
+    try:
+        if label in (None, "CERTIFICATE"):
+            try:
+                key_oid, _ = der.certificate_oids(der_bytes)
+                if key_oid not in der.PQC_OIDS:
+                    return None
+                family, parameter_set = der.PQC_OIDS[key_oid]
+                subject, expiry = _certificate_subject(der_bytes)
+                return [Finding.make(file=relative, line=line, category="certificate", algorithm=family, rule=rule,
+                                     detail=f"certificate {subject}; key {parameter_set}; expires {expiry}")]
+            except der.DerError:
+                if label == "CERTIFICATE":
+                    return None
+        private = label is not None and "PRIVATE" in label
+        oid = der.pkcs8_oid(der_bytes) if private else der.spki_oid(der_bytes)
+    except der.DerError:
+        return None
+    if oid not in der.PQC_OIDS:
+        return None
+    family, parameter_set = der.PQC_OIDS[oid]
+    return [Finding.make(file=relative, line=line, category="private-key" if private else "public-key", algorithm=family,
+                         rule=rule, detail=f"{'private' if private else 'public'} key: {parameter_set}")]
 
 
 def _certificate_findings(cert, relative: str, line: int, rule: str) -> list[Finding]:
@@ -115,6 +171,11 @@ def _pem_findings(label: str, block: bytes, relative: str, line: int) -> list[Fi
     category = "private-key" if private else "public-key"
     if label in ("CERTIFICATE REQUEST", "X509 CRL"):
         return []
+    body = der.pem_body(block)
+    if body is not None and label in ("CERTIFICATE", "PUBLIC KEY", "PRIVATE KEY"):
+        pqc = _pqc_findings(label, body, relative, line, rule)
+        if pqc is not None:
+            return pqc
     if HAVE_CRYPTOGRAPHY:
         try:
             if label == "CERTIFICATE":
@@ -147,6 +208,11 @@ def detect(relative: str, data: bytes, is_text: bool, deadline: float | None = N
     """Findings for one file. Stops early (raising TimeoutError) once time.monotonic() passes deadline."""
     findings: list[Finding] = []
     if not is_text:
+        pqc = _pqc_findings(None, data, relative, 1, "der-certificate")
+        if pqc is not None:
+            if pqc[0].category == "public-key":
+                pqc[0].rule = "der-public-key"
+            return pqc
         if HAVE_CRYPTOGRAPHY:
             try:
                 return _certificate_findings(x509.load_der_x509_certificate(data), relative, 1, "der-certificate")

@@ -141,3 +141,112 @@ def test_read_is_capped_even_if_the_size_check_passes(tmp_path, monkeypatch):
     skipped: list = []
     assert list(walker.walk(tmp_path, max_bytes=100, skipped=skipped)) == []
     assert {"file": "grow.py", "reason": "larger than 100 bytes"} in skipped
+
+
+# --------------------------------------------- 4. ML-KEM / ML-DSA / SLH-DSA keys and certificates are OK
+
+PQC_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "pq_inventory" / "keys" / "pqc"
+PQC_EXPECTED = {"mlkem768_public.pem": ("ML-KEM", "ML-KEM-768", "public-key"),
+                "mldsa65_public.pem": ("ML-DSA", "ML-DSA-65", "public-key"),
+                "mldsa65_cert.pem": ("ML-DSA", "ML-DSA-65", "certificate"),
+                "slh_dsa_sha2_128s_public.pem": ("SLH-DSA", "SLH-DSA-SHA2-128s", "public-key"),
+                "slh_dsa_sha2_128s_cert.der": ("SLH-DSA", "SLH-DSA-SHA2-128s", "certificate")}
+
+
+def _pqc_facts(result) -> dict:
+    return {f.file: (f.algorithm, f.risk, f.category, f.detail) for f in result.findings}
+
+
+@pytest.mark.parametrize("have_cryptography", [True, False])
+def test_committed_pqc_fixtures_are_recognised_by_oid(monkeypatch, have_cryptography):
+    from pq_inventory import detect_keys
+    from pq_inventory.scanner import scan
+
+    if have_cryptography and not detect_keys.HAVE_CRYPTOGRAPHY:
+        pytest.skip("needs the [pqc] extra (cryptography)")
+    monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", have_cryptography and detect_keys.HAVE_CRYPTOGRAPHY)
+    facts = _pqc_facts(scan(PQC_FIXTURES))
+    assert set(facts) == set(PQC_EXPECTED)
+    for name, (algorithm, parameter_set, category) in PQC_EXPECTED.items():
+        found_algorithm, risk, found_category, detail = facts[name]
+        assert (found_algorithm, risk, found_category) == (algorithm, "OK", category), name
+        assert parameter_set in detail, (name, detail)
+
+
+def test_real_ml_kem_and_ml_dsa_artefacts_are_ok(tmp_path):
+    asymmetric = pytest.importorskip("cryptography.hazmat.primitives.asymmetric")
+    try:
+        from cryptography.hazmat.primitives.asymmetric import mldsa, mlkem
+    except ImportError:
+        pytest.skip("cryptography without ML-KEM/ML-DSA")
+    import datetime
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.x509.oid import NameOID
+
+    del asymmetric
+    pem, spki = serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+    keys = {"mldsa44": mldsa.MLDSA44PrivateKey.generate(), "mldsa65": mldsa.MLDSA65PrivateKey.generate(),
+            "mldsa87": mldsa.MLDSA87PrivateKey.generate(), "mlkem768": mlkem.MLKEM768PrivateKey.generate(),
+            "mlkem1024": mlkem.MLKEM1024PrivateKey.generate()}
+    for name, key in keys.items():
+        (tmp_path / f"{name}_public.pem").write_bytes(key.public_key().public_bytes(pem, spki))
+    (tmp_path / "mldsa65_private.pem").write_bytes(keys["mldsa65"].private_bytes(
+        pem, serialization.PrivateFormat.PKCS8, serialization.NoEncryption()))
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "pq.test.invalid")])
+    start = datetime.datetime(2026, 1, 1, tzinfo=datetime.timezone.utc)
+    cert = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(keys["mldsa87"].public_key())
+            .serial_number(1).not_valid_before(start).not_valid_after(start + datetime.timedelta(days=30))
+            .sign(keys["mldsa87"], None))
+    (tmp_path / "mldsa87_cert.pem").write_bytes(cert.public_bytes(pem))
+    (tmp_path / "mldsa87_cert.der").write_bytes(cert.public_bytes(serialization.Encoding.DER))
+    out = tmp_path / "out"
+    assert cli.main(["scan", str(tmp_path), "--out", str(out), "--formats", "json", "--fail-on", "quantum-weakened"]) == 0
+    facts = {f["file"]: (f["algorithm"], f["risk"], f["detail"]) for f in json.loads((out / "scan.json").read_text())["findings"]}
+    expected = {"mldsa44_public.pem": ("ML-DSA", "ML-DSA-44"), "mldsa65_public.pem": ("ML-DSA", "ML-DSA-65"),
+                "mldsa87_public.pem": ("ML-DSA", "ML-DSA-87"), "mlkem768_public.pem": ("ML-KEM", "ML-KEM-768"),
+                "mlkem1024_public.pem": ("ML-KEM", "ML-KEM-1024"), "mldsa65_private.pem": ("ML-DSA", "ML-DSA-65"),
+                "mldsa87_cert.pem": ("ML-DSA", "ML-DSA-87"), "mldsa87_cert.der": ("ML-DSA", "ML-DSA-87")}
+    assert set(facts) == set(expected)
+    for file, (algorithm, parameter_set) in expected.items():
+        assert facts[file][:2] == (algorithm, "OK") and parameter_set in facts[file][2], (file, facts[file])
+    assert "pq.test.invalid" in facts["mldsa87_cert.pem"][2]
+
+
+def test_real_slh_dsa_public_key_from_liboqs_is_ok(tmp_path):
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lessons"))
+    import _pqc
+
+    oqs = _pqc.load_oqs()
+    if oqs is None:
+        pytest.skip(_pqc.missing_reason() or "liboqs missing")
+    from pq_inventory.der import spki_pem
+    from pq_inventory.scanner import scan
+
+    with oqs.Signature("SLH_DSA_PURE_SHAKE_256F") as signer:
+        public = signer.generate_keypair()
+    (tmp_path / "slh.pem").write_bytes(spki_pem("2.16.840.1.101.3.4.3.31", public))
+    (finding,) = scan(tmp_path).findings
+    assert (finding.algorithm, finding.risk) == ("SLH-DSA", "OK") and "SLH-DSA-SHAKE-256f" in finding.detail
+
+
+def test_losing_the_deprecated_dh_module_does_not_switch_off_key_parsing(monkeypatch):
+    """Review #15: cryptography deprecates finite-field DH; its removal must not disable all parsing."""
+    import importlib.util
+    import sys
+
+    asymmetric = pytest.importorskip("cryptography.hazmat.primitives.asymmetric")
+    from pq_inventory import detect_keys
+
+    monkeypatch.delattr(asymmetric, "dh", raising=False)
+    monkeypatch.setitem(sys.modules, "cryptography.hazmat.primitives.asymmetric.dh", None)  # import now fails
+    spec = importlib.util.spec_from_file_location("pq_inventory._detect_keys_probe", detect_keys.__file__)
+    probe = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(probe)
+    assert probe.HAVE_CRYPTOGRAPHY and probe.dh is None
+    ec_key = (PQC_FIXTURES.parent / "ec_p256_public.pem").read_bytes()
+    (finding,) = probe.detect("ec.pem", ec_key, True)
+    assert (finding.algorithm, finding.key_size) == ("EC", 256)

@@ -98,7 +98,22 @@
    "ML-KEM"
   ],
   "clean/decoys.py": [],
-  "clean/README.md": []
+  "clean/README.md": [],
+  "keys/pqc/mlkem768_public.pem": [
+   "ML-KEM"
+  ],
+  "keys/pqc/mldsa65_public.pem": [
+   "ML-DSA"
+  ],
+  "keys/pqc/mldsa65_cert.pem": [
+   "ML-DSA"
+  ],
+  "keys/pqc/slh_dsa_sha2_128s_public.pem": [
+   "SLH-DSA"
+  ],
+  "keys/pqc/slh_dsa_sha2_128s_cert.der": [
+   "SLH-DSA"
+  ]
  },
  "must_skip": {
   "clean/blob.bin": "binary file"
