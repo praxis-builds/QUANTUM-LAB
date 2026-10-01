@@ -40,7 +40,7 @@ Each lesson has a `.py` script and a `.md` page: the idea in plain words, three 
 | 32 | [Hybrid key exchange](32_hybrid_key_exchange.md) | X25519 + ML-KEM-768 through HKDF: an attacker must break both (educational, not production) | `_pqc.py`, liboqs |
 | 33 | [ML-DSA signatures](33_ml_dsa.md) | Sign and verify; tampering fails; 3,309-byte signatures vs 71 for ECDSA; SLH-DSA for comparison | `_pqc.py`, liboqs |
 
-Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their checks: `.venv/bin/python -m pytest tests/test_lesson_*.py tests/test_oracles.py`.
+Run one lesson: `.venv/bin/python lessons/02_interference.py`. Run all their checks, including the shared helpers' tests: `.venv/bin/python -m pytest tests/test_lesson_*.py tests/test_oracles.py tests/test_qft.py tests/test_shor.py tests/test_grover_n.py tests/test_qec.py tests/test_qkd.py tests/test_pqc_guard.py`.
 
 ## Mapping to Coursera "Complete Quantum Computing Course for Beginners" (Course 1)
 

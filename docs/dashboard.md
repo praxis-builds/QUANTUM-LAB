@@ -212,6 +212,12 @@ BB84: qubits integer in [200, 20000], noise finite in [0, 0.2], sample integer i
 Grover: key integer in [0, 15], iterations integer in [0, 8], pairs 1 or 2. Seeds are
 integers in [0, 2147483647].
 
+Two limits of the seeds here. The page's BB84 and Grover forms have no seed field and always send
+20260928, so pressing Run again with the same settings gives the same numbers (the RSA form has a
+seed field; the API accepts any seed). And BB84 derives its Aer seeds from `seed % 100000`, so two
+seeds 100,000 apart share the simulator's measurement randomness; Alice's bits, the bases and Eve's
+choices still come from the full seed, so the rounds differ.
+
 `GET /api/security/status` returns `{"available": true, "reason": null}`. The three routes
 reuse the lessons' code, so they need a repository checkout. Without `lessons/` (for example
 a wheel install) the dashboard still starts; the status says why, the three routes answer
@@ -258,6 +264,11 @@ What the tests cover:
   agrees with the saved files and fails closed.
 - Real process: the documented entry point in a fresh interpreter, with
   repeated Bell and circuit requests (the crash regression).
+- Security Lab (`tests/test_security_lab.py`): every validation rule of the three
+  routes, results that match the lessons (BB84 QBER 0 without Eve and about 25% with
+  her, the factors of 15 and 21, Grover's success curve), the HTTP routes (the same
+  answer as the checked functions, body limits, content type, duplicate keys, 429
+  while another simulation runs), and the 503 with a reason when `lessons/` is missing.
 - Front end, without a browser: static checks that every element id used by the
   scripts exists once in `index.html` and that the page has no inline scripts,
   styles or external assets. Theme tokens are checked for completeness and

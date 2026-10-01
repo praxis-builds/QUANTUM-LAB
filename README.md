@@ -102,12 +102,27 @@ src/praxis_quantum_lab/
   qiskit_experiments.py    # ideal and noisy local Qiskit Aer circuits
   density_matrices.py      # density matrices, Kraus channels, qubit ordering
   density_matrix_noise.py  # Bell-state custom-versus-Aer channel sweep
+  bell_noise_analytics.py  # analytical Bell-noise references
+  dashboard_server.py      # loopback dashboard server (+ dashboard_assets/)
+  circuit_playground.py    # Circuit Playground: request validation, 1-3 qubit states, presets
+  observatory.py           # read-only repair comparison for the Kernel Observatory
+  security_lab.py          # Security Lab routes: BB84, toy RSA break, Grover key search
+  # frozen kernel/PSD study (docs/studies/README.md): kept, not extended
   kernel_experiment.py     # fair classical vs quantum-kernel comparison
-tests/                     # focused unit tests
+  finite_shot_kernel.py    # compute-uncompute shot-noise kernel estimates
+  finite_shot_psd.py       # PSD diagnostics and transductive repair
+  kernel_concentration.py, kernel_negativity.py, kernel_spectrum.py,
+  nearest_correlation.py, repair_comparison.py, repair_metrics.py,
+  repeated_model_comparison.py   # the study's follow-up analyses
+lessons/                   # lessons 01-33: script + plain-words page + test each; C demo in lessons/c/
+tools/pq_inventory/        # the crypto-inventory scanner (docs/pq-inventory.md)
+examples/warehouse-demo/   # fictional case-study app, before/after, with committed reports
+tests/                     # unit tests, lesson tests, scanner corpus (tests/fixtures/), Node tests (tests/js/)
 experiments/               # runnable scripts, separate from reusable code
-docs/                      # learning log, experiment guide, future directions
+docs/                      # guides, decisions, review notes, the frozen study, history
 notebooks/                 # reserved for guided, exploratory lessons
 results/                   # generated JSON reports and PNG figures
+.github/workflows/ci.yml   # CI: core job and a non-blocking [pqc] job
 ```
 
 ## Local setup (Windows + WSL)
