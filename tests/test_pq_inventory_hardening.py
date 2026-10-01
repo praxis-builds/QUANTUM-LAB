@@ -250,3 +250,34 @@ def test_losing_the_deprecated_dh_module_does_not_switch_off_key_parsing(monkeyp
     ec_key = (PQC_FIXTURES.parent / "ec_p256_public.pem").read_bytes()
     (finding,) = probe.detect("ec.pem", ec_key, True)
     assert (finding.algorithm, finding.key_size) == ("EC", 256)
+
+
+# --------------------------------------------- 5. --fail-on X means "X or worse"; the sample CI gate blocks QUANTUM-BROKEN
+
+ONE_FINDING = {"OK": "import hashlib\nhashlib.sha256(b'x')\n",
+               "QUANTUM-WEAKENED": "from cryptography.hazmat.primitives.ciphers.aead import AESGCM\nkey = AESGCM.generate_key(bit_length=128)\n",
+               "QUANTUM-BROKEN": "from cryptography.hazmat.primitives.asymmetric import rsa\nrsa.generate_private_key(public_exponent=65537, key_size=4096)\n",
+               "CLASSICALLY-BROKEN": "import hashlib\nhashlib.md5(b'x')\n"}
+LEVELS = {"none": None, "quantum-weakened": 1, "quantum-broken": 2, "classically-broken": 3}
+SEVERITY = {"OK": 0, "QUANTUM-WEAKENED": 1, "QUANTUM-BROKEN": 2, "CLASSICALLY-BROKEN": 3}
+
+
+@pytest.mark.parametrize("worst", list(ONE_FINDING))
+@pytest.mark.parametrize("level", list(LEVELS))
+def test_fail_on_means_this_level_or_worse(tmp_path, worst, level):
+    tree = tmp_path / "tree"
+    tree.mkdir()
+    (tree / "app.py").write_text(ONE_FINDING[worst])
+    code, _ = _run(["scan", str(tree), "--out", str(tmp_path / "out"), "--formats", "json", "--fail-on", level])
+    risks = {f["risk"] for f in json.loads((tmp_path / "out" / "scan.json").read_text())["findings"]}
+    assert max(SEVERITY[r] for r in risks) == SEVERITY[worst], risks  # the fixture really has this worst class
+    expected = 1 if LEVELS[level] is not None and SEVERITY[worst] >= LEVELS[level] else 0
+    assert code == expected
+
+
+def test_sample_ci_workflow_gates_on_quantum_broken_and_says_so():
+    workflow = (Path(__file__).resolve().parents[1] / "docs" / "ci" / "pq-inventory.yml").read_text()
+    scan_step = workflow.split("- name: Scan", 1)[1].split("- name:", 1)[0]
+    (run,) = [line for line in scan_step.splitlines() if line.strip().startswith("run:")]
+    assert run.strip().endswith("--fail-on quantum-broken")
+    assert "QUANTUM-BROKEN or worse" in scan_step

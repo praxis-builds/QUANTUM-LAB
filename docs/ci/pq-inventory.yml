@@ -1,5 +1,7 @@
-# Sample GitHub Actions workflow: fail a pull request that introduces quantum-broken or weak crypto,
-# and keep the reports as a build artifact. Copy to .github/workflows/ in the repository you scan.
+# Sample GitHub Actions workflow: fail when the code uses QUANTUM-BROKEN crypto (RSA, ECC, DH) or
+# CLASSICALLY-BROKEN crypto (MD5, SHA-1, 3DES, TLS 1.0 ...), and keep the reports as a build artifact.
+# Copy to .github/workflows/ in the repository you scan.
+# Severity order: CLASSICALLY-BROKEN > QUANTUM-BROKEN > QUANTUM-WEAKENED > OK; --fail-on X means "X or worse".
 name: crypto-inventory
 on:
   pull_request:
@@ -21,9 +23,10 @@ jobs:
           pip install "cryptography==50.0.2"
           pip install --no-deps "git+https://github.com/<you>/praxis-quantum-lab.git"
       - name: Scan
-        # Exit code 1 if any finding is QUANTUM-BROKEN or CLASSICALLY-BROKEN.
-        # During a migration, prefer gating only on NEW findings (see the diff step below).
-        run: python -m pq_inventory scan . --out pq-report --fail-on classically-broken
+        # Exit code 1 if any finding is QUANTUM-BROKEN or worse (that includes CLASSICALLY-BROKEN).
+        # Use --fail-on classically-broken to block only crypto that is weak today.
+        # During a migration, prefer gating only on NEW findings (see the diff variant below).
+        run: python -m pq_inventory scan . --out pq-report --fail-on quantum-broken
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4

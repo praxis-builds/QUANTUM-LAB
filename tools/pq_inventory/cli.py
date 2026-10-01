@@ -16,6 +16,9 @@ from .detect_source import load_rules
 from .scanner import scan, to_document
 from .walker import DEFAULT_MAX_BYTES, DEFAULT_MAX_FILES
 
+# --fail-on X fails on X *or worse*, in the order CLASSICALLY-BROKEN > QUANTUM-BROKEN > QUANTUM-WEAKENED > OK
+# (algorithms.SEVERITY). The gate-relevant classes are QUANTUM-BROKEN (the usual CI gate) and
+# CLASSICALLY-BROKEN; quantum-weakened is available for strict pipelines.
 FAIL_LEVELS = {"none": None, "quantum-weakened": "QUANTUM-WEAKENED", "quantum-broken": "QUANTUM-BROKEN",
                "classically-broken": "CLASSICALLY-BROKEN"}
 FORMATS = ("json", "html", "md", "cbom")
@@ -32,7 +35,7 @@ def _parser() -> argparse.ArgumentParser:
     s.add_argument("--systems", type=Path, help="roadmap config: systems with x/y and the z assumption (JSON)")
     s.add_argument("--formats", default=",".join(FORMATS), help=f"comma-separated subset of {', '.join(FORMATS)}")
     s.add_argument("--fail-on", choices=FAIL_LEVELS, default="none",
-                   help="exit 1 if any finding is at this level or more severe (for CI)")
+                   help="exit 1 if any finding is at this level or worse; order: classically-broken > quantum-broken > quantum-weakened")
     s.add_argument("--max-file-size", type=int, default=DEFAULT_MAX_BYTES)
     s.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES)
     s.add_argument("--timestamp", help="fixed ISO timestamp for reproducible reports")
