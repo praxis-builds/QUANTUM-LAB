@@ -268,11 +268,15 @@ def test_roadmap_orders_systems_by_mosca_and_labels_assumptions(tmp_path):
     assert default["assumptions"]["z_years"] == max(0, 2035 - default["assumptions"]["reference_year"])
 
 
-def test_without_cryptography_keys_fall_back_to_pem_headers(monkeypatch):
+def test_without_cryptography_keys_are_named_from_labels_and_oids(monkeypatch):
     monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", False)
     result = scan(CORPUS / "keys")
-    by_file = {f.file: f for f in result.findings}
-    assert by_file["legacy_sha1_cert.pem"].heuristic and "not parsed" in by_file["legacy_sha1_cert.pem"].detail
-    assert by_file["encrypted_private_key.pem"].category == "private-key"
-    assert "ecdsa_cert.der" not in by_file  # DER needs the parser; reported nowhere rather than guessed
+    by_file = {(f.file, f.rule.endswith("-hash")): f for f in result.findings}
+    legacy = by_file[("legacy_sha1_cert.pem", False)]
+    assert legacy.algorithm == "RSA-SIGNATURE" and "from its OID" in legacy.detail and "install the [pqc] extra" in legacy.detail
+    assert by_file[("legacy_sha1_cert.pem", True)].algorithm == "SHA-1"  # from the signature OID
+    assert by_file[("ecdsa_cert.der", False)].algorithm == "ECDSA"
+    assert by_file[("ec_p256_public.pem", False)].algorithm == "EC" and by_file[("ec_p256_public.pem", False)].key_size is None
+    encrypted = by_file[("encrypted_private_key.pem", False)]
+    assert (encrypted.category, encrypted.algorithm, encrypted.heuristic) == ("private-key", "UNKNOWN", True)
     assert any("'cryptography' package is not installed" in note for note in result.notes)

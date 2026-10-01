@@ -74,6 +74,8 @@ ALGORITHMS: dict[str, tuple[str, str, str]] = {
     "EXPORT": (CLASSICALLY_BROKEN, "export-grade (40/56-bit or 512-bit) cryptography, broken today (FREAK, Logjam)", "TLS 1.3 suites"),
     "PSK": (OK, "pre-shared symmetric key: no public-key step for Shor's algorithm; its strength is the key's length",
             "256-bit PSKs; (EC)DHE-PSK or ML-KEM for forward secrecy"),
+    "UNKNOWN": (QUANTUM_WEAKENED, "the algorithm could not be identified (the detail says why): review manually",
+                "review manually"),
     "SRP": (QUANTUM_BROKEN, "SRP is built on discrete logarithms, which Shor's algorithm breaks", KEM_REPLACEMENT),
 }
 

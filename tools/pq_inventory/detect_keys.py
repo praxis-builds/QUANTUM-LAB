@@ -106,36 +106,166 @@ def key_facts(key) -> tuple[str, int | None, str]:
     return "UNKNOWN", None, type(key).__name__
 
 
-def _certificate_subject(der_bytes: bytes) -> tuple[str, str]:
-    """(subject, expiry) via cryptography when it can load the certificate (even if not its key)."""
+INSTALL_HINT = "; install the [pqc] extra for size, subject and expiry"
+SIGNATURE_NAME = {"RSA": "RSA-SIGNATURE", "EC": "ECDSA"}  # certificate findings name the signature scheme
+WEAK_SIGNATURE_OIDS = {"1.2.840.113549.1.1.5": "SHA-1", "1.2.840.10045.4.1": "SHA-1", "1.2.840.10040.4.3": "SHA-1",
+                       "1.2.840.113549.1.1.4": "MD5"}  # sha1WithRSA, ecdsa-with-SHA1, dsa-with-sha1, md5WithRSA
+OPENSSH_TYPES = {b"ssh-rsa": "RSA", b"ssh-dss": "DSA", b"ssh-ed25519": "EdDSA", b"ssh-ed448": "EdDSA",
+                 b"ecdsa-sha2-nistp256": "EC", b"ecdsa-sha2-nistp384": "EC", b"ecdsa-sha2-nistp521": "EC"}
+
+
+def _hint() -> str:
+    return "" if HAVE_CRYPTOGRAPHY else INSTALL_HINT
+
+
+def _unknown(relative: str, line: int, rule: str, category: str, detail: str) -> list[Finding]:
+    """A key or certificate whose algorithm could not be determined: reported, never guessed."""
+    return [Finding.make(file=relative, line=line, category=category, algorithm="UNKNOWN", rule=rule, heuristic=True,
+                         detail=detail + _hint())]
+
+
+def _loaded_certificate(der_bytes: bytes):
     if not HAVE_CRYPTOGRAPHY:
-        return "(subject not parsed: install the [pqc] extra)", "unknown"
+        return None
     try:
-        cert = x509.load_der_x509_certificate(der_bytes)
-        return cert.subject.rfc4514_string(), cert.not_valid_after_utc.date().isoformat()
+        return x509.load_der_x509_certificate(der_bytes)
+    except Exception:  # noqa: BLE001 - cryptography rejects some valid-enough DER; the OID reader may still cope
+        return None
+
+
+def _subject_and_expiry(cert) -> tuple[str, str]:
+    if cert is None:
+        return "(subject not parsed)", "unknown"
+    try:
+        subject = cert.subject.rfc4514_string()
     except Exception:  # noqa: BLE001
-        return "(unreadable subject)", "unknown"
+        subject = "(unreadable subject)"
+    try:
+        expiry = cert.not_valid_after_utc.date().isoformat()
+    except Exception:  # noqa: BLE001
+        expiry = "unknown"
+    return subject, expiry
+
+
+def _certificate(der_bytes: bytes | None, relative: str, line: int, rule: str) -> list[Finding]:
+    """Certificate findings. Order: post-quantum OID; cryptography's full parse; the key OID (classical
+    names, no size); otherwise UNKNOWN with the reason. The algorithm is never guessed."""
+    if der_bytes is None:
+        return _unknown(relative, line, rule, "certificate", "certificate could not be parsed: not valid base64")
+    try:
+        key_oid, signature_oid = der.certificate_oids(der_bytes)
+    except der.DerError as error:
+        key_oid = signature_oid = None
+        reason = str(error)
+    cert = _loaded_certificate(der_bytes)
+    subject, expiry = _subject_and_expiry(cert)
+    if key_oid in der.PQC_OIDS:
+        family, parameter_set = der.PQC_OIDS[key_oid]
+        return [Finding.make(file=relative, line=line, category="certificate", algorithm=family, rule=rule,
+                             detail=f"certificate {subject}; key {parameter_set}; expires {expiry}{_hint()}")]
+    if cert is not None:
+        try:
+            return _certificate_findings(cert, relative, line, rule)
+        except Exception:  # noqa: BLE001 - e.g. UnsupportedAlgorithm for the key; fall back to the OID
+            pass
+    if key_oid is None:
+        return _unknown(relative, line, rule, "certificate", f"certificate could not be parsed ({reason})")
+    name = der.CLASSICAL_OIDS.get(key_oid)
+    if name is None:
+        return _unknown(relative, line, rule, "certificate",
+                        f"certificate {subject}; key algorithm OID {key_oid} not recognised; expires {expiry}")
+    findings = [Finding.make(file=relative, line=line, category="certificate", algorithm=SIGNATURE_NAME.get(name, name),
+                             rule=rule, detail=f"certificate {subject}; key {name} (from its OID){_hint()}")]
+    weak = WEAK_SIGNATURE_OIDS.get(signature_oid)
+    if weak:
+        findings.append(Finding.make(file=relative, line=line, category="certificate", algorithm=weak, rule=rule + "-hash",
+                                     detail=f"certificate {subject} is signed with {weak}"))
+    return findings
+
+
+def _openssh_key_type(der_bytes: bytes | None) -> str | None:
+    """The key type of an OpenSSH private key, read from its unencrypted public-key part."""
+    magic = b"openssh-key-v1\x00"
+    if not der_bytes or not der_bytes.startswith(magic):
+        return None
+    position = len(magic)
+    try:
+        for _ in range(3):  # ciphername, kdfname, kdfoptions
+            position += 4 + int.from_bytes(der_bytes[position:position + 4], "big")
+        position += 4 + 4  # number of keys, length of the first public key blob
+        length = int.from_bytes(der_bytes[position:position + 4], "big")
+        return OPENSSH_TYPES.get(der_bytes[position + 4:position + 4 + length])
+    except (IndexError, ValueError):
+        return None
+
+
+def _key_from_oid(label: str, der_bytes: bytes | None) -> str | None:
+    if der_bytes is None:
+        return None
+    try:
+        oid = der.pkcs8_oid(der_bytes) if label == "PRIVATE KEY" else der.spki_oid(der_bytes)
+    except der.DerError:
+        return None
+    return der.CLASSICAL_OIDS.get(oid)
+
+
+def _key(label: str, block: bytes, der_bytes: bytes | None, relative: str, line: int, rule: str) -> list[Finding]:
+    """Key findings. Order: post-quantum OID; cryptography; the PEM label or OID (no size); else UNKNOWN."""
+    private = "PRIVATE" in label
+    category = "private-key" if private else "public-key"
+    kind = "private" if private else "public"
+    if HAVE_CRYPTOGRAPHY and label != "ENCRYPTED PRIVATE KEY":
+        pem = b"-----BEGIN " + label.encode() + b"-----\n" + block.strip() + b"\n-----END " + label.encode() + b"-----\n"
+        try:
+            if label == "OPENSSH PRIVATE KEY":
+                key = serialization.load_ssh_private_key(pem, password=None)
+            elif private:
+                key = serialization.load_pem_private_key(pem, password=None)
+            else:
+                key = serialization.load_pem_public_key(pem)
+            algorithm, size, detail = key_facts(key)
+            if algorithm != "UNKNOWN":
+                return [Finding.make(file=relative, line=line, category=category, algorithm=algorithm, rule=rule,
+                                     key_size=size, detail=f"{kind} key: {detail}")]
+        except Exception:  # noqa: BLE001 - encrypted, malformed or unsupported: use what the structure says
+            pass
+    name = HEADER_TYPES.get(label) or _key_from_oid(label, der_bytes)
+    if label == "OPENSSH PRIVATE KEY":
+        name = _openssh_key_type(der_bytes)
+    encrypted = label == "ENCRYPTED PRIVATE KEY" or b"ENCRYPTED" in block or (
+        label == "OPENSSH PRIVATE KEY" and der_bytes is not None and b"none" not in der_bytes[15:40])
+    state = "encrypted " if encrypted else ""
+    if name is None:
+        why = "the key type is not visible without the password" if encrypted else "the key type could not be read"
+        return _unknown(relative, line, rule, category, f"{state}{kind} key: {why}")
+    return [Finding.make(file=relative, line=line, category=category, algorithm=name, rule=rule,
+                         detail=f"{state}{kind} key: {name} (from its {'PEM label' if HEADER_TYPES.get(label) else 'encoding'}; size not parsed){_hint()}")]
+
+
+def _pem_findings(label: str, block: bytes, relative: str, line: int) -> list[Finding]:
+    rule = "pem-" + label.lower().replace(" ", "-")
+    if label in ("CERTIFICATE REQUEST", "NEW CERTIFICATE REQUEST", "X509 CRL"):
+        return []
+    der_bytes = der.pem_body(block)
+    if label in ("CERTIFICATE", "X509 CERTIFICATE", "TRUSTED CERTIFICATE"):
+        return _certificate(der_bytes, relative, line, rule)
+    if der_bytes is not None and label in ("PUBLIC KEY", "PRIVATE KEY"):
+        pqc = _pqc_findings(label, der_bytes, relative, line, rule)
+        if pqc is not None:
+            return pqc
+    if label in HEADER_TYPES or label.endswith("KEY"):
+        return _key(label, block, der_bytes, relative, line, rule)
+    if label == "DH PARAMETERS":
+        return [Finding.make(file=relative, line=line, category="config", algorithm="DH", rule=rule,
+                             detail="Diffie-Hellman parameters")]
+    return []  # other PEM types (messages, PGP armour ...) carry no key-algorithm claim
 
 
 def _pqc_findings(label: str | None, der_bytes: bytes, relative: str, line: int, rule: str) -> list[Finding] | None:
-    """Findings for a post-quantum key or certificate recognised by its algorithm OID, else None.
-
-    Reads only the DER structure (no key material), so it works without `cryptography` and for
-    algorithms `cryptography` cannot load yet (SLH-DSA)."""
+    """Findings for a post-quantum public or private key recognised by its algorithm OID, else None.
+    Reads only the DER structure (no key material), so it works without `cryptography`."""
+    private = label is not None and "PRIVATE" in label
     try:
-        if label in (None, "CERTIFICATE"):
-            try:
-                key_oid, _ = der.certificate_oids(der_bytes)
-                if key_oid not in der.PQC_OIDS:
-                    return None
-                family, parameter_set = der.PQC_OIDS[key_oid]
-                subject, expiry = _certificate_subject(der_bytes)
-                return [Finding.make(file=relative, line=line, category="certificate", algorithm=family, rule=rule,
-                                     detail=f"certificate {subject}; key {parameter_set}; expires {expiry}")]
-            except der.DerError:
-                if label == "CERTIFICATE":
-                    return None
-        private = label is not None and "PRIVATE" in label
         oid = der.pkcs8_oid(der_bytes) if private else der.spki_oid(der_bytes)
     except der.DerError:
         return None
@@ -148,15 +278,15 @@ def _pqc_findings(label: str | None, der_bytes: bytes, relative: str, line: int,
 
 def _certificate_findings(cert, relative: str, line: int, rule: str) -> list[Finding]:
     algorithm, size, detail = key_facts(cert.public_key())
+    if algorithm == "UNKNOWN":
+        raise ValueError("unsupported key type")
+    subject, expiry = _subject_and_expiry(cert)
+    findings = [Finding.make(file=relative, line=line, category="certificate", algorithm=SIGNATURE_NAME.get(algorithm, algorithm),
+                             rule=rule, key_size=size, detail=f"certificate {subject}; key {detail}; expires {expiry}")]
     try:
-        subject = cert.subject.rfc4514_string()
-    except Exception:  # noqa: BLE001 - malformed subjects still get reported by key
-        subject = "(unreadable subject)"
-    expiry = cert.not_valid_after_utc.date().isoformat()
-    signature_algorithm = {"RSA": "RSA-SIGNATURE", "EC": "ECDSA"}.get(algorithm, algorithm)
-    findings = [Finding.make(file=relative, line=line, category="certificate", algorithm=signature_algorithm, rule=rule,
-                             key_size=size, detail=f"certificate {subject}; key {detail}; expires {expiry}")]
-    hash_algorithm = cert.signature_hash_algorithm
+        hash_algorithm = cert.signature_hash_algorithm
+    except Exception:  # noqa: BLE001 - signature schemes without a separate hash
+        hash_algorithm = None
     if hash_algorithm is not None and hash_algorithm.name in ("sha1", "md5"):
         findings.append(Finding.make(file=relative, line=line, category="certificate",
                                      algorithm="SHA-1" if hash_algorithm.name == "sha1" else "MD5", rule=rule + "-hash",
@@ -164,65 +294,29 @@ def _certificate_findings(cert, relative: str, line: int, rule: str) -> list[Fin
     return findings
 
 
-def _pem_findings(label: str, block: bytes, relative: str, line: int) -> list[Finding]:
-    rule = "pem-" + label.lower().replace(" ", "-")
-    pem = b"-----BEGIN " + label.encode() + b"-----\n" + block.strip() + b"\n-----END " + label.encode() + b"-----\n"
-    private = "PRIVATE" in label
-    category = "private-key" if private else "public-key"
-    if label in ("CERTIFICATE REQUEST", "X509 CRL"):
-        return []
-    body = der.pem_body(block)
-    if body is not None and label in ("CERTIFICATE", "PUBLIC KEY", "PRIVATE KEY"):
-        pqc = _pqc_findings(label, body, relative, line, rule)
-        if pqc is not None:
-            return pqc
-    if HAVE_CRYPTOGRAPHY:
-        try:
-            if label == "CERTIFICATE":
-                return _certificate_findings(x509.load_pem_x509_certificate(pem), relative, line, rule)
-            if label == "OPENSSH PRIVATE KEY":
-                key = serialization.load_ssh_private_key(pem, password=None)
-            elif private:
-                key = serialization.load_pem_private_key(pem, password=None)
-            else:
-                key = serialization.load_pem_public_key(pem)
-            algorithm, size, detail = key_facts(key)
-            return [Finding.make(file=relative, line=line, category=category, algorithm=algorithm, rule=rule,
-                                 key_size=size, detail=f"{'private' if private else 'public'} key: {detail}")]
-        except (TypeError, ValueError) as error:  # encrypted key, or not parseable
-            reason = "encrypted" if "password" in str(error).lower() or "encrypted" in str(error).lower() or label == "ENCRYPTED PRIVATE KEY" else "unparsed"
-            algorithm = HEADER_TYPES.get(label) or "RSA"
-            return [Finding.make(file=relative, line=line, category=category, algorithm=algorithm, rule=rule,
-                                 heuristic=True, detail=f"{label.lower()} ({reason}): key type assumed from the header, review manually")]
-        except Exception:  # noqa: BLE001 - never let one malformed block stop the scan
-            pass
-    algorithm = HEADER_TYPES.get(label)
-    if label == "CERTIFICATE":
-        return [Finding.make(file=relative, line=line, category="certificate", algorithm="RSA", rule=rule, heuristic=True,
-                             detail="certificate not parsed (install the [pqc] extra for details); RSA assumed")]
-    return [Finding.make(file=relative, line=line, category=category, algorithm=algorithm or "RSA", rule=rule,
-                         heuristic=algorithm is None, detail=f"{label.lower()} (header only)")]
-
-
 def detect(relative: str, data: bytes, is_text: bool, deadline: float | None = None) -> list[Finding]:
     """Findings for one file. Stops early (raising TimeoutError) once time.monotonic() passes deadline."""
     findings: list[Finding] = []
-    if not is_text:
-        pqc = _pqc_findings(None, data, relative, 1, "der-certificate")
+    if not is_text:  # DER: a certificate or a public key, recognised by structure; anything else is not reported
+        try:
+            der.certificate_oids(data)
+            return _certificate(data, relative, 1, "der-certificate")
+        except der.DerError:
+            pass
+        pqc = _pqc_findings(None, data, relative, 1, "der-public-key")
         if pqc is not None:
-            if pqc[0].category == "public-key":
-                pqc[0].rule = "der-public-key"
             return pqc
         if HAVE_CRYPTOGRAPHY:
             try:
-                return _certificate_findings(x509.load_der_x509_certificate(data), relative, 1, "der-certificate")
+                algorithm, size, detail = key_facts(serialization.load_der_public_key(data))
+                return [Finding.make(file=relative, line=1, category="public-key", algorithm=algorithm,
+                                     rule="der-public-key", key_size=size, detail=f"public key: {detail}")]
             except Exception:  # noqa: BLE001
-                try:
-                    algorithm, size, detail = key_facts(serialization.load_der_public_key(data))
-                    return [Finding.make(file=relative, line=1, category="public-key", algorithm=algorithm,
-                                         rule="der-public-key", key_size=size, detail=f"public key: {detail}")]
-                except Exception:  # noqa: BLE001
-                    return []
+                pass
+        name = _key_from_oid("PUBLIC KEY", data)
+        if name:
+            return [Finding.make(file=relative, line=1, category="public-key", algorithm=name, rule="der-public-key",
+                                 detail=f"public key: {name} (from its OID){_hint()}")]
         return []
     for label, body, offset in pem_blocks(data):
         if deadline is not None and time.monotonic() > deadline:

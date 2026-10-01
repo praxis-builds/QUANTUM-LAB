@@ -46,7 +46,7 @@
    "ECDSA"
   ],
   "keys/encrypted_private_key.pem": [
-   "RSA"
+   "UNKNOWN"
   ],
   "keys/legacy_sha1_cert.pem": [
    "RSA-SIGNATURE",

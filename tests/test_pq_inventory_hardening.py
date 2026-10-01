@@ -379,3 +379,72 @@ def test_real_cipher_strings(value, expected):
 def test_suite_risk_is_its_worst_component(token, risk):
     (entry,) = alg.cipher_entries(token)
     assert alg.worst(alg.classify(a)[0] for a in entry.algorithms) == risk
+
+
+# --------------------------------------------- 8. unreadable keys and certificates: UNKNOWN with a reason, never "RSA assumed"
+
+KEYS = PQC_FIXTURES.parent
+
+
+def _odd_oid_certificate() -> bytes:
+    """The committed ECDSA certificate with its key OID 1.2.840.10045.2.1 changed to the unassigned ...2.9."""
+    der_cert = (KEYS / "ecdsa_cert.der").read_bytes()
+    ec_oid = bytes.fromhex("06072a8648ce3d0201")
+    assert der_cert.count(ec_oid) == 1
+    return der_cert.replace(ec_oid, bytes.fromhex("06072a8648ce3d0209"))
+
+
+def _pem(label: str, der_bytes: bytes) -> bytes:
+    from pq_inventory.der import to_pem
+
+    return to_pem(label, der_bytes)
+
+
+@pytest.mark.parametrize("have_cryptography", [True, False])
+def test_unreadable_certificates_are_unknown_with_a_reason(tmp_path, monkeypatch, have_cryptography):
+    from pq_inventory import detect_keys
+    from pq_inventory.scanner import scan
+
+    if have_cryptography and not detect_keys.HAVE_CRYPTOGRAPHY:
+        pytest.skip("needs the [pqc] extra (cryptography)")
+    monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", have_cryptography)
+    (tmp_path / "odd_key.pem").write_bytes(_pem("CERTIFICATE", _odd_oid_certificate()))
+    (tmp_path / "garbage.pem").write_bytes(b"-----BEGIN CERTIFICATE-----\nTm90IGEgY2VydGlmaWNhdGU=\n-----END CERTIFICATE-----\n")
+    by_file = {f.file: f for f in scan(tmp_path).findings}
+    odd, garbage = by_file["odd_key.pem"], by_file["garbage.pem"]
+    assert (odd.algorithm, odd.category, odd.heuristic) == ("UNKNOWN", "certificate", True)
+    assert "1.2.840.10045.2.9" in odd.detail
+    assert garbage.algorithm == "UNKNOWN" and "could not be parsed" in garbage.detail
+    for finding in (odd, garbage):
+        assert "assumed" not in finding.detail and "RSA" not in finding.detail
+        assert ("install" in finding.detail) == (not have_cryptography)
+
+
+@pytest.mark.parametrize("have_cryptography", [True, False])
+def test_corpus_never_reports_an_assumed_algorithm(monkeypatch, have_cryptography):
+    from pq_inventory import detect_keys
+    from pq_inventory.scanner import scan
+
+    if have_cryptography and not detect_keys.HAVE_CRYPTOGRAPHY:
+        pytest.skip("needs the [pqc] extra (cryptography)")
+    monkeypatch.setattr(detect_keys, "HAVE_CRYPTOGRAPHY", have_cryptography)
+    findings = scan(KEYS).findings
+    assert findings and not [f.detail for f in findings if "assumed" in f.detail]
+    by_file = {(f.file, f.rule.endswith("-hash")): f for f in findings}
+    legacy = by_file[("legacy_sha1_cert.pem", False)]
+    assert legacy.algorithm == "RSA-SIGNATURE"  # from the certificate's key OID, with or without cryptography
+    assert by_file[("ecdsa_cert.der", False)].algorithm == "ECDSA"
+
+
+def test_encrypted_private_key_type_is_unknown_not_rsa(tmp_path):
+    serialization = pytest.importorskip("cryptography.hazmat.primitives.serialization")
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    from pq_inventory.scanner import scan
+
+    key = ec.generate_private_key(ec.SECP256R1())  # an EC key: guessing "RSA" would be wrong
+    (tmp_path / "enc.pem").write_bytes(key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+                                                         serialization.BestAvailableEncryption(b"generated-at-test-time")))
+    (finding,) = scan(tmp_path).findings
+    assert (finding.algorithm, finding.category, finding.heuristic) == ("UNKNOWN", "private-key", True)
+    assert "encrypted" in finding.detail
