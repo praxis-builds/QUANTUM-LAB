@@ -1,6 +1,8 @@
 # Review findings: full repository review at `dd01576`
 
-A read-only review of the whole repository, starting from [`REVIEW.md`](REVIEW.md) and [`DECISIONS.md`](DECISIONS.md). Nothing has been fixed yet. Reproductions wrote only to a scratch directory outside the repository, and the tree was clean before and after the review.
+A read-only review of the whole repository, starting from [`REVIEW.md`](REVIEW.md) and [`DECISIONS.md`](DECISIONS.md). Reproductions wrote only to a scratch directory outside the repository, and the tree was clean before and after the review.
+
+**Status (2026-10-01, after the fixes):** the findings below are kept as written at review time; the **Status** columns and the *Status* notes say what happened to each. 17 of the 18 numbered findings are fixed, the code changes each with a regression test; #18 is partly done. Of the 17 Info items, 12 are fixed, 3 are documented without a behaviour change, and 2 are documented and left open. The suite now has 859 tests, all passing with the `[pqc]` extra and liboqs (exit code 0, 135 s). What is still open is collected in [`REVIEW.md`](REVIEW.md#still-open).
 
 - **Test suite:** `pytest` passed 741 tests at `dd01576` (exit code 0, 131 s), with the `[pqc]` extra and liboqs.
 - **GitHub Actions:** no run results were pasted, so none are reported. [`REVIEW.md:28`](REVIEW.md) still applies: CI has never run.
@@ -10,28 +12,28 @@ A read-only review of the whole repository, starting from [`REVIEW.md`](REVIEW.m
   - **Low:** limited impact, or a mismatch between the docs and the code.
   - **Info:** worth knowing, no action needed.
 
-| # | Severity | Where | Finding |
-|---|---|---|---|
-| 1 | High | `tools/pq_inventory/model.py:11` | Hard-coded keys and passwords are copied verbatim into `scan.json`, which the sample CI workflow uploads |
-| 2 | High | `tools/pq_inventory/detect_keys.py:14` | The PEM regex is quadratic: a crafted 2 MiB file stalls a scan for about 33 min |
-| 3 | High | `tools/pq_inventory/walker.py:60-64` | A FIFO, or any other non-regular file, hangs the scan forever |
-| 4 | High | `tools/pq_inventory/detect_keys.py:35-53` | Real ML-DSA and ML-KEM keys and certificates are reported as UNKNOWN / QUANTUM-WEAKENED |
-| 5 | Medium | `docs/ci/pq-inventory.yml:24-26` | The sample CI gate lets quantum-broken crypto through, although its comments say it blocks it |
-| 6 | Medium | `tools/pq_inventory/walker.py:36`, `cli.py:36-37` | Scans that read nothing pass every `--fail-on` gate |
-| 7 | Medium | `tools/pq_inventory/algorithms.py:101-148` | Cipher strings are misparsed: `ECDHE+AESGCM` is read as RSA key transport, and NULL, anon and PSK suites are wrong |
-| 8 | Medium | `tools/pq_inventory/detect_keys.py:99-104` | A certificate the parser can't read is reported as "RSA assumed", with a wrong install hint |
-| 9 | Low | `tools/pq_inventory/scanner.py:38` | TLS and OpenSSL directive patterns fire inside source code (false positives not flagged as heuristic) |
-| 10 | Low | `tools/pq_inventory/cli.py:3,67,70,90` | Input errors exit with 1, the "threshold reached" code, instead of the documented 2 |
-| 11 | Low | `src/praxis_quantum_lab/security_lab.py:17` | Without `lessons/` (a wheel install) the whole dashboard fails to start |
-| 12 | Low | `lessons/_pqc.py:21-29` | The liboqs guard can still let `import oqs` download and build liboqs |
-| 13 | Low | `tools/pq_inventory/reports.py:183-202` | The CBOM has dangling refs, null sizes and uninformative names, including in the committed reports |
-| 14 | Low | `tests/fixtures/generate_pq_inventory_keys.py:50` | A decryptable private key is committed, contrary to D9 and REVIEW.md |
-| 15 | Low | `tools/pq_inventory/detect_keys.py:25,51` | One shared import, plus the FFDH deprecation: key parsing can switch off silently |
-| 16 | Low | `lessons/14_shor_15.md:27`, `15_shor_21.md:29` | Beauregard's cost is misquoted: it is O(n³ log n) gates, not O(n³) |
-| 17 | Low | `lessons/21_why_errors_matter.md:4` | The definition of depolarizing noise doesn't match Qiskit's channel |
-| 18 | Low | `lessons/21_why_errors_matter.md:11` and others | One number is unsourced, and some citations come from memory |
+| # | Severity | Where | Finding | Status |
+|---|---|---|---|---|
+| 1 | High | `tools/pq_inventory/model.py:11` | Hard-coded keys and passwords are copied verbatim into `scan.json`, which the sample CI workflow uploads | Fixed in `d1abc87`: evidence is only a `[redacted]` marker (D18) |
+| 2 | High | `tools/pq_inventory/detect_keys.py:14` | The PEM regex is quadratic: a crafted 2 MiB file stalls a scan for about 33 min | Fixed in `4a37735`: linear marker pairing, 10 s per-file budget |
+| 3 | High | `tools/pq_inventory/walker.py:60-64` | A FIFO, or any other non-regular file, hangs the scan forever | Fixed in `58f6f55`: non-regular files are skipped before opening |
+| 4 | High | `tools/pq_inventory/detect_keys.py:35-53` | Real ML-DSA and ML-KEM keys and certificates are reported as UNKNOWN / QUANTUM-WEAKENED | Fixed in `678d253`: recognised by OID, classified OK |
+| 5 | Medium | `docs/ci/pq-inventory.yml:24-26` | The sample CI gate lets quantum-broken crypto through, although its comments say it blocks it | Fixed in `b819277`: the sample gates on `quantum-broken` |
+| 6 | Medium | `tools/pq_inventory/walker.py:36`, `cli.py:36-37` | Scans that read nothing pass every `--fail-on` gate | Fixed in `ec7e395`: an empty scan exits 3 (D19) |
+| 7 | Medium | `tools/pq_inventory/algorithms.py:101-148` | Cipher strings are misparsed: `ECDHE+AESGCM` is read as RSA key transport, and NULL, anon and PSK suites are wrong | Fixed in `3829fa6`: table-driven parser; selectors are heuristic |
+| 8 | Medium | `tools/pq_inventory/detect_keys.py:99-104` | A certificate the parser can't read is reported as "RSA assumed", with a wrong install hint | Fixed in `a1636a7`: UNKNOWN with the reason, never "RSA assumed" |
+| 9 | Low | `tools/pq_inventory/scanner.py:38` | TLS and OpenSSL directive patterns fire inside source code (false positives not flagged as heuristic) | Fixed in `400e4c8`: directives count only outside source code and docs |
+| 10 | Low | `tools/pq_inventory/cli.py:3,67,70,90` | Input errors exit with 1, the "threshold reached" code, instead of the documented 2 | Fixed in `f1b66f8`: input errors exit 2, crashes exit 4 |
+| 11 | Low | `src/praxis_quantum_lab/security_lab.py:17` | Without `lessons/` (a wheel install) the whole dashboard fails to start | Fixed in `72c4aae`: the dashboard starts; the tab reports why it is off |
+| 12 | Low | `lessons/_pqc.py:21-29` | The liboqs guard can still let `import oqs` download and build liboqs | Fixed in `8b9c5bb`: the guard accepts only what liboqs-python will load |
+| 13 | Low | `tools/pq_inventory/reports.py:183-202` | The CBOM has dangling refs, null sizes and uninformative names, including in the committed reports | Fixed in `a789ff7`: refs resolve, no nulls, readable names; demo CBOMs regenerated |
+| 14 | Low | `tests/fixtures/generate_pq_inventory_keys.py:50` | A decryptable private key is committed, contrary to D9 and REVIEW.md | Fixed in `0830fa3`: file removed; it remains in git history (D9) |
+| 15 | Low | `tools/pq_inventory/detect_keys.py:25,51` | One shared import, plus the FFDH deprecation: key parsing can switch off silently | Fixed in `678d253` (separate import) and `13719d9` (no warning, size kept under warnings-as-errors) |
+| 16 | Low | `lessons/14_shor_15.md:27`, `15_shor_21.md:29` | Beauregard's cost is misquoted: it is O(n³ log n) gates, not O(n³) | Fixed in `c75d01b` |
+| 17 | Low | `lessons/21_why_errors_matter.md:4` | The definition of depolarizing noise doesn't match Qiskit's channel | Fixed in `c75d01b`, with a test against the Qiskit channel |
+| 18 | Low | `lessons/21_why_errors_matter.md:11` and others | One number is unsourced, and some citations come from memory | **Partly** (`c75d01b`): the gate-error figure is labelled an order-of-magnitude assumption; the citations from memory and the quotes are still not checked against the originals |
 
-Info-level items, weak tests and smaller doc mismatches are listed after the detailed findings.
+Info-level items, weak tests and smaller doc mismatches are listed after the detailed findings, each with its own status.
 
 ---
 
@@ -289,40 +291,44 @@ Info-level items, weak tests and smaller doc mismatches are listed after the det
 
 ## Info
 
-| Where | Note |
-|---|---|
-| `detect_keys.py:63` | A certificate's signature algorithm is labelled from the *subject's* key. I generated an EC leaf signed by an RSA CA (`sha256WithRSAEncryption`); it was reported as "ECDSA". Use `cert.signature_algorithm_oid`. |
-| `detect_keys.py:49-50` | X448 keys are labelled `X25519`, with size 448. |
-| `detect_configs.py:31` | In `HostKeyAlgorithms`/`PubkeyAcceptedAlgorithms`, `ssh-rsa` means RSA with SHA-1. Under D7 that is CLASSICALLY-BROKEN, but it is mapped to RSA-SIGNATURE (QUANTUM-BROKEN). As a key type in `authorized_keys` it is only the key format, so the fix belongs in the directive path. |
-| `scanner.py:15-17` | `_is_ssh_config` misses `sshd_config.d/*.conf` drop-ins: the name lacks "ssh" and the path lacks "/.ssh/". |
-| `detect_configs.py:45` | `MinProtocol = TLSv1` flags TLS 1.0 only, but TLS 1.1 is enabled as well. |
-| `detect_source.py:89-90` | Lines over 4,000 characters are truncated (minified JS). This is not mentioned in `docs/pq-inventory.md`. |
-| `walker.py:68-71` | The NUL-byte test skips UTF-16 text files (common for Windows configs) as "binary file". |
-| `walker.py:49-51` | After `--max-files`, the walk continues and every further file goes into `skipped`, which grows without bound in memory and in `scan.json`. |
-| `scanner.py:24`, `reports.py:48,214` | The root path is recorded as given. An absolute path such as `/home/<user>/…` ends up in `scan.json`, the Markdown header and the CBOM serial number. |
-| `reports.py:66,69` | Markdown is not escaped beyond replacing `\|`. A file name with a backtick, or a crafted certificate CN, can inject Markdown (for example a link) into `report.md`. Found by reading the code. |
-| `reports.py:33-34` | The headline counts only QUANTUM-BROKEN files as "would break". A file whose only finding is RSA-1024 (CLASSICALLY-BROKEN, also breakable by Shor's algorithm) is left out of that count. |
-| `roadmap.py:55-58` | Overlapping path patterns count a finding in every matching system. I verified this with one finding and the systems `*` and `src/*`: it was counted in both. Not documented. The committed demo is unaffected: per-system sums equal the totals. |
-| `docs/ci/pq-inventory.yml:13,14,22,29` | The scanner is installed from an unpinned git ref, and the actions are pinned by tag. A security gate should pin a commit. |
-| `security.js:93,167` | The UI always sends seed 20260928, so repeated runs give identical results. The API accepts any seed. |
-| `security_lab.py:83` | `seed % 100_000` aliasing: seeds s and s + 100,000 share Aer base runs. |
-| `lessons/c/ml_kem_demo.c:31-39` | The error paths free only `kem`: buffers leak and `secret_key` is not wiped. Harmless in a demo that exits, but the file is presented as a model. |
-| `docs/history/codex-handoff-2026-09-29.md` | Contains two absolute `/home/praxis` paths, which reveal the local username. |
+| Where | Note | Status |
+|---|---|---|
+| `detect_keys.py:63` | A certificate's signature algorithm is labelled from the *subject's* key. I generated an EC leaf signed by an RSA CA (`sha256WithRSAEncryption`); it was reported as "ECDSA". Use `cert.signature_algorithm_oid`. | Fixed (`f70df55`): a second finding names the issuer's signature scheme when it differs from the key; the CBOM references it. |
+| `detect_keys.py:49-50` | X448 keys are labelled `X25519`, with size 448. | Fixed (`f70df55`): named X448. |
+| `detect_configs.py:31` | In `HostKeyAlgorithms`/`PubkeyAcceptedAlgorithms`, `ssh-rsa` means RSA with SHA-1. Under D7 that is CLASSICALLY-BROKEN, but it is mapped to RSA-SIGNATURE (QUANTUM-BROKEN). As a key type in `authorized_keys` it is only the key format, so the fix belongs in the directive path. | Fixed (`f70df55`): `ssh-rsa`/`ssh-dss` in these directives also count as SHA-1. |
+| `scanner.py:15-17` | `_is_ssh_config` misses `sshd_config.d/*.conf` drop-ins: the name lacks "ssh" and the path lacks "/.ssh/". | Fixed (`f70df55`): "ssh" in any directory name counts. |
+| `detect_configs.py:45` | `MinProtocol = TLSv1` flags TLS 1.0 only, but TLS 1.1 is enabled as well. | Fixed (`f70df55`): every version from the minimum up to TLS 1.1 is reported. |
+| `detect_source.py:89-90` | Lines over 4,000 characters are truncated (minified JS). This is not mentioned in `docs/pq-inventory.md`. | Documented in `docs/pq-inventory.md` (`f70df55`); behaviour unchanged. |
+| `walker.py:68-71` | The NUL-byte test skips UTF-16 text files (common for Windows configs) as "binary file". | Fixed for files with a byte-order mark (`f70df55`). **Open:** UTF-16 without one is still skipped as binary (documented). |
+| `walker.py:49-51` | After `--max-files`, the walk continues and every further file goes into `skipped`, which grows without bound in memory and in `scan.json`. | Fixed (`f70df55`): the walk stops with one skipped entry. |
+| `scanner.py:24`, `reports.py:48,214` | The root path is recorded as given. An absolute path such as `/home/<user>/…` ends up in `scan.json`, the Markdown header and the CBOM serial number. | Documented, not changed (`f70df55`): the root is recorded as typed; pass a relative path. |
+| `reports.py:66,69` | Markdown is not escaped beyond replacing `\|`. A file name with a backtick, or a crafted certificate CN, can inject Markdown (for example a link) into `report.md`. Found by reading the code. | Fixed (`f70df55`): `report.md` and `diff.md` escape text from the scanned tree. |
+| `reports.py:33-34` | The headline counts only QUANTUM-BROKEN files as "would break". A file whose only finding is RSA-1024 (CLASSICALLY-BROKEN, also breakable by Shor's algorithm) is left out of that count. | Fixed (`f70df55`): short RSA/DSA/DH keys count as quantum-breakable in the headline. |
+| `roadmap.py:55-58` | Overlapping path patterns count a finding in every matching system. I verified this with one finding and the systems `*` and `src/*`: it was counted in both. Not documented. The committed demo is unaffected: per-system sums equal the totals. | Documented, not changed (`f70df55`). |
+| `docs/ci/pq-inventory.yml:13,14,22,29` | The scanner is installed from an unpinned git ref, and the actions are pinned by tag. A security gate should pin a commit. | Fixed (`0eca9c1`): actions pinned to commit SHAs, the scanner install takes a commit placeholder. The workflow has still never run. |
+| `security.js:93,167` | The UI always sends seed 20260928, so repeated runs give identical results. The API accepts any seed. | **Open:** documented in `docs/dashboard.md` (`ff91491`); the forms still have no seed field (a UI change, not cheap). |
+| `security_lab.py:83` | `seed % 100_000` aliasing: seeds s and s + 100,000 share Aer base runs. | **Open:** documented in `docs/dashboard.md` (`ff91491`); not changed, because larger Aer seeds are unverified here. |
+| `lessons/c/ml_kem_demo.c:31-39` | The error paths free only `kem`: buffers leak and `secret_key` is not wiped. Harmless in a demo that exits, but the file is presented as a model. | Fixed (`0eca9c1`): one cleanup path frees and wipes. |
+| `docs/history/codex-handoff-2026-09-29.md` | Contains two absolute `/home/praxis` paths, which reveal the local username. | Fixed (`0eca9c1`) in the current file; the paths remain in git history. |
 
 ## Weak tests
 
 These tests pass but would not catch the problems listed:
-- **No-network check** (`tests/test_pq_inventory.py:162-164`): a substring grep over the source. `from socket import create_connection` or `os.popen` would pass it. A runtime guard would be stronger: monkeypatch `socket.socket.connect` and `subprocess.Popen` to raise during a scan.
-- **Demo drift test** (`tests/test_warehouse_demo.py:23-25`): compares fingerprint sets only. Risk, replacement, detail, roadmap and the committed `report.md`/`report.html`/CBOM can all drift without a failure.
-- **CBOM test** (`tests/test_pq_inventory.py:195-203`): checks shape only. It does not check that refs resolve or that sizes are integers, which would have caught #13.
-- **Security Lab HTTP happy path** (`tests/test_security_lab.py:110-112`): asserts the status code and one key. The content is checked in the non-HTTP tests, which is acceptable.
+- **No-network check** (`tests/test_pq_inventory.py:162-164`): a substring grep over the source. `from socket import create_connection` or `os.popen` would pass it. A runtime guard would be stronger: monkeypatch `socket.socket.connect` and `subprocess.Popen` to raise during a scan. *Status: done (`8afbef7`); a full scan and diff run with connections and process creation patched to raise.*
+- **Demo drift test** (`tests/test_warehouse_demo.py:23-25`): compares fingerprint sets only. Risk, replacement, detail, roadmap and the committed `report.md`/`report.html`/CBOM can all drift without a failure. *Status: done (`8afbef7`); every committed report file is compared byte for byte with what the documented commands write.*
+- **CBOM test** (`tests/test_pq_inventory.py:195-203`): checks shape only. It does not check that refs resolve or that sizes are integers, which would have caught #13. *Status: done with #13 (`a789ff7`).*
+- **Security Lab HTTP happy path** (`tests/test_security_lab.py:110-112`): asserts the status code and one key. The content is checked in the non-HTTP tests, which is acceptable. *Status: done (`8afbef7`); the route's answer must equal the checked function's result.*
 - **Missing tests:**
   - no `redact()` unit test (#1);
   - no test with a FIFO (#3) or a crafted PEM file (#2);
   - no ML-DSA or ML-KEM key or certificate (#4);
   - no empty scan under `--fail-on` (#6).
 
+  *Status: all added, the last four with their fixes and the `redact()` test in `8afbef7`.*
+
 ## Docs that disagree with the code (small)
+
+*Status: all three fixed in `ff91491`.*
 
 - **`lessons/README.md:43`:** the "Run all their checks" line omits the helper tests `test_qft.py`, `test_shor.py`, `test_grover_n.py`, `test_qec.py` and `test_qkd.py`.
 - **`README.md:86-101`:** "Project layout" lists only the original six modules. Missing:
@@ -353,7 +359,7 @@ These tests pass but would not catch the problems listed:
 
 ## Not verified
 
-- The CBOM against the official CycloneDX 1.6 schema (D11; no validator is installed).
-- Reads from character devices (#3) and the actual oqs auto-install (#12). Both are inferred from the code; I did not run them.
-- Real SLH-DSA or composite certificates (#8).
-- Anything about GitHub Actions: no results were pasted.
+- The CBOM against the official CycloneDX 1.6 schema (D11; no validator is installed). *Still not validated after #13.*
+- Reads from character devices (#3) and the actual oqs auto-install (#12). Both are inferred from the code; I did not run them. *Still not run: the fixes are tested with a FIFO, a socket and a fake liboqs directory.*
+- Real SLH-DSA or composite certificates (#8). *An SLH-DSA certificate signed with liboqs is now a corpus fixture and is classified OK; composite certificates are still untested.*
+- Anything about GitHub Actions: no results were pasted. *Unchanged: CI has still never run.*
