@@ -1,14 +1,14 @@
 # Lesson 21: why errors matter
 
 ## The idea
-Real quantum gates are imperfect. A simple model is **depolarizing noise**: after each gate, with probability p, the qubits it touched are hit by a random Pauli error. Lesson 06 showed one Grover step fading toward random guessing. Here we run bigger circuits, Shor for N = 15 (Lesson 14) and Grover on 3, 4 and 5 qubits (Lesson 17), compiled to basic gates, with noise of strength p after **every** gate.
+Real quantum gates are imperfect. A simple model is **depolarizing noise**: after each gate, with probability p, the qubits it touched are replaced by a completely random state. That is the same as applying a uniformly random Pauli, the identity included, so a real error happens with probability 3p/4 after a one-qubit gate and 15p/16 after a two-qubit gate (Qiskit's `depolarizing_error(p, n)`, which this lesson simulates). Lesson 06 showed one Grover step fading toward random guessing. Here we run bigger circuits, Shor for N = 15 (Lesson 14) and Grover on 3, 4 and 5 qubits (Lesson 17), compiled to basic gates, with noise of strength p after **every** gate.
 
-The rough rule: a circuit with G gates runs error-free with probability about (1 − p)^G. So bigger circuits need smaller p. A Shor that threatens RSA is enormous, which is why error correction (Lessons 22–25) exists.
+The rough rule: a circuit with G gates runs error-free with probability about (1 − p)^G (slightly pessimistic for this channel, whose real-error rate is 3p/4 or 15p/16 per gate). So bigger circuits need smaller p. A Shor that threatens RSA is enormous, which is why error correction (Lessons 22–25) exists.
 
 ## Predict first
 1. Shor-15 compiles to 399 gates and Grover n = 5 to 629. Which breaks down sooner as p grows? What about Grover n = 3 (63 gates) against Shor-15?
 2. In Shor, does an error on the work register hurt as much as one on the counting register?
-3. Shor for N = 21 compiles to about 27,000 gates. At p = 10⁻³, a typical error rate for today's best two-qubit gates, what is the chance that no error happens at all?
+3. Shor for N = 21 compiles to about 27,000 gates. At p = 10⁻³ (the order of magnitude often quoted for the best two-qubit gates today; an assumption here, not a cited figure), what is the chance that no error happens at all?
 
 ## How to run
 
