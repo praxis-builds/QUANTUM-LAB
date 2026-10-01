@@ -58,7 +58,7 @@ The project was originally reported on Windows as:
 
 Later, while setting up a WSL-oriented working environment, the intended WSL path was discussed as:
 
-`/home/praxis/projects/praxis-quantum-lab`
+`~/projects/praxis-quantum-lab`
 
 The broader development environment is the user's Praxis lab setup.
 
@@ -530,7 +530,7 @@ The user later wanted a separate VS Code working environment for the Quantum Lab
 A WSL-oriented VS Code launch command discussed was:
 
 ```bash
-code --new-window /home/praxis/projects/praxis-quantum-lab
+code --new-window ~/projects/praxis-quantum-lab
 ```
 
 Historical note: earlier project context reported the project on Windows at:

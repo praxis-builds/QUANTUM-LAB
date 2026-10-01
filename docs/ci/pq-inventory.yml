@@ -1,6 +1,8 @@
 # Sample GitHub Actions workflow: fail when the code uses QUANTUM-BROKEN crypto (RSA, ECC, DH) or
 # CLASSICALLY-BROKEN crypto (MD5, SHA-1, 3DES, TLS 1.0 ...), and keep the reports as a build artifact.
 # Copy to .github/workflows/ in the repository you scan.
+# A security gate should not run code that can change under it: the actions are pinned to full commit
+# SHAs (the tag each one belonged to on 2026-10-01 is in the comment), and the scanner to a commit you choose.
 # Severity order: CLASSICALLY-BROKEN > QUANTUM-BROKEN > QUANTUM-WEAKENED > OK; --fail-on X means "X or worse".
 name: crypto-inventory
 on:
@@ -12,16 +14,17 @@ jobs:
   pq-inventory:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
         with:
           python-version: "3.12"
       - name: Install pq_inventory
         # Point this at wherever you publish the scanner; here: this lab's repository, with the
         # [pqc] extra for certificate and key parsing (cryptography). liboqs is NOT needed for scanning.
+        # Replace <full-commit-sha> with the 40-character commit you reviewed: a branch or tag name can move.
         run: |
           pip install "cryptography==50.0.2"
-          pip install --no-deps "git+https://github.com/<you>/praxis-quantum-lab.git"
+          pip install --no-deps "git+https://github.com/<you>/praxis-quantum-lab.git@<full-commit-sha>"
       - name: Scan
         # Exit code 1 if any finding is QUANTUM-BROKEN or worse (that includes CLASSICALLY-BROKEN).
         # Use --fail-on classically-broken to block only crypto that is weak today.
@@ -29,7 +32,7 @@ jobs:
         run: python -m pq_inventory scan . --out pq-report --fail-on quantum-broken
       - name: Upload reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
         with:
           name: pq-inventory-report
           path: pq-report/
