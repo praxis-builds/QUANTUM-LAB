@@ -20,6 +20,9 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest==9.1.1"]
+# Post-quantum lessons 30-33 and the scanner's key parsing. liboqs-python also needs the liboqs C
+# library (0.16.0, shared) in ~/_oqs or OQS_INSTALL_PATH; see docs/DECISIONS.md (D1).
+pqc = ["liboqs-python==0.16.0.1", "cryptography==50.0.2"]
 
 [project.scripts]
 praxis-qiskit-experiments = "praxis_quantum_lab.qiskit_experiments:main"

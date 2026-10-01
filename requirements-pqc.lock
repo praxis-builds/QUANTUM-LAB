@@ -1,0 +1,6 @@
+# Resolved versions for the optional [pqc] extra on top of requirements.lock (Python 3.12, WSL Ubuntu 24.04).
+# The liboqs C library itself (0.16.0, built with -DOQS_USE_OPENSSL=OFF) is not a pip package: see docs/DECISIONS.md D1.
+cffi==2.1.1
+cryptography==50.0.2
+liboqs-python==0.16.0.1
+pycparser==3.0
