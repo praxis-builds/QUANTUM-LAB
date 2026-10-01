@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import time
 
-from .algorithms import SEVERITY, classify, parse_cipher_string, suite_algorithms, worst
+from .algorithms import SEVERITY, cipher_entries, classify, worst
 from .model import Finding
 
 TLS_PROTOCOLS = {"SSLV2": "SSLv2", "SSLV3": "SSLv3", "TLSV1": "TLS1.0", "TLSV1.0": "TLS1.0", "TLSV1.1": "TLS1.1",
@@ -61,14 +61,14 @@ def _list(value: str) -> list[str]:
 
 def _suite_findings(relative: str, line: int, rule: str, raw: str) -> list[Finding]:
     findings = []
-    for suite in parse_cipher_string(raw):
-        algorithms = suite_algorithms(suite)
-        if not algorithms:
-            continue
+    for entry in cipher_entries(raw):
+        algorithms = entry.algorithms
         risks = {alg: classify(alg)[0] for alg in algorithms}
         worst_alg = max(algorithms, key=lambda alg: SEVERITY[risks[alg]])
+        detail = (f"cipher selector {entry.token} selects {' + '.join(algorithms)} (contents depend on the OpenSSL build)"
+                  if entry.heuristic else f"cipher suite {entry.token} = {' + '.join(algorithms)}")
         finding = Finding.make(file=relative, line=line, category="tls-config", algorithm=worst_alg, rule=rule,
-                               detail=f"cipher suite {suite} = {' + '.join(algorithms)}", evidence=raw)
+                               heuristic=entry.heuristic, detail=detail, evidence=raw)
         finding.risk = worst(risks.values())
         findings.append(finding)
     return findings

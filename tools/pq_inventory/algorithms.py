@@ -12,6 +12,7 @@ Risk classes (most to least severe, see SEVERITY):
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
 CLASSICALLY_BROKEN = "CLASSICALLY-BROKEN"
 QUANTUM_BROKEN = "QUANTUM-BROKEN"
@@ -67,6 +68,13 @@ ALGORITHMS: dict[str, tuple[str, str, str]] = {
     "ML-DSA": (OK, "NIST post-quantum signature (FIPS 204)", "none needed"),
     "SLH-DSA": (OK, "NIST post-quantum hash-based signature (FIPS 205)", "none needed"),
     "HYBRID-PQ": (OK, "hybrid post-quantum key exchange (classical + post-quantum)", "none needed"),
+    "NULL-CIPHER": (CLASSICALLY_BROKEN, "no encryption at all: the traffic is plaintext", CIPHER_REPLACEMENT),
+    "ANON-KEX": (CLASSICALLY_BROKEN, "anonymous key exchange: the server is not authenticated, so a man-in-the-middle is trivial",
+                 "authenticated (EC)DHE, then hybrid ML-KEM, with certificates"),
+    "EXPORT": (CLASSICALLY_BROKEN, "export-grade (40/56-bit or 512-bit) cryptography, broken today (FREAK, Logjam)", "TLS 1.3 suites"),
+    "PSK": (OK, "pre-shared symmetric key: no public-key step for Shor's algorithm; its strength is the key's length",
+            "256-bit PSKs; (EC)DHE-PSK or ML-KEM for forward secrecy"),
+    "SRP": (QUANTUM_BROKEN, "SRP is built on discrete logarithms, which Shor's algorithm breaks", KEM_REPLACEMENT),
 }
 
 
@@ -84,65 +92,138 @@ def worst(risks) -> str:
 
 
 # ----------------------------------------------------------- cipher suite parsing
+#
+# Two kinds of positive token appear in OpenSSL/nginx/Apache cipher strings:
+# - explicit suite names (OpenSSL "ECDHE-RSA-AES128-GCM-SHA256" or IANA "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256"),
+#   decomposed exactly with the tables below;
+# - selectors ("EECDH+AESGCM", "aRSA", "eNULL"), which add every suite matching all their parts. Their
+#   contents depend on the OpenSSL build and on later exclusions, so they are reported as heuristic,
+#   with the algorithms their parts name.
+# Exclusions (!X, -X), reordering (+X), directives (@SECLEVEL=2) and class keywords (HIGH, DEFAULT ...)
+# add nothing and are skipped.
 
-# OpenSSL / IANA cipher-suite name fragments -> algorithms. Order matters only within each group.
-_KX = [("ECDHE", "ECDH"), ("ECDH", "ECDH"), ("DHE", "DH"), ("EDH", "DH"), ("ADH", "DH"), ("DH", "DH")]
-_AUTH = [("ECDSA", "ECDSA"), ("RSA", "RSA-SIGNATURE"), ("DSS", "DSA")]
-_ENC = [("AES256", "AES-256"), ("AES_256", "AES-256"), ("AES128", "AES-128"), ("AES_128", "AES-128"),
-        ("CHACHA20", "CHACHA20"), ("DES-CBC3", "3DES"), ("3DES", "3DES"), ("DES_CBC", "DES"), ("DES-CBC", "DES"),
-        ("RC4", "RC4"), ("CAMELLIA256", "CAMELLIA-256"), ("CAMELLIA_256", "CAMELLIA-256"),
-        ("CAMELLIA128", "CAMELLIA-128"), ("CAMELLIA_128", "CAMELLIA-128")]
 _TLS13 = {"TLS_AES_128_GCM_SHA256": ["AES-128", "SHA-256"], "TLS_AES_256_GCM_SHA384": ["AES-256", "SHA-384"],
           "TLS_CHACHA20_POLY1305_SHA256": ["CHACHA20", "SHA-256"], "TLS_AES_128_CCM_SHA256": ["AES-128", "SHA-256"],
           "TLS_AES_128_CCM_8_SHA256": ["AES-128", "SHA-256"]}
-CIPHER_KEYWORDS = {"HIGH", "MEDIUM", "LOW", "DEFAULT", "ALL", "COMPLEMENTOFDEFAULT", "COMPLEMENTOFALL", "SECURE", "PFS"}
+CIPHER_KEYWORDS = {"HIGH", "MEDIUM", "LOW", "DEFAULT", "ALL", "COMPLEMENTOFDEFAULT", "COMPLEMENTOFALL", "SECURE", "PFS",
+                   "FIPS", "SUITEB128", "SUITEB128ONLY", "SUITEB192", "SSLV2", "SSLV3", "TLSV1", "TLSV1.0", "TLSV1.1",
+                   "TLSV1.2", "TLSV1.3"}
+# Key-exchange tokens in suite names (OpenSSL and IANA spellings).
+_SUITE_KX = {"ECDHE": ["ECDH"], "EECDH": ["ECDH"], "ECDH": ["ECDH"], "DHE": ["DH"], "EDH": ["DH"], "DH": ["DH"],
+             "ADH": ["DH", "ANON-KEX"], "AECDH": ["ECDH", "ANON-KEX"], "PSK": ["PSK"], "SRP": ["SRP"]}
+_SUITE_AUTH = {"RSA": "RSA-SIGNATURE", "ECDSA": "ECDSA", "DSS": "DSA", "ANON": "ANON-KEX"}
+# Bulk ciphers, most specific first (matched as substrings of the part after the key exchange).
+_SUITE_ENC = [("CHACHA20", "CHACHA20"), ("AES256", "AES-256"), ("AES_256", "AES-256"), ("AES-256", "AES-256"),
+              ("AES128", "AES-128"), ("AES_128", "AES-128"), ("AES-128", "AES-128"),
+              ("CAMELLIA256", "CAMELLIA-256"), ("CAMELLIA_256", "CAMELLIA-256"), ("CAMELLIA128", "CAMELLIA-128"),
+              ("CAMELLIA_128", "CAMELLIA-128"), ("3DES", "3DES"), ("DES-CBC3", "3DES"), ("DES_CBC3", "3DES"),
+              ("DES-CBC", "DES"), ("DES_CBC", "DES"), ("DES40", "DES"), ("RC4", "RC4"), ("RC2", "RC2")]
+_SUITE_MAC = {"SHA": "HMAC-SHA1", "MD5": "HMAC-MD5", "SHA256": "SHA-256", "SHA384": "SHA-384"}
+_ENC_FIRST = ("AES", "DES", "3DES", "RC4", "RC2", "CAMELLIA", "NULL", "IDEA", "SEED")  # OpenSSL RSA-kx names start here
+# Selector keywords (OpenSSL ciphers(1)); "RSA" alone is an alias for kRSA (RSA key exchange).
+SELECTORS = {"KEECDH": ["ECDH"], "KECDHE": ["ECDH"], "ECDHE": ["ECDH"], "EECDH": ["ECDH"], "KECDH": ["ECDH"], "ECDH": ["ECDH"],
+             "KEDH": ["DH"], "KDHE": ["DH"], "EDH": ["DH"], "DHE": ["DH"], "KDH": ["DH"], "DH": ["DH"],
+             "KRSA": ["RSA-KEX"], "RSA": ["RSA-KEX"], "ARSA": ["RSA-SIGNATURE"], "AECDSA": ["ECDSA"], "ECDSA": ["ECDSA"],
+             "ADSS": ["DSA"], "DSS": ["DSA"], "ANULL": ["ANON-KEX"], "ADH": ["DH", "ANON-KEX"], "AECDH": ["ECDH", "ANON-KEX"],
+             "ENULL": ["NULL-CIPHER"], "NULL": ["NULL-CIPHER"], "EXPORT": ["EXPORT"], "EXP": ["EXPORT"],
+             "AESGCM": ["AES"], "AESCCM": ["AES"], "AES": ["AES"], "AES128": ["AES-128"], "AES256": ["AES-256"],
+             "AES128GCM": ["AES-128"], "AES256GCM": ["AES-256"], "CHACHA20": ["CHACHA20"], "CAMELLIA128": ["CAMELLIA-128"],
+             "CAMELLIA256": ["CAMELLIA-256"], "3DES": ["3DES"], "DES": ["DES"], "RC4": ["RC4"], "MD5": ["HMAC-MD5"],
+             "SHA1": ["HMAC-SHA1"], "SHA": ["HMAC-SHA1"], "SHA256": ["SHA-256"], "SHA384": ["SHA-384"],
+             "PSK": ["PSK"], "KPSK": ["PSK"], "SRP": ["SRP"], "KSRP": ["SRP"]}
 
 
-def suite_algorithms(suite: str) -> list[str]:
-    """Algorithms inside one cipher-suite name such as ECDHE-RSA-AES128-GCM-SHA256 or AES256-SHA."""
-    name = suite.strip().upper()
-    if name in _TLS13:
-        return list(_TLS13[name])
-    parts = re.split(r"[-_]", name)
-    found: list[str] = []
-    kx = next((alg for token, alg in _KX if token in parts), None)
-    auth = next((alg for token, alg in _AUTH if token in parts), None)
-    if kx:
-        found.append(kx)
-    if auth:
-        found.append(auth)
-    if not kx:
-        # No (EC)DHE prefix: RSA key transport (e.g. AES256-SHA, RSA-AES128-SHA)
-        found.append("RSA-KEX")
-        if not auth:
-            found.append("RSA-SIGNATURE")
-    enc = next((alg for token, alg in _ENC if token in name), None)
-    if enc is None and "AES" in parts:
-        enc = "AES-128"  # OpenSSL's 'AES-SHA'-style names without a size mean 128-bit
-    if enc:
-        found.append(enc)
-    if name.endswith(("-MD5", "_MD5")):
-        found.append("HMAC-MD5")
-    elif name.endswith(("-SHA", "_SHA")):
-        found.append("HMAC-SHA1")
-    elif "SHA384" in name:
-        found.append("SHA-384")
-    elif "SHA256" in name:
-        found.append("SHA-256")
+@dataclass
+class CipherEntry:
+    token: str
+    algorithms: list[str]
+    heuristic: bool  # True for selectors: what they expand to depends on the OpenSSL build
+
+
+def _bulk_and_mac(rest: str, separator: str) -> list[str]:
+    found = []
+    first = rest.split(separator, 1)[0]
+    if first == "NULL":
+        found.append("NULL-CIPHER")
+    else:
+        enc = next((name for token, name in _SUITE_ENC if token in rest), None)
+        if enc is None and first == "AES":
+            enc = "AES-128"  # OpenSSL's size-less AES names (e.g. SRP-AES-128 spells it out; AES-SHA does not)
+        if enc:
+            found.append(enc)
+    mac = _SUITE_MAC.get(rest.rsplit(separator, 1)[-1])
+    if mac:
+        found.append(mac)
     return found
 
 
-def parse_cipher_string(value: str) -> list[str]:
-    """Cipher-suite names named positively in an OpenSSL/Apache/nginx cipher string or a list.
-    Exclusions (!RC4, -DES) and keyword classes (HIGH, DEFAULT ...) are not suites and are skipped."""
-    tokens = [t.strip().strip("'\";") for t in re.split(r"[:,\s]+", value) if t.strip()]
-    suites = []
-    for token in tokens:
-        token = token.split("@", 1)[0]  # DEFAULT@SECLEVEL=2 -> DEFAULT (a security-level directive, not a suite)
+def suite_algorithms(suite: str) -> list[str]:
+    """Algorithms inside one explicit suite name; [] if the name is not recognised."""
+    name = suite.strip().upper()
+    if name in _TLS13:
+        return list(_TLS13[name])
+    if name.startswith(("TLS_", "SSL_")) and "_WITH_" in name:
+        kx_part, rest = name[4:].split("_WITH_", 1)
+        tokens, separator = kx_part.split("_"), "_"
+    else:
+        tokens, separator, rest = name.split("-"), "-", None
+    found: list[str] = []
+    if tokens and tokens[0] in ("EXP", "EXP1024", "EXPORT"):
+        found.append("EXPORT")
+        tokens = tokens[1:]
+    if tokens and tokens[-1] in ("EXPORT", "EXPORT1024") and rest is not None:
+        found.insert(0, "EXPORT")
+        tokens = tokens[:-1]
+    kx: list[str] = []
+    auth: list[str] = []
+    index = 0
+    if len(tokens) > 1 and tokens[0] == "RSA" and tokens[1] == "PSK":
+        kx, index = ["RSA-KEX", "PSK"], 2
+    else:
+        while index < len(tokens) and tokens[index] in _SUITE_KX and len(kx) < 2:
+            kx += [a for a in _SUITE_KX[tokens[index]] if a not in kx]
+            index += 1
+        if index < len(tokens) and tokens[index] in _SUITE_AUTH:
+            auth.append(_SUITE_AUTH[tokens[index]])
+            index += 1
+    if rest is None:
+        rest = "-".join(tokens[index:])
+    elif index < len(tokens):
+        return []  # unexpected tokens before _WITH_
+    if not rest:
+        return []
+    if not kx:
+        if auth == ["RSA-SIGNATURE"] or (not auth and rest.split(separator, 1)[0].startswith(_ENC_FIRST)):
+            kx, auth = ["RSA-KEX"], ["RSA-SIGNATURE"]  # RSA key transport: AES256-SHA, TLS_RSA_WITH_...
+        else:
+            return []
+    auth = [a for a in auth if a not in kx]
+    bulk = _bulk_and_mac(rest, separator)
+    if not bulk:
+        return []
+    return found + kx + auth + bulk
+
+
+def cipher_entries(value: str) -> list[CipherEntry]:
+    """Positive entries of an OpenSSL/Apache/nginx cipher string or a comma-separated suite list."""
+    entries = []
+    for raw in re.split(r"[:,\s]+", value):
+        token = raw.strip().strip("'\";").split("@", 1)[0]
         if not token or token[0] in "!-+" or "=" in token or token.upper() in CIPHER_KEYWORDS:
             continue
-        if token.upper() in ("ECDHE", "EECDH", "EDH", "DHE", "RSA", "ECDSA", "AESGCM", "AES", "SHA", "SHA1", "SHA256", "SHA384", "CHACHA20", "KRSA", "ARSA", "AES256", "AES128"):
-            # bare family keywords: selector classes, not suite names
+        if "+" in token or token.upper() in SELECTORS:
+            algorithms: list[str] = []
+            for part in token.split("+"):
+                algorithms += [a for a in SELECTORS.get(part.upper(), []) if a not in algorithms]
+            if algorithms:
+                entries.append(CipherEntry(token, algorithms, True))
             continue
-        suites.append(token)
-    return suites
+        algorithms = suite_algorithms(token)
+        if algorithms:
+            entries.append(CipherEntry(token, algorithms, False))
+    return entries
+
+
+def parse_cipher_string(value: str) -> list[str]:
+    """The positive suites and selectors of a cipher string (see cipher_entries)."""
+    return [entry.token for entry in cipher_entries(value)]

@@ -311,3 +311,71 @@ def test_non_positive_limits_are_usage_errors(tmp_path, option, value):
     with pytest.raises(SystemExit) as error, contextlib.redirect_stderr(io.StringIO()):
         cli.main(["scan", str(tmp_path), "--out", str(tmp_path / "out"), option, value])
     assert error.value.code == 2
+
+
+# --------------------------------------------- 7. table-driven cipher-string parsing
+
+from pq_inventory import algorithms as alg  # noqa: E402
+
+MOZILLA_INTERMEDIATE = ("ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
+                        "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:"
+                        "DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305")
+
+
+def _entries(value: str) -> list[tuple[str, list[str], bool]]:
+    return [(e.token, e.algorithms, e.heuristic) for e in alg.cipher_entries(value)]
+
+
+@pytest.mark.parametrize("suite,expected", [
+    ("ECDHE-RSA-AES128-GCM-SHA256", ["ECDH", "RSA-SIGNATURE", "AES-128", "SHA-256"]),
+    ("DHE-RSA-CHACHA20-POLY1305", ["DH", "RSA-SIGNATURE", "CHACHA20"]),
+    ("ECDH-ECDSA-AES128-SHA", ["ECDH", "ECDSA", "AES-128", "HMAC-SHA1"]),
+    ("EDH-DSS-DES-CBC3-SHA", ["DH", "DSA", "3DES", "HMAC-SHA1"]),
+    ("AES256-SHA", ["RSA-KEX", "RSA-SIGNATURE", "AES-256", "HMAC-SHA1"]),
+    ("RC4-MD5", ["RSA-KEX", "RSA-SIGNATURE", "RC4", "HMAC-MD5"]),
+    ("NULL-SHA256", ["RSA-KEX", "RSA-SIGNATURE", "NULL-CIPHER", "SHA-256"]),
+    ("ADH-AES128-SHA256", ["DH", "ANON-KEX", "AES-128", "SHA-256"]),
+    ("AECDH-AES256-SHA", ["ECDH", "ANON-KEX", "AES-256", "HMAC-SHA1"]),
+    ("PSK-AES128-GCM-SHA256", ["PSK", "AES-128", "SHA-256"]),
+    ("ECDHE-PSK-CHACHA20-POLY1305", ["ECDH", "PSK", "CHACHA20"]),
+    ("RSA-PSK-AES256-GCM-SHA384", ["RSA-KEX", "PSK", "AES-256", "SHA-384"]),
+    ("EXP-RC4-MD5", ["EXPORT", "RSA-KEX", "RSA-SIGNATURE", "RC4", "HMAC-MD5"]),
+    ("TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256", ["ECDH", "RSA-SIGNATURE", "AES-128", "SHA-256"]),
+    ("TLS_RSA_WITH_3DES_EDE_CBC_SHA", ["RSA-KEX", "RSA-SIGNATURE", "3DES", "HMAC-SHA1"]),
+    ("TLS_DH_anon_WITH_AES_128_CBC_SHA", ["DH", "ANON-KEX", "AES-128", "HMAC-SHA1"]),
+    ("TLS_AES_256_GCM_SHA384", ["AES-256", "SHA-384"]),
+])
+def test_explicit_suites_decompose_by_table(suite, expected):
+    assert alg.suite_algorithms(suite) == expected
+
+
+def test_mozilla_intermediate_has_no_rsa_key_transport():
+    entries = _entries(MOZILLA_INTERMEDIATE)
+    assert len(entries) == 9 and not any(heuristic for _, _, heuristic in entries)
+    assert all(algs[0] in ("ECDH", "DH") and "RSA-KEX" not in algs for _, algs, _ in entries)
+
+
+@pytest.mark.parametrize("value,expected", [
+    ("EECDH+AESGCM:EDH+AESGCM", [("EECDH+AESGCM", ["ECDH", "AES"], True), ("EDH+AESGCM", ["DH", "AES"], True)]),
+    ("ECDHE+AESGCM:ECDHE+CHACHA20:DHE+AESGCM:!aNULL:!MD5:!DSS",
+     [("ECDHE+AESGCM", ["ECDH", "AES"], True), ("ECDHE+CHACHA20", ["ECDH", "CHACHA20"], True), ("DHE+AESGCM", ["DH", "AES"], True)]),
+    ("kEECDH+aRSA+AES256GCM", [("kEECDH+aRSA+AES256GCM", ["ECDH", "RSA-SIGNATURE", "AES-256"], True)]),
+    ("HIGH:!aNULL:!MD5", []),  # nginx's default: class keywords depend on the OpenSSL build
+    ("ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW", [("RC4+RSA", ["RC4", "RSA-KEX"], True)]),
+    ("DEFAULT@SECLEVEL=2", []),
+    ("aNULL", [("aNULL", ["ANON-KEX"], True)]),
+    ("eNULL:EXPORT", [("eNULL", ["NULL-CIPHER"], True), ("EXPORT", ["EXPORT"], True)]),
+    ("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA",
+     [("TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256", ["ECDH", "ECDSA", "CHACHA20", "SHA-256"], False),
+      ("TLS_RSA_WITH_AES_128_CBC_SHA", ["RSA-KEX", "RSA-SIGNATURE", "AES-128", "HMAC-SHA1"], False)]),
+])
+def test_real_cipher_strings(value, expected):
+    assert _entries(value) == expected
+
+
+@pytest.mark.parametrize("token,risk", [("NULL-SHA256", "CLASSICALLY-BROKEN"), ("ADH-AES128-SHA256", "CLASSICALLY-BROKEN"),
+                                        ("EXP-RC4-MD5", "CLASSICALLY-BROKEN"), ("PSK-AES256-GCM-SHA384", "OK"),
+                                        ("EECDH+AESGCM", "QUANTUM-BROKEN")])
+def test_suite_risk_is_its_worst_component(token, risk):
+    (entry,) = alg.cipher_entries(token)
+    assert alg.worst(alg.classify(a)[0] for a in entry.algorithms) == risk
