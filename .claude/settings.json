@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(/**)",
+      "Bash(git status *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(gh *)",
+      "Bash(.venv/bin/python *)",
+      "Bash(.venv/bin/pip *)",
+      "Bash(pytest *)",
+      "Bash(node *)",
+      "Bash(make *)"
+    ],
+    "ask": [
+      "Bash(sudo *)",
+      "Bash(git push --force*)",
+      "Bash(git push -f*)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f*)",
+      "Bash(git push * +*)",
+      "Bash(git config *)",
+      "Bash(gh auth setup-git*)",
+      "Bash(gh repo delete *)",
+      "Bash(rm *)"
+    ]
+  }
+}
