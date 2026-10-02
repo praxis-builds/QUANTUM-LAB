@@ -91,6 +91,15 @@ def test_forwarded_host_and_its_https_origin_are_accepted(codespace_server) -> N
     assert status == 200
 
 
+def test_forwarder_loopback_host_with_forwarded_origin_is_accepted(codespace_server) -> None:
+    # The Codespaces port forwarder may connect as localhost:<port> while the browser's
+    # Origin is the forwarded https URL (seen in a real codespace: the forwarded Host alone was refused).
+    loopback = f"localhost:{codespace_server.server_port}"
+    assert _get(codespace_server, {"Host": loopback})[0] == 200
+    assert _get(codespace_server, {"Host": loopback, "Origin": f"https://{FORWARDED}"})[0] == 200
+    assert _get(codespace_server, {"Host": loopback, "X-Forwarded-Host": FORWARDED})[0] == 200
+
+
 def test_local_host_still_works_in_codespaces_mode(codespace_server) -> None:
     local = f"127.0.0.1:{codespace_server.server_port}"
     assert _get(codespace_server, {"Host": local, "Origin": f"http://{local}"})[0] == 200
@@ -105,6 +114,9 @@ def test_local_host_still_works_in_codespaces_mode(codespace_server) -> None:
         {"Host": FORWARDED, "Origin": f"http://{FORWARDED}"},  # wrong scheme
         {"Host": FORWARDED, "Origin": "https://example.com"},
         {"Host": FORWARDED, "Sec-Fetch-Site": "cross-site"},
+        {"Host": FORWARDED, "X-Forwarded-Host": "evil.example"},
+        {"Host": FORWARDED, "Origin": "https://other-codespace-8765.app.github.dev"},
+        {"Host": "localhost:1"},
     ],
 )
 def test_codespaces_mode_rejects_everything_else(codespace_server, headers) -> None:
@@ -117,5 +129,9 @@ def test_default_server_rejects_the_forwarded_host() -> None:
     server, thread = _serve(None)
     try:
         assert _get(server, {"Host": FORWARDED})[0] == 403
+        assert _get(server, {"Host": f"localhost:{server.server_port}"})[0] == 403
+        local = f"127.0.0.1:{server.server_port}"
+        assert _get(server, {"Host": local, "X-Forwarded-Host": FORWARDED})[0] == 403
+        assert _get(server, {"Host": local, "Origin": f"https://{FORWARDED}"})[0] == 403
     finally:
         _stop(server, thread)

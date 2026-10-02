@@ -15,14 +15,19 @@ If the tab doesn't open, use the **Ports** panel (globe icon next to 8765). To r
 - The server still binds `127.0.0.1` only.
 - It reads `CODESPACES`, `CODESPACE_NAME` and `GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN` and refuses
   to start outside a codespace or on unexpected values.
-- It then accepts exactly **one** extra Host, `<codespace-name>-8765.<forwarding-domain>`, and only
-  with its `https://` Origin. Every other host and origin is still rejected
-  (`tests/test_dashboard_codespaces.py`).
+- It then accepts two extra Hosts: this codespace's own forwarded name,
+  `<codespace-name>-8765.<forwarding-domain>`, and `localhost:8765` (the loopback name the port
+  forwarder may connect with), plus the forwarded `https://` Origin. Every other host, every
+  foreign origin, any `X-Forwarded-Host` other than this codespace's, and cross-site fetches are
+  still rejected (`tests/test_dashboard_codespaces.py`). A rejected Host is printed to the server
+  log (`/tmp/dashboard.log`), never in the response, so a mismatch can be diagnosed.
 - Codespaces forwards ports **privately** by default (only the codespace owner can open them).
   Keep it that way: the dashboard is built for one trusted user, not public hosting.
 
-**Not yet verified inside a real codespace.** The mode is tested with simulated requests carrying
-the forwarded Host and Origin headers; the first real run is the end-to-end check.
+**First real run (2026-10-02):** the forwarded name alone was refused ("Only the local dashboard
+host is allowed"), so the forwarder does not pass the public host name through as `Host`. The
+loopback name is now accepted as well. If it still fails, `cat /tmp/dashboard.log` shows the Host
+that arrived.
 
 ## The static showcase (GitHub Pages)
 

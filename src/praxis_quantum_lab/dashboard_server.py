@@ -8,6 +8,7 @@ import math
 import os
 import re
 import socket
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -279,12 +280,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._error(431, "Request headers or target too large.")
             return False
         hosts = self.headers.get_all("Host", [])
-        allowed = self.server.allowed_origins()
-        if len(hosts) != 1 or hosts[0] not in allowed:
+        allowed_hosts, allowed_origins = self.server.allowed_hosts_and_origins()
+        if len(hosts) != 1 or hosts[0] not in allowed_hosts:
+            if self.server.forwarded_host is not None:
+                # Codespaces only: say which Host arrived, in the server log (never in the response).
+                print(f"dashboard: rejected Host {hosts!r}", file=sys.stderr, flush=True)
             self._error(403, "Only the local dashboard host is allowed.")
             return False
         origins = self.headers.get_all("Origin", [])
-        if (origins and origins != [allowed[hosts[0]]]) or self.headers.get("Sec-Fetch-Site") == "cross-site":
+        forwarded_hosts = self.headers.get_all("X-Forwarded-Host", [])
+        if forwarded_hosts and (self.server.forwarded_host is None or forwarded_hosts != [self.server.forwarded_host]):
+            self._error(403, "Only the local dashboard host is allowed.")
+            return False
+        if (origins and (len(origins) != 1 or origins[0] not in allowed_origins)) or self.headers.get("Sec-Fetch-Site") == "cross-site":
             self._error(403, "Cross-origin requests are not allowed.")
             return False
         if self.headers.get("Transfer-Encoding") is not None:
@@ -430,13 +438,23 @@ class DashboardServer(ThreadingHTTPServer):
         self.forwarded_host = forwarded_host
         super().__init__(("127.0.0.1", port), DashboardHandler)
 
-    def allowed_origins(self) -> dict[str, str]:
-        """Accepted Host header -> the only Origin accepted with it."""
+    def allowed_hosts_and_origins(self) -> tuple[frozenset[str], frozenset[str]]:
+        """Accepted Host headers and accepted Origin headers.
+
+        Default: only 127.0.0.1:<port> and its http origin. In Codespaces mode the port
+        forwarder may present either the codespace's own forwarded name or the loopback
+        name it connected to (localhost:<port>), so both are accepted, together with the
+        forwarded https origin. Any other host, any foreign origin, any X-Forwarded-Host
+        other than this codespace's, and cross-site fetches are still refused.
+        """
         local = f"127.0.0.1:{self.server_port}"
-        allowed = {local: f"http://{local}"}
+        hosts = {local}
+        origins = {f"http://{local}"}
         if self.forwarded_host is not None:
-            allowed[self.forwarded_host] = f"https://{self.forwarded_host}"
-        return allowed
+            loopback = f"localhost:{self.server_port}"
+            hosts |= {loopback, self.forwarded_host}
+            origins |= {f"http://{loopback}", f"https://{self.forwarded_host}"}
+        return frozenset(hosts), frozenset(origins)
 
     def process_request(self, request: socket.socket, client_address: tuple) -> None:
         if not self._connections.acquire(blocking=False):
