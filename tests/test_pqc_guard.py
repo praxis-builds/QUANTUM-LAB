@@ -8,6 +8,7 @@ guard has to accept nothing more than that. These tests only call the guard, nev
 from __future__ import annotations
 
 import ctypes.util
+import importlib.util
 import os
 import sys
 
@@ -61,5 +62,8 @@ def test_a_real_liboqs_is_found_and_pinned_through_oqs_install_path(monkeypatch)
     monkeypatch.delenv("OQS_INSTALL_PATH")
     path = _pqc.liboqs_library_path()
     assert path is not None and path.name == "liboqs.so"
+    if importlib.util.find_spec("oqs") is None:  # liboqs built here, but no liboqs-python (a core-only install)
+        assert _pqc.load_oqs() is None  # degrades cleanly instead of failing
+        pytest.skip("liboqs is present but liboqs-python is not installed")
     assert _pqc.load_oqs() is not None
     assert os.environ["OQS_INSTALL_PATH"] == str(path.parent.parent)  # oqs now looks exactly where we checked
