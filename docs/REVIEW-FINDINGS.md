@@ -2,10 +2,10 @@
 
 A read-only review of the whole repository, starting from [`REVIEW.md`](REVIEW.md) and [`DECISIONS.md`](DECISIONS.md). Reproductions wrote only to a scratch directory outside the repository, and the tree was clean before and after the review.
 
-**Status (2026-10-01, after the fixes):** the findings below are kept as written at review time; the **Status** columns and the *Status* notes say what happened to each. 17 of the 18 numbered findings are fixed, the code changes each with a regression test; #18 is partly done. Of the 17 Info items, 12 are fixed, 3 are documented without a behaviour change, and 2 are documented and left open. The suite now has 859 tests, all passing with the `[pqc]` extra and liboqs (exit code 0, 135 s). What is still open is collected in [`REVIEW.md`](REVIEW.md#still-open).
+**Status (2026-10-01, after the fixes):** the findings below are kept as written at review time; the **Status** columns and the *Status* notes say what happened to each. All 18 numbered findings are fixed, the code changes each with a regression test; two details of #18 remain unverified and are labelled so in the lessons. Of the 17 Info items, 14 are fixed and 3 are documented without a behaviour change. The suite now has 887 passing tests with the `[pqc]` extra and liboqs (2 skipped for optional packages), and 859 passing in a core-only virtualenv (30 skipped), both exit code 0. GitHub Actions CI is green. What is still open is collected in [`REVIEW.md`](REVIEW.md#still-open).
 
 - **Test suite:** `pytest` passed 741 tests at `dd01576` (exit code 0, 131 s), with the `[pqc]` extra and liboqs.
-- **GitHub Actions:** no run results were pasted, so none are reported. [`REVIEW.md:28`](REVIEW.md) still applies: CI has never run.
+- **GitHub Actions:** no run results were pasted at review time, so none were reported then. (Since checked: CI is green; see the status note below.)
 - **Severity scale:**
   - **High:** leaks secrets, hangs, or gets the core security verdict wrong.
   - **Medium:** a security gate that fails open, or a false crypto claim in reports.
@@ -31,7 +31,7 @@ A read-only review of the whole repository, starting from [`REVIEW.md`](REVIEW.m
 | 15 | Low | `tools/pq_inventory/detect_keys.py:25,51` | One shared import, plus the FFDH deprecation: key parsing can switch off silently | Fixed in `678d253` (separate import) and `13719d9` (no warning, size kept under warnings-as-errors) |
 | 16 | Low | `lessons/14_shor_15.md:27`, `15_shor_21.md:29` | Beauregard's cost is misquoted: it is O(n³ log n) gates, not O(n³) | Fixed in `c75d01b` |
 | 17 | Low | `lessons/21_why_errors_matter.md:4` | The definition of depolarizing noise doesn't match Qiskit's channel | Fixed in `c75d01b`, with a test against the Qiskit channel |
-| 18 | Low | `lessons/21_why_errors_matter.md:11` and others | One number is unsourced, and some citations come from memory | **Partly** (`c75d01b`): the gate-error figure is labelled an order-of-magnitude assumption; the citations from memory and the quotes are still not checked against the originals |
+| 18 | Low | `lessons/21_why_errors_matter.md:11` and others | One number is unsourced, and some citations come from memory | Fixed in `c75d01b` (gate-error figure labelled an assumption) and the citation check of 2026-10-01: each source read in the original and cited precisely, quotes compared word for word. Left unverified and labelled: the SP 800-90B abstract wording and the NSA statement's date |
 
 Info-level items, weak tests and smaller doc mismatches are listed after the detailed findings, each with its own status.
 
@@ -306,8 +306,8 @@ Info-level items, weak tests and smaller doc mismatches are listed after the det
 | `reports.py:33-34` | The headline counts only QUANTUM-BROKEN files as "would break". A file whose only finding is RSA-1024 (CLASSICALLY-BROKEN, also breakable by Shor's algorithm) is left out of that count. | Fixed (`f70df55`): short RSA/DSA/DH keys count as quantum-breakable in the headline. |
 | `roadmap.py:55-58` | Overlapping path patterns count a finding in every matching system. I verified this with one finding and the systems `*` and `src/*`: it was counted in both. Not documented. The committed demo is unaffected: per-system sums equal the totals. | Documented, not changed (`f70df55`). |
 | `docs/ci/pq-inventory.yml:13,14,22,29` | The scanner is installed from an unpinned git ref, and the actions are pinned by tag. A security gate should pin a commit. | Fixed (`0eca9c1`): actions pinned to commit SHAs, the scanner install takes a commit placeholder. The workflow has still never run. |
-| `security.js:93,167` | The UI always sends seed 20260928, so repeated runs give identical results. The API accepts any seed. | **Open:** documented in `docs/dashboard.md` (`ff91491`); the forms still have no seed field (a UI change, not cheap). |
-| `security_lab.py:83` | `seed % 100_000` aliasing: seeds s and s + 100,000 share Aer base runs. | **Open:** documented in `docs/dashboard.md` (`ff91491`); not changed, because larger Aer seeds are unverified here. |
+| `security.js:93,167` | The UI always sends seed 20260928, so repeated runs give identical results. The API accepts any seed. | Fixed: every form has a seed field and a New seed button, validated like the API; tested in Node and on the DOM stand-in against a real server. |
+| `security_lab.py:83` | `seed % 100_000` aliasing: seeds s and s + 100,000 share Aer base runs. | Fixed: each seed owns its own block of Aer run indices (`bb84_base_run`), spaced by `run_seed`; Aer's handling of 64-bit seeds was measured first; tested. |
 | `lessons/c/ml_kem_demo.c:31-39` | The error paths free only `kem`: buffers leak and `secret_key` is not wiped. Harmless in a demo that exits, but the file is presented as a model. | Fixed (`0eca9c1`): one cleanup path frees and wipes. |
 | `docs/history/codex-handoff-2026-09-29.md` | Contains two absolute `/home/praxis` paths, which reveal the local username. | Fixed (`0eca9c1`) in the current file; the paths remain in git history. |
 
@@ -359,7 +359,7 @@ These tests pass but would not catch the problems listed:
 
 ## Not verified
 
-- The CBOM against the official CycloneDX 1.6 schema (D11; no validator is installed). *Still not validated after #13.*
+- The CBOM against the official CycloneDX 1.6 schema (D11; no validator is installed). *Validated on 2026-10-01: the demo and corpus CBOMs have 0 errors against the official schema (`tests/fixtures/cyclonedx/`); see REVIEW.md.*
 - Reads from character devices (#3) and the actual oqs auto-install (#12). Both are inferred from the code; I did not run them. *Still not run: the fixes are tested with a FIFO, a socket and a fake liboqs directory.*
 - Real SLH-DSA or composite certificates (#8). *An SLH-DSA certificate signed with liboqs is now a corpus fixture and is classified OK; composite certificates are still untested.*
-- Anything about GitHub Actions: no results were pasted. *Unchanged: CI has still never run.*
+- Anything about GitHub Actions: no results were pasted. *CI is green on GitHub Actions for every push since `dd01576`, both jobs; the Pages site is live. The sample `docs/ci/pq-inventory.yml` is still untested.*
