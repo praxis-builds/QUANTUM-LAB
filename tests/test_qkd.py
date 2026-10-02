@@ -63,6 +63,14 @@ def test_parity_error_correction_fixes_errors_and_counts_leakage():
     assert 4000 * qkd.binary_entropy(0.05) < leaked < 4000  # at least the Shannon minimum, less than the key
 
 
+def test_randomness_tests_reproduce_the_worked_examples_of_nist_sp_800_22():
+    """SP 800-22 Rev. 1a (April 2010): section 2.1.4 gives P-value 0.527089 for 1011010101 (monobit) and
+    section 2.3.4 gives 0.147232 for 1001101011 (runs). Read from the NIST PDF on 2026-10-01."""
+    bits = lambda text: np.array([int(c) for c in text])
+    assert qkd.monobit_test(bits("1011010101")) == pytest.approx(0.527089, abs=5e-7)
+    assert qkd.runs_test(bits("1001101011")) == pytest.approx(0.147232, abs=5e-7)
+
+
 def test_randomness_tests_reject_bad_sequences():
     n = 20000
     assert qkd.monobit_test(np.ones(n, int)) < 0.01
