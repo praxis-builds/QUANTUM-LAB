@@ -104,3 +104,9 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 - **Why:** a server that picks x25519 from a classical-only offer says nothing about whether it supports hybrid key exchange. Reporting it as CLASSICAL would be a false negative presented as a finding.
 - **Limits accepted:** at most 20 hosts per run, single names or addresses only, 10-second timeouts, one ClientHello plus one normal handshake per host (browser-equivalent traffic). The certificate statement is dated by the run's timestamp and has to be revisited when public CAs start issuing post-quantum certificates.
 
+## D22. Quantum Readiness Report: one deterministic, self-contained page
+- **Decision:** `pq_readiness` builds the report as data first (the JSON), then renders one HTML page with inline CSS, no scripts and a print stylesheet. The report date comes only from `--date` (default: today), so fixed inputs give identical bytes. Findings carry only the scanner's metadata fields; the evidence field is dropped, not just redacted.
+- **Demo inputs:** the readiness demo uses the warehouse code *before* the first migration wave (a readiness report is the first deliverable of an engagement) and the recorded pq_tls run of 2026-10-05. Northwind is fictional, so its "websites" are four real public sites used as stand-ins; the report says so in the summary and the websites section (`--sites-note`). The demo is generated with no network and checked byte for byte by a test.
+- **Alternatives:** a PDF library (a new dependency); separate HTML and print versions.
+- **Why:** browsers already print HTML to PDF well, and one file is easier to hand over and to test. **Not verified:** the printed output itself; no browser could run here.
+

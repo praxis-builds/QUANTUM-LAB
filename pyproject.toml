@@ -31,6 +31,7 @@ praxis-kernel-experiment = "praxis_quantum_lab.kernel_experiment:main"
 praxis-density-matrix-sweep = "praxis_quantum_lab.density_matrix_noise:main"
 pq-inventory = "pq_inventory.cli:main"
 pq-tls = "pq_tls.cli:main"
+pq-readiness = "pq_readiness.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src", "tools"]

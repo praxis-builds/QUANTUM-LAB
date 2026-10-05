@@ -1,0 +1,898 @@
+{
+  "tool": "pq_readiness",
+  "version": "0.1.0",
+  "client": "Northwind Warehouse (fictional)",
+  "date": "2026-10-05",
+  "versions": {
+    "pq_readiness": "0.1.0",
+    "pq_inventory": "0.1.0",
+    "pq_tls": "0.1.0",
+    "pq_tls (website results)": "0.1.0"
+  },
+  "executive_summary": [
+    "Websites: 3 of 4 already protect their traffic with hybrid post-quantum key exchange; 1 still uses classical key exchange only (recorded pq_tls results from 2026-10-05 (sample-results.json), not a live check). Northwind is fictional, so these are four real public websites checked on 2026-10-05 as stand-ins, not Northwind's own.",
+    "Code and configuration: 37 uses of cryptography in 12 of 12 files. 16 are weak today, 17 would be broken by a large quantum computer, 2 are only weakened, 2 are fine.",
+    "Under the planning assumption z = 9 years (an assumption, not a forecast), 3 of 5 systems are already late: ERP (SAP), Supplier EDI feed, Inventory API (customer orders).",
+    "Do now: ERP (SAP): replace cryptography that is weak today, and 7 more.",
+    "Certificates everywhere still use RSA or elliptic curves, like every web certificate today; that migration waits for post-quantum certificates to become available."
+  ],
+  "websites": {
+    "rows": [
+      {
+        "host": "google.com",
+        "port": 443,
+        "key_exchange": "PQ-HYBRID",
+        "key_exchange_detail": "The server chose X25519MLKEM768 (ML-KEM-768 + X25519, RFC 10024).",
+        "tls_version": "TLSv1.3",
+        "certificate_key": "ECDSA P-256",
+        "recommendation": "Key exchange is already post-quantum hybrid; keep it, and plan certificate migration once PQ certificates exist."
+      },
+      {
+        "host": "cloudflare.com",
+        "port": 443,
+        "key_exchange": "PQ-HYBRID",
+        "key_exchange_detail": "The server chose X25519MLKEM768 (ML-KEM-768 + X25519, RFC 10024).",
+        "tls_version": "TLSv1.3",
+        "certificate_key": "ECDSA P-256",
+        "recommendation": "Key exchange is already post-quantum hybrid; keep it, and plan certificate migration once PQ certificates exist."
+      },
+      {
+        "host": "praxis-builds.github.io",
+        "port": 443,
+        "key_exchange": "PQ-HYBRID",
+        "key_exchange_detail": "The server chose X25519MLKEM768 (ML-KEM-768 + X25519, RFC 10024).",
+        "tls_version": "TLSv1.3",
+        "certificate_key": "RSA 2048",
+        "recommendation": "Key exchange is already post-quantum hybrid; keep it, and plan certificate migration once PQ certificates exist."
+      },
+      {
+        "host": "github.com",
+        "port": 443,
+        "key_exchange": "CLASSICAL",
+        "key_exchange_detail": "Offered X25519MLKEM768 first; the server chose x25519. Traffic recorded today could be decrypted by a future quantum computer.",
+        "tls_version": "TLSv1.3",
+        "certificate_key": "ECDSA P-256",
+        "recommendation": "Enable the hybrid group X25519MLKEM768 (RFC 10024) on the TLS endpoint or CDN to stop harvest-now-decrypt-later."
+      }
+    ],
+    "source": "recorded pq_tls results from 2026-10-05 (sample-results.json), not a live check",
+    "note": "Northwind is fictional, so these are four real public websites checked on 2026-10-05 as stand-ins, not Northwind's own.",
+    "checked_at": "2026-10-05T22:32:51+00:00",
+    "ml_kem": "cryptography 50.0.2"
+  },
+  "code": {
+    "root": "examples/warehouse-demo/before",
+    "summary": {
+      "files_scanned": 12,
+      "files_with_findings": 12,
+      "findings": 37,
+      "by_risk": {
+        "CLASSICALLY-BROKEN": 16,
+        "QUANTUM-BROKEN": 17,
+        "QUANTUM-WEAKENED": 2,
+        "OK": 2
+      },
+      "by_category": {
+        "certificate": 3,
+        "config": 5,
+        "source": 12,
+        "ssh-config": 6,
+        "ssh-key": 2,
+        "tls-config": 9
+      },
+      "by_algorithm": {
+        "3DES": 4,
+        "AES-128": 2,
+        "DH": 1,
+        "ECDH": 6,
+        "ECDSA": 1,
+        "HMAC-SHA1": 2,
+        "MD5": 2,
+        "RSA": 5,
+        "RSA-SIGNATURE": 4,
+        "SHA-1": 6,
+        "SHA-256": 2,
+        "TLS1.0": 1,
+        "TLS1.1": 1
+      },
+      "heuristic_findings": 5,
+      "skipped": 0
+    },
+    "notes": [],
+    "skipped": 0,
+    "roadmap": {
+      "assumptions": {
+        "z_years": 9,
+        "z_deadline_year": 2035,
+        "z_source": "ASSUMPTION for this case study: z = 9 years (2026 to 2035, the year NIST IR 8547's initial public draft proposes for disallowing quantum-vulnerable public-key algorithms). A planning horizon, NOT a forecast of when a quantum computer will exist.",
+        "x_default_years": 10,
+        "x_source": "ASSUMPTION: 10 years of required confidentiality when a system does not say; replace per system.",
+        "y_default_years": 5,
+        "y_source": "ASSUMPTION: 5 years to migrate when a system does not say; large estates often need longer.",
+        "reference_year": 2026
+      },
+      "items": [
+        {
+          "system": "ERP (SAP)",
+          "paths": [
+            "erp/DEFAULT.PFL"
+          ],
+          "notes": "Depends on vendor support for post-quantum TLS.",
+          "x": 10.0,
+          "y": 5.0,
+          "z": 9.0,
+          "x_from": "config",
+          "y_from": "config",
+          "slack_years": -6.0,
+          "mosca_at_risk": true,
+          "tier": 1,
+          "tier_label": "Fix now: already weak without any quantum computer",
+          "counts": {
+            "CLASSICALLY-BROKEN": 1,
+            "QUANTUM-BROKEN": 2,
+            "QUANTUM-WEAKENED": 0
+          },
+          "findings": 3,
+          "start_migration_by": 2026,
+          "overdue_years": 6.0,
+          "actions": [
+            {
+              "algorithm": "SHA-1",
+              "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "ECDH",
+              "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+              "risk": "QUANTUM-BROKEN",
+              "count": 2
+            }
+          ]
+        },
+        {
+          "system": "Supplier EDI feed",
+          "paths": [
+            "app/SupplierFeed.java",
+            "erp/as2_*",
+            "certs/legacy-edi.pem"
+          ],
+          "notes": "Contracts and pricing; partner coordination slows migration.",
+          "x": 10.0,
+          "y": 4.0,
+          "z": 9.0,
+          "x_from": "config",
+          "y_from": "config",
+          "slack_years": -5.0,
+          "mosca_at_risk": true,
+          "tier": 1,
+          "tier_label": "Fix now: already weak without any quantum computer",
+          "counts": {
+            "CLASSICALLY-BROKEN": 4,
+            "QUANTUM-BROKEN": 4,
+            "QUANTUM-WEAKENED": 0
+          },
+          "findings": 8,
+          "start_migration_by": 2026,
+          "overdue_years": 5.0,
+          "actions": [
+            {
+              "algorithm": "SHA-1",
+              "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 3
+            },
+            {
+              "algorithm": "3DES",
+              "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "RSA",
+              "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+              "risk": "QUANTUM-BROKEN",
+              "count": 2
+            },
+            {
+              "algorithm": "ECDSA",
+              "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+              "risk": "QUANTUM-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "RSA-SIGNATURE",
+              "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+              "risk": "QUANTUM-BROKEN",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "system": "Inventory API (customer orders)",
+          "paths": [
+            "app/inventory_api.py",
+            "config/nginx.conf",
+            "config/openssl.cnf",
+            "certs/warehouse-api.pem"
+          ],
+          "notes": "Orders and invoices kept 7 years (assumed retention).",
+          "x": 7.0,
+          "y": 3.0,
+          "z": 9.0,
+          "x_from": "config",
+          "y_from": "config",
+          "slack_years": -1.0,
+          "mosca_at_risk": true,
+          "tier": 1,
+          "tier_label": "Fix now: already weak without any quantum computer",
+          "counts": {
+            "CLASSICALLY-BROKEN": 6,
+            "QUANTUM-BROKEN": 7,
+            "QUANTUM-WEAKENED": 1
+          },
+          "findings": 16,
+          "start_migration_by": 2026,
+          "overdue_years": 1.0,
+          "actions": [
+            {
+              "algorithm": "MD5",
+              "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "SHA-1",
+              "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "TLS1.0",
+              "replacement": "TLS 1.3 (TLS 1.2 minimum)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "TLS1.1",
+              "replacement": "TLS 1.3 (TLS 1.2 minimum)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "3DES",
+              "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "HMAC-SHA1",
+              "replacement": "HMAC-SHA-256",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "RSA",
+              "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+              "risk": "QUANTUM-BROKEN",
+              "count": 3
+            },
+            {
+              "algorithm": "RSA-SIGNATURE",
+              "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+              "risk": "QUANTUM-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "ECDH",
+              "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+              "risk": "QUANTUM-BROKEN",
+              "count": 3
+            },
+            {
+              "algorithm": "AES-128",
+              "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+              "risk": "QUANTUM-WEAKENED",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "system": "Admin access (SSH)",
+          "paths": [
+            "config/sshd_config",
+            "ssh/*"
+          ],
+          "notes": "Sessions are short-lived; host and user keys are the long-lived part.",
+          "x": 1.0,
+          "y": 1.0,
+          "z": 9.0,
+          "x_from": "config",
+          "y_from": "config",
+          "slack_years": 7.0,
+          "mosca_at_risk": false,
+          "tier": 1,
+          "tier_label": "Fix now: already weak without any quantum computer",
+          "counts": {
+            "CLASSICALLY-BROKEN": 3,
+            "QUANTUM-BROKEN": 4,
+            "QUANTUM-WEAKENED": 1
+          },
+          "findings": 8,
+          "start_migration_by": 2033,
+          "overdue_years": 0.0,
+          "actions": [
+            {
+              "algorithm": "SHA-1",
+              "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "3DES",
+              "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "HMAC-SHA1",
+              "replacement": "HMAC-SHA-256",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "DH",
+              "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+              "risk": "QUANTUM-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "ECDH",
+              "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+              "risk": "QUANTUM-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "RSA-SIGNATURE",
+              "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+              "risk": "QUANTUM-BROKEN",
+              "count": 2
+            },
+            {
+              "algorithm": "AES-128",
+              "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+              "risk": "QUANTUM-WEAKENED",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "system": "Label printing",
+          "paths": [
+            "app/label_printer.js"
+          ],
+          "notes": "",
+          "x": 0.5,
+          "y": 1.0,
+          "z": 9.0,
+          "x_from": "config",
+          "y_from": "config",
+          "slack_years": 7.5,
+          "mosca_at_risk": false,
+          "tier": 1,
+          "tier_label": "Fix now: already weak without any quantum computer",
+          "counts": {
+            "CLASSICALLY-BROKEN": 2,
+            "QUANTUM-BROKEN": 0,
+            "QUANTUM-WEAKENED": 0
+          },
+          "findings": 2,
+          "start_migration_by": null,
+          "overdue_years": 0.0,
+          "actions": [
+            {
+              "algorithm": "MD5",
+              "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            },
+            {
+              "algorithm": "3DES",
+              "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+              "risk": "CLASSICALLY-BROKEN",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "unassigned_findings": 0,
+      "config_from_file": true
+    },
+    "findings_by_risk": {
+      "CLASSICALLY-BROKEN": [
+        {
+          "file": "app/SupplierFeed.java",
+          "line": 12,
+          "category": "source",
+          "algorithm": "SHA-1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2017 (SHAttered); deprecated by NIST",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": false,
+          "detail": "hash function"
+        },
+        {
+          "file": "app/inventory_api.py",
+          "line": 17,
+          "category": "source",
+          "algorithm": "MD5",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2004",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": false,
+          "detail": "hash function"
+        },
+        {
+          "file": "app/inventory_api.py",
+          "line": 21,
+          "category": "source",
+          "algorithm": "SHA-1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2017 (SHAttered); deprecated by NIST",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": false,
+          "detail": "hash function"
+        },
+        {
+          "file": "app/label_printer.js",
+          "line": 5,
+          "category": "source",
+          "algorithm": "MD5",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2004",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": false,
+          "detail": "hash function"
+        },
+        {
+          "file": "app/label_printer.js",
+          "line": 9,
+          "category": "source",
+          "algorithm": "3DES",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "64-bit blocks (Sweet32) and disallowed by NIST after 2023",
+          "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+          "heuristic": false,
+          "detail": "symmetric cipher"
+        },
+        {
+          "file": "certs/legacy-edi.pem",
+          "line": 1,
+          "category": "certificate",
+          "algorithm": "SHA-1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2017 (SHAttered); deprecated by NIST",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": false,
+          "detail": "certificate O=Northwind Warehouse DEMO - TEST ONLY,CN=edi.northwind.test is signed with SHA1"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 6,
+          "category": "tls-config",
+          "algorithm": "TLS1.0",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "deprecated by RFC 8996 (2021)",
+          "replacement": "TLS 1.3 (TLS 1.2 minimum)",
+          "heuristic": false,
+          "detail": "protocol TLSv1 enabled"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 6,
+          "category": "tls-config",
+          "algorithm": "TLS1.1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "deprecated by RFC 8996 (2021)",
+          "replacement": "TLS 1.3 (TLS 1.2 minimum)",
+          "heuristic": false,
+          "detail": "protocol TLSv1.1 enabled"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 7,
+          "category": "tls-config",
+          "algorithm": "3DES",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "64-bit blocks (Sweet32) and disallowed by NIST after 2023",
+          "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+          "heuristic": false,
+          "detail": "cipher suite DES-CBC3-SHA = RSA-KEX + RSA-SIGNATURE + 3DES + HMAC-SHA1"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 7,
+          "category": "tls-config",
+          "algorithm": "HMAC-SHA1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "SHA-1 based; HMAC-SHA1 itself is not known to be broken but SHA-1 is deprecated",
+          "replacement": "HMAC-SHA-256",
+          "heuristic": false,
+          "detail": "cipher suite AES128-SHA = RSA-KEX + RSA-SIGNATURE + AES-128 + HMAC-SHA1"
+        },
+        {
+          "file": "config/sshd_config",
+          "line": 4,
+          "category": "ssh-config",
+          "algorithm": "SHA-1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2017 (SHAttered); deprecated by NIST",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": false,
+          "detail": "KexAlgorithms diffie-hellman-group14-sha1"
+        },
+        {
+          "file": "config/sshd_config",
+          "line": 5,
+          "category": "ssh-config",
+          "algorithm": "3DES",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "64-bit blocks (Sweet32) and disallowed by NIST after 2023",
+          "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+          "heuristic": false,
+          "detail": "Ciphers 3des-cbc"
+        },
+        {
+          "file": "config/sshd_config",
+          "line": 6,
+          "category": "ssh-config",
+          "algorithm": "HMAC-SHA1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "SHA-1 based; HMAC-SHA1 itself is not known to be broken but SHA-1 is deprecated",
+          "replacement": "HMAC-SHA-256",
+          "heuristic": false,
+          "detail": "MACs hmac-sha1"
+        },
+        {
+          "file": "erp/DEFAULT.PFL",
+          "line": 5,
+          "category": "config",
+          "algorithm": "SHA-1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2017 (SHAttered); deprecated by NIST",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": true,
+          "detail": "SAP password hash algorithm"
+        },
+        {
+          "file": "erp/as2_partner_acme.properties",
+          "line": 3,
+          "category": "config",
+          "algorithm": "3DES",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "64-bit blocks (Sweet32) and disallowed by NIST after 2023",
+          "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+          "heuristic": true,
+          "detail": "EDI/AS2 encryption algorithm"
+        },
+        {
+          "file": "erp/as2_partner_acme.properties",
+          "line": 4,
+          "category": "config",
+          "algorithm": "SHA-1",
+          "risk": "CLASSICALLY-BROKEN",
+          "why": "practical collisions since 2017 (SHAttered); deprecated by NIST",
+          "replacement": "SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+          "heuristic": true,
+          "detail": "EDI/AS2 signing / MIC hash"
+        }
+      ],
+      "QUANTUM-BROKEN": [
+        {
+          "file": "app/SupplierFeed.java",
+          "line": 6,
+          "category": "source",
+          "algorithm": "RSA",
+          "risk": "QUANTUM-BROKEN",
+          "why": "factoring falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+          "heuristic": false,
+          "detail": "key pair generator"
+        },
+        {
+          "file": "app/SupplierFeed.java",
+          "line": 7,
+          "category": "source",
+          "algorithm": "RSA",
+          "risk": "QUANTUM-BROKEN",
+          "why": "factoring falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+          "heuristic": false,
+          "detail": "key size initialisation (2048-bit)"
+        },
+        {
+          "file": "app/SupplierFeed.java",
+          "line": 16,
+          "category": "source",
+          "algorithm": "ECDSA",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve signatures fall to Shor's algorithm",
+          "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+          "heuristic": false,
+          "detail": "signature algorithm"
+        },
+        {
+          "file": "app/inventory_api.py",
+          "line": 8,
+          "category": "source",
+          "algorithm": "RSA",
+          "risk": "QUANTUM-BROKEN",
+          "why": "factoring falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+          "heuristic": false,
+          "detail": "RSA key generation (2048-bit)"
+        },
+        {
+          "file": "app/inventory_api.py",
+          "line": 13,
+          "category": "source",
+          "algorithm": "RSA",
+          "risk": "QUANTUM-BROKEN",
+          "why": "factoring falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+          "heuristic": false,
+          "detail": "RSA encryption/signature padding"
+        },
+        {
+          "file": "certs/legacy-edi.pem",
+          "line": 1,
+          "category": "certificate",
+          "algorithm": "RSA-SIGNATURE",
+          "risk": "QUANTUM-BROKEN",
+          "why": "RSA signatures fall to Shor's algorithm",
+          "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+          "heuristic": false,
+          "detail": "certificate O=Northwind Warehouse DEMO - TEST ONLY,CN=edi.northwind.test; key RSA 2048-bit; expires 2036-09-28"
+        },
+        {
+          "file": "certs/warehouse-api.pem",
+          "line": 1,
+          "category": "certificate",
+          "algorithm": "RSA-SIGNATURE",
+          "risk": "QUANTUM-BROKEN",
+          "why": "RSA signatures fall to Shor's algorithm",
+          "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+          "heuristic": false,
+          "detail": "certificate O=Northwind Warehouse DEMO - TEST ONLY,CN=inventory.northwind.test; key RSA 2048-bit; expires 2028-04-19"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 7,
+          "category": "tls-config",
+          "algorithm": "ECDH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": false,
+          "detail": "cipher suite ECDHE-RSA-AES128-GCM-SHA256 = ECDH + RSA-SIGNATURE + AES-128 + SHA-256"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 7,
+          "category": "tls-config",
+          "algorithm": "ECDH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": false,
+          "detail": "cipher suite ECDHE-RSA-AES256-GCM-SHA384 = ECDH + RSA-SIGNATURE + AES-256 + SHA-384"
+        },
+        {
+          "file": "config/nginx.conf",
+          "line": 8,
+          "category": "tls-config",
+          "algorithm": "ECDH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": false,
+          "detail": "key-exchange group prime256v1"
+        },
+        {
+          "file": "config/openssl.cnf",
+          "line": 3,
+          "category": "tls-config",
+          "algorithm": "RSA",
+          "risk": "QUANTUM-BROKEN",
+          "why": "factoring falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures",
+          "heuristic": false,
+          "detail": "new keys default to RSA 2048-bit"
+        },
+        {
+          "file": "config/sshd_config",
+          "line": 4,
+          "category": "ssh-config",
+          "algorithm": "DH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "finite-field Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": false,
+          "detail": "KexAlgorithms diffie-hellman-group14-sha1"
+        },
+        {
+          "file": "config/sshd_config",
+          "line": 4,
+          "category": "ssh-config",
+          "algorithm": "ECDH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": false,
+          "detail": "KexAlgorithms ecdh-sha2-nistp256"
+        },
+        {
+          "file": "erp/DEFAULT.PFL",
+          "line": 3,
+          "category": "config",
+          "algorithm": "ECDH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": true,
+          "detail": "SAP profile TLS cipher suites (classical key exchange)"
+        },
+        {
+          "file": "erp/DEFAULT.PFL",
+          "line": 4,
+          "category": "config",
+          "algorithm": "ECDH",
+          "risk": "QUANTUM-BROKEN",
+          "why": "elliptic-curve Diffie-Hellman falls to Shor's algorithm",
+          "replacement": "ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+          "heuristic": true,
+          "detail": "SAP profile TLS cipher suites (classical key exchange)"
+        },
+        {
+          "file": "ssh/authorized_keys",
+          "line": 1,
+          "category": "ssh-key",
+          "algorithm": "RSA-SIGNATURE",
+          "risk": "QUANTUM-BROKEN",
+          "why": "RSA signatures fall to Shor's algorithm",
+          "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+          "heuristic": false,
+          "detail": "SSH public key: ssh-rsa 2048-bit"
+        },
+        {
+          "file": "ssh/deploy_key.pub",
+          "line": 1,
+          "category": "ssh-key",
+          "algorithm": "RSA-SIGNATURE",
+          "risk": "QUANTUM-BROKEN",
+          "why": "RSA signatures fall to Shor's algorithm",
+          "replacement": "ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+          "heuristic": false,
+          "detail": "SSH public key: ssh-rsa 2048-bit"
+        }
+      ],
+      "QUANTUM-WEAKENED": [
+        {
+          "file": "app/inventory_api.py",
+          "line": 9,
+          "category": "source",
+          "algorithm": "AES-128",
+          "risk": "QUANTUM-WEAKENED",
+          "why": "Grover's algorithm roughly halves a 128-bit key's strength",
+          "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+          "heuristic": false,
+          "detail": "AES key generated with an explicit length"
+        },
+        {
+          "file": "config/sshd_config",
+          "line": 5,
+          "category": "ssh-config",
+          "algorithm": "AES-128",
+          "risk": "QUANTUM-WEAKENED",
+          "why": "Grover's algorithm roughly halves a 128-bit key's strength",
+          "replacement": "AES-256-GCM (FIPS 197, SP 800-38D)",
+          "heuristic": false,
+          "detail": "Ciphers aes128-ctr"
+        }
+      ],
+      "OK": [
+        {
+          "file": "app/inventory_api.py",
+          "line": 13,
+          "category": "source",
+          "algorithm": "SHA-256",
+          "risk": "OK",
+          "why": "no known practical attack; Grover-type attacks leave ample margin",
+          "replacement": "none needed",
+          "heuristic": false,
+          "detail": "hash function"
+        },
+        {
+          "file": "config/openssl.cnf",
+          "line": 4,
+          "category": "tls-config",
+          "algorithm": "SHA-256",
+          "risk": "OK",
+          "why": "no known practical attack; Grover-type attacks leave ample margin",
+          "replacement": "none needed",
+          "heuristic": false,
+          "detail": "default digest sha256"
+        }
+      ]
+    },
+    "risk_text": {
+      "CLASSICALLY-BROKEN": "Already weak today, without any quantum computer. Fix first.",
+      "QUANTUM-BROKEN": "Secure today, but a future large quantum computer breaks it (Shor's algorithm). Data recorded now can be decrypted later.",
+      "QUANTUM-WEAKENED": "A quantum computer roughly halves its strength (Grover's algorithm). Upgrade during maintenance.",
+      "OK": "No known quantum break. No action needed."
+    }
+  },
+  "actions": {
+    "now": [
+      {
+        "what": "ERP (SAP): replace cryptography that is weak today",
+        "detail": "SHA-1 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202)",
+        "why": "Broken or deprecated without any quantum computer."
+      },
+      {
+        "what": "ERP (SAP): start the post-quantum migration now (now (overdue by 6 years))",
+        "detail": "SHA-1 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); ECDH (2) \u2192 ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition",
+        "why": "x + y = 15 years > z = 9: data protected today must stay secret beyond the assumed horizon."
+      },
+      {
+        "what": "Supplier EDI feed: replace cryptography that is weak today",
+        "detail": "SHA-1 (3) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D)",
+        "why": "Broken or deprecated without any quantum computer."
+      },
+      {
+        "what": "Supplier EDI feed: start the post-quantum migration now (now (overdue by 5 years))",
+        "detail": "SHA-1 (3) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D); RSA (2) \u2192 ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures; ECDSA (1) \u2192 ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots; RSA-SIGNATURE (1) \u2192 ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots",
+        "why": "x + y = 14 years > z = 9: data protected today must stay secret beyond the assumed horizon."
+      },
+      {
+        "what": "Inventory API (customer orders): replace cryptography that is weak today",
+        "detail": "MD5 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); SHA-1 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); TLS1.0 (1) \u2192 TLS 1.3 (TLS 1.2 minimum); TLS1.1 (1) \u2192 TLS 1.3 (TLS 1.2 minimum); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D); HMAC-SHA1 (1) \u2192 HMAC-SHA-256",
+        "why": "Broken or deprecated without any quantum computer."
+      },
+      {
+        "what": "Inventory API (customer orders): start the post-quantum migration now (now (overdue by 1 year))",
+        "detail": "MD5 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); SHA-1 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); TLS1.0 (1) \u2192 TLS 1.3 (TLS 1.2 minimum); TLS1.1 (1) \u2192 TLS 1.3 (TLS 1.2 minimum); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D); HMAC-SHA1 (1) \u2192 HMAC-SHA-256; RSA (3) \u2192 ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition for key exchange; ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots for signatures; RSA-SIGNATURE (1) \u2192 ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots; ECDH (3) \u2192 ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition; AES-128 (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D)",
+        "why": "x + y = 10 years > z = 9: data protected today must stay secret beyond the assumed horizon."
+      },
+      {
+        "what": "Admin access (SSH): replace cryptography that is weak today",
+        "detail": "SHA-1 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D); HMAC-SHA1 (1) \u2192 HMAC-SHA-256",
+        "why": "Broken or deprecated without any quantum computer."
+      },
+      {
+        "what": "Label printing: replace cryptography that is weak today",
+        "detail": "MD5 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D)",
+        "why": "Broken or deprecated without any quantum computer."
+      }
+    ],
+    "next": [
+      {
+        "what": "Admin access (SSH): plan the post-quantum migration, start by 2033",
+        "detail": "SHA-1 (1) \u2192 SHA-256 or SHA-384 (FIPS 180-4) or SHA3-256 (FIPS 202); 3DES (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D); HMAC-SHA1 (1) \u2192 HMAC-SHA-256; DH (1) \u2192 ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition; ECDH (1) \u2192 ML-KEM-768 (NIST FIPS 203); hybrid X25519MLKEM768 during the transition; RSA-SIGNATURE (2) \u2192 ML-DSA-65 (NIST FIPS 204); SLH-DSA (FIPS 205) for long-lived roots; AES-128 (1) \u2192 AES-256-GCM (FIPS 197, SP 800-38D)",
+        "why": "Quantum-vulnerable, with +7 years of slack under the assumed z."
+      },
+      {
+        "what": "github.com: enable hybrid key exchange X25519MLKEM768",
+        "detail": "On the TLS endpoint or CDN (RFC 10024).",
+        "why": "Traffic recorded today could be decrypted later (harvest now, decrypt later)."
+      }
+    ],
+    "later": [
+      {
+        "what": "Certificates and signature keys: move to ML-DSA (FIPS 204) or composite certificates when possible",
+        "detail": "Public CAs and browsers do not support post-quantum web certificates yet; track it.",
+        "why": "Signatures only need to resist forgery while in use, so they can follow the key exchange."
+      }
+    ]
+  }
+}

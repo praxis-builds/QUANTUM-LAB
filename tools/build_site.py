@@ -30,6 +30,7 @@ LESSON_RE = re.compile(r"^\d\d_[a-z0-9_]+\.md$")
 REPORTS = {
     "reports/before.html": ROOT / "examples/warehouse-demo/reports/before/report.html",
     "reports/after.html": ROOT / "examples/warehouse-demo/reports/after/report.html",
+    "reports/readiness.html": ROOT / "examples/readiness-demo/readiness-report.html",
 }
 
 
@@ -39,6 +40,8 @@ def pages() -> dict[Path, str]:
         ROOT / "lessons/README.md": "lessons/index.html",
         ROOT / "docs/case-study.md": "case-study.html",
         ROOT / "docs/pq-inventory.md": "pq-inventory.html",
+        ROOT / "docs/pq-tls.md": "pq-tls.html",
+        ROOT / "docs/pq-readiness.md": "pq-readiness.html",
     }
     for path in sorted((ROOT / "lessons").glob("*.md")):
         if LESSON_RE.match(path.name):
@@ -153,6 +156,8 @@ def landing() -> str:
         ("Case study", "A consulting-style before/after engagement on a fictional warehouse company.", "case-study.html"),
         ("Scanner report (before)", "The report a manager would read: risk counts, a Mosca roadmap, every finding.", "reports/before.html"),
         ("Scanner report (after)", "The same systems after the first migration wave.", "reports/after.html"),
+        ("Quantum Readiness Report", "A print-ready client report: websites, code findings, Mosca timeline, actions now / next / later.", "reports/readiness.html"),
+        ("Is this website quantum-safe?", "pq_tls checks whether a site already uses hybrid post-quantum key exchange (X25519MLKEM768).", "pq-tls.html"),
     ]
     grid = "".join(
         f'<a class="card" href="{href}" style="text-decoration:none;color:inherit"><h3>{html.escape(t)}</h3><p>{html.escape(d)}</p></a>'

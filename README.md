@@ -79,6 +79,17 @@ python -m pq_tls check example.com --json results.json     # also the full resul
 ```
 
 It sends one TLS 1.3 ClientHello offering the hybrid group X25519MLKEM768 (RFC 10024) and reports which group the server picks, then makes one normal TLS connection for the version and certificate: the same traffic a browser makes. At most 20 hosts, single names or addresses only, 10-second timeouts. Needs an ML-KEM implementation for the post-quantum check (the `[pqc]` extra's `cryptography`); without one it says the check was skipped. Details: [`docs/pq-tls.md`](docs/pq-tls.md); a recorded run: [`examples/pq-tls/`](examples/pq-tls/README.md).
+
+## Quantum Readiness Report (`pq_readiness`)
+
+```bash
+python -m pq_readiness report --client "Acme Ltd" --code path/to/code --systems systems.json \
+    --sites acme.example shop.acme.example --out readiness/            # checks the sites live
+python -m pq_readiness report --client "Acme Ltd" --code path/to/code \
+    --sites-json results.json --out readiness/ --date 2026-10-05       # reuses a pq_tls --json file, no network
+```
+
+One self-contained, print-ready HTML page (print it to PDF from a browser) plus JSON: executive summary, website key-exchange table, code findings by risk, a Mosca timeline with labelled assumptions, actions now / next / later, methodology and limits. No key material or source text. Details: [`docs/pq-readiness.md`](docs/pq-readiness.md); a full example for the fictional warehouse client: [`examples/readiness-demo/`](examples/readiness-demo/README.md).
 ## Completed study: classical vs quantum-kernel classification (frozen)
 
 The lab began as a kernel study: a classical RBF classifier against a quantum-kernel classifier on one small data set, followed by finite-shot and PSD-repair experiments. That study is **complete and frozen**: its code, results, tests and docs stay as they are and are not extended. The index is [`docs/studies/README.md`](docs/studies/README.md). The sections below describe it and the shared foundations.
