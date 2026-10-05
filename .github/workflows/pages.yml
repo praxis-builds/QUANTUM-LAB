@@ -27,7 +27,7 @@ jobs:
           python-version: "3.12"
       - name: Build site
         run: |
-          python -m pip install markdown==3.11
+          python -m pip install markdown==3.11 numpy==2.5.3
           python tools/build_site.py --out _site
       - uses: actions/upload-pages-artifact@v3
         with:

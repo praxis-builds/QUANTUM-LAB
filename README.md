@@ -2,7 +2,7 @@
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/praxis-builds/QUANTUM-LAB?quickstart=1)
 
-**Showcase site:** <https://praxis-builds.github.io/QUANTUM-LAB/> (lessons, case study and scanner reports; static, no simulation).
+**Showcase site:** <https://praxis-builds.github.io/QUANTUM-LAB/> (lessons, case study, scanner and readiness reports). **Try it now:** the [Circuit Playground](https://praxis-builds.github.io/QUANTUM-LAB/playground/) and a Mosca calculator run right in your browser, with nothing to install.
 **Run the live lab in your browser:** click the Codespaces button. GitHub builds the environment, starts the dashboard and opens it, private to you. Nothing to install.
 
 **What it is.** A local, simulator-only lab that goes from single qubits to Shor's and Grover's algorithms, error correction, quantum key distribution and NIST's post-quantum standards. Each step is a short lesson you can run and test. It ends in a practical tool: **`pq_inventory`**, a read-only scanner that finds quantum-vulnerable cryptography in code and configuration and turns it into a prioritised migration plan.

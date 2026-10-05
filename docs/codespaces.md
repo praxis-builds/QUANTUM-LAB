@@ -31,7 +31,16 @@ that arrived.
 
 ## The static showcase (GitHub Pages)
 
-`tools/build_site.py` renders the 33 lessons, the case study and the scanner guide, and copies the
-committed before/after scanner reports. `.github/workflows/pages.yml` publishes it on every push
+`tools/build_site.py` renders the 33 lessons, the case study and the tool guides, and copies the
+committed scanner and readiness reports. `.github/workflows/pages.yml` publishes it on every push
 to `main` to <https://praxis-builds.github.io/QUANTUM-LAB/>. One-time setup by the repo owner:
-**Settings → Pages → Build and deployment → Source: GitHub Actions**. No simulation runs there.
+**Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+The site also has a **live Circuit Playground** at `/playground/` with the Mosca calculator. It is the
+dashboard's own UI code (`playground.js`, `security.js`) with a browser backend instead of the
+Python server: `circuit_sim.js`, a JavaScript port of `circuit_playground.py` whose states match
+the Python ones to 1e-12 (`tests/js/circuit_sim.test.js`), and presets exported from Python when the
+site is built. Shots come from a seeded browser random generator and are labelled "browser
+sampling, not Aer", so counts differ from the dashboard's for the same seed. No script is loaded
+from anywhere else, and nothing is sent anywhere. Bell Lab and the Security Lab's Aer simulations
+still need Python.

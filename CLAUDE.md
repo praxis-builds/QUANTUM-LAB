@@ -45,6 +45,7 @@ kept, not moved, not extended.
   - `finite_shot_psd.py` – PSD diagnostics and transductive repair
 - `dashboard_server.py` + `dashboard_assets/` – loopback dashboard (Circuit Playground, Bell Lab, Kernel Observatory); loads Qiskit at start-up (lazy import in a request thread segfaults)
 - `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
+- `dashboard_assets/circuit_sim.js` – JavaScript port of `circuit_playground.py` for the public site's `/playground/` (states match Python to 1e-12: `tests/js/circuit_sim.test.js`; regenerate `tests/fixtures/playground_states.json` with `tests/fixtures/generate_playground_states.py` when the Python simulator changes); `tools/site_assets/playground_backend.js` plugs it into `playground.js`
 - `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
 - `security_lab.py` – Security Lab routes (BB84, toy RSA break, Grover key search); reuses lesson modules via one loader, preloaded at start-up
 - `tools/pq_tls/` – website key-exchange check (`python -m pq_tls check <host>`): hand-built TLS 1.3 ClientHello offering X25519MLKEM768, never completes the handshake; docs in `docs/pq-tls.md`, recorded run in `examples/pq-tls/`

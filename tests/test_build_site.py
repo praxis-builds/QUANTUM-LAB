@@ -36,7 +36,8 @@ def test_every_lesson_and_page_is_rendered(site) -> None:
     for stem in lessons:
         assert (site / "lessons" / f"{stem}.html").is_file(), stem
     for rel in ("index.html", "style.css", "lessons/index.html", "case-study.html",
-                "pq-inventory.html", "reports/before.html", "reports/after.html", ".nojekyll"):
+                "pq-inventory.html", "pq-tls.html", "pq-readiness.html", "reports/before.html", "reports/after.html",
+                "reports/readiness.html", "playground/index.html", ".nojekyll"):
         assert (site / rel).is_file(), rel
 
 
@@ -52,9 +53,18 @@ def test_internal_links_resolve_and_no_raw_markdown_links_remain(site) -> None:
             assert (page.parent / target.split("#")[0]).resolve().is_file(), (page, target)
 
 
-def test_pages_carry_no_scripts(site) -> None:
+def test_only_the_playground_has_scripts_and_they_are_local_files(site) -> None:
     for page in site.rglob("*.html"):
-        assert "<script" not in page.read_text(encoding="utf-8").lower(), page
+        text = page.read_text(encoding="utf-8").lower()
+        if page.relative_to(site).as_posix() != "playground/index.html":
+            assert "<script" not in text, page
+            continue
+        tags = re.findall(r"<script[^>]*>", text)
+        assert tags and all(re.fullmatch(r'<script src="[a-z_]+\.js" defer>', tag) for tag in tags), tags  # no inline, no external
+        for name in re.findall(r'<script src="([^"]+)"', text):
+            assert (page.parent / name).is_file(), name
+    for script in site.rglob("*.js"):
+        assert not re.search(r"https?://(?!www\.w3\.org/2000/svg)", script.read_text(encoding="utf-8")), script
 
 
 def test_reports_are_the_committed_ones_and_hold_no_key_material(site) -> None:

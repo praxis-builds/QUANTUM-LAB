@@ -98,100 +98,116 @@ if (typeof document !== "undefined") (() => {
     finally { busy[kind] = false; $(button).disabled = false; }
   }
 
-  // The seed typed into a form, or an error the form shows instead of simulating.
-  function seedFrom(id) {
-    const seed = C.parseSeed($(id).value);
-    if (seed === null) throw new Error(`Seed must be a whole number from 0 to ${C.MAX_SEED}.`);
-    return seed;
-  }
-  $("bb84-new-seed").addEventListener("click", () => { $("bb84-seed").value = String(C.newSeed()); });
-  $("rsa-new-seed").addEventListener("click", () => { $("rsa-seed").value = String(C.newSeed()); });
-  $("grover-new-seed").addEventListener("click", () => { $("grover-seed").value = String(C.newSeed()); });
+  // The Security Lab panels exist only on the dashboard; the static site reuses just the Mosca calculator.
+  if ($("bb84-form")) securityLab();
 
-  // ------------------------------------------------------------------- BB84
-  function bb84Values() {
-    return {qubits: $("bb84-qubits").value, noise: $("bb84-noise").value, sample: $("bb84-sample").value,
-            eve: $("bb84-eve").checked, seed: $("bb84-seed").value};
-  }
-  function bb84Outputs() {
-    $("bb84-qubits-output").textContent = String(C.bb84Request(bb84Values()).qubits);
-    $("bb84-noise-output").textContent = C.bb84Request(bb84Values()).noise.toFixed(2);
-    $("bb84-sample-output").textContent = String(C.bb84Request(bb84Values()).sample);
-  }
-  for (const id of ["bb84-qubits", "bb84-noise", "bb84-sample"]) $(id).addEventListener("input", bb84Outputs);
-  $("bb84-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    run("bb84", "bb84-run", "bb84-status", async () => {
-      const r = await post("/api/security/bb84", {...C.bb84Request(bb84Values()), seed: seedFrom("bb84-seed")});
-      $("bb84-results").hidden = false;
-      $("bb84-sifted").textContent = `${r.sifted} of ${r.qubits} qubits`;
-      $("bb84-qber").textContent = `${C.percent(r.qber_estimate)} in the sample (true ${C.percent(r.qber_true)})`;
-      $("bb84-detect").textContent = `${C.percent(r.p_detect, 4)}${r.errors_seen ? " · errors seen" : " · no errors seen"}`;
-      $("bb84-key").textContent = r.key_bits > 0 ? `${r.key_bits} bits (keys equal: ${r.keys_equal})` : "none: aborted";
-      $("bb84-status").textContent = `${r.status === "key" ? "Secret key distilled." : r.status}${r.sample_clipped ? " Sample reduced to half the sifted key." : ""}`;
-      $("bb84-explain").textContent = r.eve
-        ? `Eve measured every qubit and knows ${C.percent(r.eve_knows_fraction)} of the sifted key for certain, but she caused about 25% errors. Comparing ${r.sample} bits misses her with probability (3/4)^${r.sample}. Above 11% errors no secret key can be distilled.`
-        : `Without Eve the errors come from channel noise, which Alice and Bob cannot tell apart from eavesdropping, so every error costs key length. Above 11% (Shor–Preskill) the protocol aborts.`;
-    });
-  });
+  function securityLab() {
+    // The seed typed into a form, or an error the form shows instead of simulating.
+    function seedFrom(id) {
+      const seed = C.parseSeed($(id).value);
+      if (seed === null) throw new Error(`Seed must be a whole number from 0 to ${C.MAX_SEED}.`);
+      return seed;
+    }
+    $("bb84-new-seed").addEventListener("click", () => { $("bb84-seed").value = String(C.newSeed()); });
+    $("rsa-new-seed").addEventListener("click", () => { $("rsa-seed").value = String(C.newSeed()); });
+    $("grover-new-seed").addEventListener("click", () => { $("grover-seed").value = String(C.newSeed()); });
 
-  // -------------------------------------------------------------------- RSA
-  $("rsa-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    run("rsa", "rsa-run", "rsa-status", async () => {
-      const r = await post("/api/security/rsa", C.rsaRequest({n: $("rsa-n").value, seed: seedFrom("rsa-seed")}));
-      const list = $("rsa-steps");
-      list.replaceChildren();
-      const step = (text) => list.append(element("li", null, text));
-      step(`Public key (N, e) = (${r.n}, ${r.e}). The attacker sees nothing else.`);
-      for (const a of r.attempts) {
-        step(`a = ${a.a}: Shor's circuit (${r.qubits} qubits) measured m = ${a.fraction}; continued fraction gives r = ${a.candidate}; ${a.check ? "check passes" : "check fails"} → ${a.outcome}.`);
-      }
-      if (r.status !== "key recovered") { $("rsa-status").textContent = r.status; return; }
-      step(`Period r = ${r.period}, so N = ${r.factors[0]} × ${r.factors[1]} (from gcd(a^(r/2) ± 1, N)).`);
-      step(`φ = (${r.factors[0]} − 1)(${r.factors[1]} − 1) = ${r.phi}; private key d = e⁻¹ mod φ = ${r.d}.`);
-      step(`Ciphertext ${r.ciphertext.join(", ")} decrypts to "${r.decrypted}".`);
-      $("rsa-status").textContent = `Key recovered from the public key alone (toy size: trial division would find ${r.factors[0]} instantly).`;
+    // ------------------------------------------------------------------- BB84
+    function bb84Values() {
+      return {qubits: $("bb84-qubits").value, noise: $("bb84-noise").value, sample: $("bb84-sample").value,
+              eve: $("bb84-eve").checked, seed: $("bb84-seed").value};
+    }
+    function bb84Outputs() {
+      $("bb84-qubits-output").textContent = String(C.bb84Request(bb84Values()).qubits);
+      $("bb84-noise-output").textContent = C.bb84Request(bb84Values()).noise.toFixed(2);
+      $("bb84-sample-output").textContent = String(C.bb84Request(bb84Values()).sample);
+    }
+    for (const id of ["bb84-qubits", "bb84-noise", "bb84-sample"]) $(id).addEventListener("input", bb84Outputs);
+    $("bb84-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      run("bb84", "bb84-run", "bb84-status", async () => {
+        const r = await post("/api/security/bb84", {...C.bb84Request(bb84Values()), seed: seedFrom("bb84-seed")});
+        $("bb84-results").hidden = false;
+        $("bb84-sifted").textContent = `${r.sifted} of ${r.qubits} qubits`;
+        $("bb84-qber").textContent = `${C.percent(r.qber_estimate)} in the sample (true ${C.percent(r.qber_true)})`;
+        $("bb84-detect").textContent = `${C.percent(r.p_detect, 4)}${r.errors_seen ? " · errors seen" : " · no errors seen"}`;
+        $("bb84-key").textContent = r.key_bits > 0 ? `${r.key_bits} bits (keys equal: ${r.keys_equal})` : "none: aborted";
+        $("bb84-status").textContent = `${r.status === "key" ? "Secret key distilled." : r.status}${r.sample_clipped ? " Sample reduced to half the sifted key." : ""}`;
+        $("bb84-explain").textContent = r.eve
+          ? `Eve measured every qubit and knows ${C.percent(r.eve_knows_fraction)} of the sifted key for certain, but she caused about 25% errors. Comparing ${r.sample} bits misses her with probability (3/4)^${r.sample}. Above 11% errors no secret key can be distilled.`
+          : `Without Eve the errors come from channel noise, which Alice and Bob cannot tell apart from eavesdropping, so every error costs key length. Above 11% (Shor–Preskill) the protocol aborts.`;
+      });
     });
-  });
 
-  // ----------------------------------------------------------------- Grover
-  for (let k = 0; k < 16; k++) {
-    const option = element("option", null, k.toString(2).padStart(4, "0"));
-    option.value = String(k);
-    $("grover-key").append(option);
-  }
-  $("grover-key").value = "11";
-  $("grover-iterations").addEventListener("input", () => { $("grover-iterations-output").textContent = $("grover-iterations").value; });
-  function drawGrover(r) {
-    const chart = $("grover-chart");
-    chart.replaceChildren();
-    const W = 320, H = 150, M = 22;
-    svg("line", {x1: M, y1: H - M, x2: W - M, y2: H - M, class: "sec-axis"}, chart);
-    svg("line", {x1: M, y1: M, x2: M, y2: H - M, class: "sec-axis"}, chart);
-    const points = C.chartPoints(r.curve.map((c) => c.p_secret), W, H, M);
-    svg("polyline", {points: points.map((p) => p.join(",")).join(" "), class: "sec-curve"}, chart);
-    const x = points[r.iterations][0];
-    const y = H - M - r.measured_secret * (H - 2 * M);
-    svg("circle", {cx: x, cy: y, r: 5, class: "sec-point"}, chart);
-    const label = document.createElementNS(SVG_NS, "text");
-    label.setAttribute("x", String(x + 6)); label.setAttribute("y", String(Math.max(M + 10, y - 6)));
-    label.setAttribute("class", "sec-label");
-    label.textContent = `measured ${C.percent(r.measured_secret, 0)}`;
-    chart.append(label);
-    chart.setAttribute("aria-label", `Theory curve of P(secret key) for 0 to 8 iterations; measured ${C.percent(r.measured_secret)} at ${r.iterations} iterations.`);
-  }
-  $("grover-form").addEventListener("submit", (event) => {
-    event.preventDefault();
-    run("grover", "grover-run", "grover-status", async () => {
-      const r = await post("/api/security/grover", C.groverRequest({key: $("grover-key").value, iterations: $("grover-iterations").value,
-                                                                  pairs: $("grover-pairs").value, seed: seedFrom("grover-seed")}));
-      drawGrover(r);
-      const over = r.iterations > r.optimal_iterations;
-      $("grover-status").textContent = `${r.iterations} iterations on ${r.qubits} qubits: the secret key came out in ${C.percent(r.measured_secret)} of ${r.shots} shots (theory ${C.percent(r.curve[r.iterations].p_secret)}).`;
-      $("grover-explain").textContent = `${r.matching_keys.length} key(s) fit the known pair(s): ${r.matching_keys.join(", ")}. Best: ${r.optimal_iterations} iterations${over ? "; you are past it, so success falls again (over-rotation)" : ""}. Classical brute force: ${r.classical_expected_trials} trials on average. Each quantum iteration runs the whole cipher reversibly, twice per pair.`;
+    // -------------------------------------------------------------------- RSA
+    $("rsa-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      run("rsa", "rsa-run", "rsa-status", async () => {
+        const r = await post("/api/security/rsa", C.rsaRequest({n: $("rsa-n").value, seed: seedFrom("rsa-seed")}));
+        const list = $("rsa-steps");
+        list.replaceChildren();
+        const step = (text) => list.append(element("li", null, text));
+        step(`Public key (N, e) = (${r.n}, ${r.e}). The attacker sees nothing else.`);
+        for (const a of r.attempts) {
+          step(`a = ${a.a}: Shor's circuit (${r.qubits} qubits) measured m = ${a.fraction}; continued fraction gives r = ${a.candidate}; ${a.check ? "check passes" : "check fails"} → ${a.outcome}.`);
+        }
+        if (r.status !== "key recovered") { $("rsa-status").textContent = r.status; return; }
+        step(`Period r = ${r.period}, so N = ${r.factors[0]} × ${r.factors[1]} (from gcd(a^(r/2) ± 1, N)).`);
+        step(`φ = (${r.factors[0]} − 1)(${r.factors[1]} − 1) = ${r.phi}; private key d = e⁻¹ mod φ = ${r.d}.`);
+        step(`Ciphertext ${r.ciphertext.join(", ")} decrypts to "${r.decrypted}".`);
+        $("rsa-status").textContent = `Key recovered from the public key alone (toy size: trial division would find ${r.factors[0]} instantly).`;
+      });
     });
-  });
+
+    // ----------------------------------------------------------------- Grover
+    for (let k = 0; k < 16; k++) {
+      const option = element("option", null, k.toString(2).padStart(4, "0"));
+      option.value = String(k);
+      $("grover-key").append(option);
+    }
+    $("grover-key").value = "11";
+    $("grover-iterations").addEventListener("input", () => { $("grover-iterations-output").textContent = $("grover-iterations").value; });
+    function drawGrover(r) {
+      const chart = $("grover-chart");
+      chart.replaceChildren();
+      const W = 320, H = 150, M = 22;
+      svg("line", {x1: M, y1: H - M, x2: W - M, y2: H - M, class: "sec-axis"}, chart);
+      svg("line", {x1: M, y1: M, x2: M, y2: H - M, class: "sec-axis"}, chart);
+      const points = C.chartPoints(r.curve.map((c) => c.p_secret), W, H, M);
+      svg("polyline", {points: points.map((p) => p.join(",")).join(" "), class: "sec-curve"}, chart);
+      const x = points[r.iterations][0];
+      const y = H - M - r.measured_secret * (H - 2 * M);
+      svg("circle", {cx: x, cy: y, r: 5, class: "sec-point"}, chart);
+      const label = document.createElementNS(SVG_NS, "text");
+      label.setAttribute("x", String(x + 6)); label.setAttribute("y", String(Math.max(M + 10, y - 6)));
+      label.setAttribute("class", "sec-label");
+      label.textContent = `measured ${C.percent(r.measured_secret, 0)}`;
+      chart.append(label);
+      chart.setAttribute("aria-label", `Theory curve of P(secret key) for 0 to 8 iterations; measured ${C.percent(r.measured_secret)} at ${r.iterations} iterations.`);
+    }
+    $("grover-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      run("grover", "grover-run", "grover-status", async () => {
+        const r = await post("/api/security/grover", C.groverRequest({key: $("grover-key").value, iterations: $("grover-iterations").value,
+                                                                    pairs: $("grover-pairs").value, seed: seedFrom("grover-seed")}));
+        drawGrover(r);
+        const over = r.iterations > r.optimal_iterations;
+        $("grover-status").textContent = `${r.iterations} iterations on ${r.qubits} qubits: the secret key came out in ${C.percent(r.measured_secret)} of ${r.shots} shots (theory ${C.percent(r.curve[r.iterations].p_secret)}).`;
+        $("grover-explain").textContent = `${r.matching_keys.length} key(s) fit the known pair(s): ${r.matching_keys.join(", ")}. Best: ${r.optimal_iterations} iterations${over ? "; you are past it, so success falls again (over-rotation)" : ""}. Classical brute force: ${r.classical_expected_trials} trials on average. Each quantum iteration runs the whole cipher reversibly, twice per pair.`;
+      });
+    });
+
+    // Without a repository checkout the server cannot load the lessons' code: say so and keep only
+    // the Mosca calculator (pure arithmetic in the browser) usable.
+    fetch("/api/security/status", {cache: "no-store"}).then((response) => response.json()).then((status) => {
+      if (status.available) return;
+      const note = $("security-unavailable");
+      note.textContent = `${status.reason} The Mosca calculator below still works.`;
+      note.hidden = false;
+      for (const id of ["bb84-run", "rsa-run", "grover-run"]) $(id).disabled = true;
+    }).catch(() => {});
+    bb84Outputs();
+  }
 
   // ------------------------------------------------------------------ Mosca
   function mosca() {
@@ -204,16 +220,5 @@ if (typeof document !== "undefined") (() => {
   for (const id of ["mosca-x", "mosca-y", "mosca-z"]) $(id).addEventListener("input", mosca);
   $("mosca-form").addEventListener("submit", (event) => { event.preventDefault(); mosca(); });
 
-  // Without a repository checkout the server cannot load the lessons' code: say so and keep only
-  // the Mosca calculator (pure arithmetic in the browser) usable.
-  fetch("/api/security/status", {cache: "no-store"}).then((response) => response.json()).then((status) => {
-    if (status.available) return;
-    const note = $("security-unavailable");
-    note.textContent = `${status.reason} The Mosca calculator below still works.`;
-    note.hidden = false;
-    for (const id of ["bb84-run", "rsa-run", "grover-run"]) $(id).disabled = true;
-  }).catch(() => {});
-
-  bb84Outputs();
   mosca();
 })();

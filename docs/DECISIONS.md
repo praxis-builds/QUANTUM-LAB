@@ -110,3 +110,11 @@ Each entry: the decision, the alternatives, and why. Logged as the work happened
 - **Alternatives:** a PDF library (a new dependency); separate HTML and print versions.
 - **Why:** browsers already print HTML to PDF well, and one file is easier to hand over and to test. **Not verified:** the printed output itself; no browser could run here.
 
+## D23. The public Circuit Playground: a JavaScript port, not Python in the browser
+- **Decision:** the static site's Playground runs `circuit_sim.js`, a line-by-line port of `circuit_playground.py` (validation, gates, Bloch vectors, response fields), behind the dashboard's unchanged UI code. `playground.js` now asks a backend object: the Python server on the dashboard, `window.PlaygroundBackend` on the site (`tools/site_assets/playground_backend.js`). Presets are exported from Python at build time (`playground/presets.js`), so the two never drift. `security.js` runs only its Mosca part when the Security Lab panels are absent.
+- **Cross-check:** Python writes the exact states of every preset (all steps) and of 50 random circuits from a fixed seed, plus validator verdicts, to `tests/fixtures/playground_states.json`. The Node test requires agreement to 1e-12 (4,632 values) and identical error messages. A Python test fails if the fixture is stale.
+- **Shots:** a seeded mulberry32 generator, labelled "browser sampling, not Aer" in the histogram and status. The same seed gives the same counts in the browser, but not the counts Aer gives on the dashboard.
+- **Known difference:** JavaScript cannot tell `2.0` from `2` after JSON parsing, so the browser validator accepts integral floats that Python's rejects. The UI only ever sends integers.
+- **Alternatives:** Pyodide (NumPy in WebAssembly: a large external download, against "no external scripts"); a server (the site is static).
+- **Why:** 1–3 qubits need about 300 lines of plain JavaScript. A port the tests pin to the Python results is smaller and safer than shipping an interpreter. **Not verified:** layout in a real browser (nothing could render one here); the logic is tested on the DOM stand-in.
+

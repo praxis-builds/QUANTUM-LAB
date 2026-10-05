@@ -1,21 +1,24 @@
 """Build the static GitHub Pages showcase into a folder (default: _site/).
 
-Renders the lesson pages, the case study and the scanner guide from this repository's
-Markdown, copies the committed warehouse-demo scanner reports, and writes a landing page.
-Nothing is simulated: the live dashboard needs Python and runs locally or in a codespace.
+Renders the lesson pages, the case study and the tool guides from this repository's Markdown,
+copies the committed scanner and readiness reports, writes a landing page, and publishes the
+Circuit Playground and the Mosca calculator at playground/ (they run in the browser:
+circuit_sim.js, with the presets exported from Python here). The rest of the dashboard needs Python.
 
     python tools/build_site.py --out _site
 
-Needs the third-party `markdown` package (in the `dev` extra, and installed by the Pages workflow).
+Needs `markdown` (in the `dev` extra) and NumPy (for the preset export); the Pages workflow installs both.
 """
 
 from __future__ import annotations
 
 import argparse
 import html
+import json
 import os
 import re
 import shutil
+import sys
 from pathlib import Path
 
 import markdown
@@ -31,6 +34,20 @@ REPORTS = {
     "reports/before.html": ROOT / "examples/warehouse-demo/reports/before/report.html",
     "reports/after.html": ROOT / "examples/warehouse-demo/reports/after/report.html",
     "reports/readiness.html": ROOT / "examples/readiness-demo/readiness-report.html",
+}
+DASHBOARD = ROOT / "src/praxis_quantum_lab/dashboard_assets"
+SITE_ASSETS = ROOT / "tools/site_assets"
+# The live Playground page: these scripts, in this order, all served from playground/ (no external scripts).
+PLAYGROUND_FILES = {"circuit_sim.js": DASHBOARD / "circuit_sim.js", "playground_backend.js": SITE_ASSETS / "playground_backend.js",
+                    "playground.js": DASHBOARD / "playground.js", "security.js": DASHBOARD / "security.js",
+                    "dashboard.css": DASHBOARD / "style.css"}
+PLAYGROUND_SCRIPTS = ["circuit_sim.js", "presets.js", "playground_backend.js", "playground.js", "security.js"]
+# Server wording in the dashboard markup, and what the browser version says instead.
+PLAYGROUND_WORDING = {
+    "Exact states come from the project's NumPy code; shots come from local Aer.":
+        "Everything runs in your browser: exact states from a JavaScript port of the project's simulator "
+        "(it matches the Python code to 1e-12), shots from a seeded random generator (browser sampling, not Aer).",
+    "LOCAL AER SHOTS": "BROWSER SAMPLING, NOT AER",
 }
 
 
@@ -148,6 +165,63 @@ def lesson_pager(index: int, lessons: list[Path], mapping: dict[Path, str]) -> s
     return '<div class="pager">' + "".join(links) + "</div>"
 
 
+def playground_presets() -> list:
+    """The dashboard's presets, exported from Python (checked by the same validator as user circuits)."""
+    if str(ROOT / "src") not in sys.path:
+        sys.path.insert(0, str(ROOT / "src"))
+    from praxis_quantum_lab.circuit_playground import presets_payload
+
+    return presets_payload()["presets"]
+
+
+def _cut(text: str, start: str, end: str) -> str:
+    """From `start` up to (not including) `end`; fails loudly if the dashboard markup changed."""
+    i = text.index(start)
+    return text[i:text.index(end, i)].rstrip()
+
+
+def playground_page() -> str:
+    index = (DASHBOARD / "index.html").read_text(encoding="utf-8")
+    playground = _cut(index, '<section id="playground-area"', '<section id="bell-area"')
+    for server_text, browser_text in PLAYGROUND_WORDING.items():
+        if server_text not in playground:
+            raise ValueError(f"dashboard markup changed: {server_text!r} not found")
+        playground = playground.replace(server_text, browser_text)
+    mosca_start = index.index('<section class="panel" aria-labelledby="mosca-heading">')
+    mosca = index[mosca_start:index.index("</section>", mosca_start) + len("</section>")]
+    scripts = "\n".join(f'  <script src="{name}" defer></script>' for name in PLAYGROUND_SCRIPTS)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Circuit Playground · Praxis Quantum Lab</title>
+  <link rel="stylesheet" href="dashboard.css">
+{scripts}
+</head>
+<body>
+  <a class="skip-link" href="#workspace">Skip to the playground</a>
+  <header class="masthead">
+    <div class="brand"><span class="brand-symbol" aria-hidden="true">Ψ</span><div><p class="eyebrow"><a href="../index.html">PRAXIS QUANTUM LAB</a></p><h1>Circuit Playground</h1></div></div>
+    <div class="masthead-actions"><div class="local-badge"><span aria-hidden="true"></span>RUNS IN YOUR BROWSER</div></div>
+  </header>
+  <main id="workspace">
+    <div class="intro"><p>Build a circuit, step through it, sample it.</p><span>1–3 qubits · classical simulation in your browser · nothing is sent anywhere</span></div>
+    {playground}
+
+    <section id="mosca-area" aria-labelledby="mosca-area-heading">
+      <div class="section-heading"><div><p class="eyebrow">DEADLINES</p><h2 id="mosca-area-heading">When must you migrate?</h2></div><p>Mosca's inequality, pure arithmetic: if x + y &gt; z, data protected today with RSA or elliptic curves can be recorded now and decrypted later.</p></div>
+      <div class="sec-grid">
+        {mosca}
+      </div>
+    </section>
+    <p class="field-note">This is a classical simulation of at most 3 qubits; no quantum advantage is claimed. The full lab (Bell Lab, Security Lab with Aer) needs Python: <a href="../index.html">see the home page</a>.</p>
+  </main>
+</body>
+</html>
+"""
+
+
 def landing() -> str:
     cards = [
         ("33 lessons", "From one qubit to Shor, Grover, error correction, BB84 and post-quantum crypto. Predict first, then run.", "lessons/index.html"),
@@ -165,11 +239,11 @@ def landing() -> str:
     )
     body = f"""<section class="hero"><h1>From qubits to post-quantum migration</h1>
 <p class="lead">A hands-on, simulator-only lab: build quantum algorithms, watch them break toy cryptography, and turn that into a practical plan for replacing RSA and elliptic curves.</p>
-<div class="buttons"><a class="btn primary" href="{CODESPACES}">Run the live lab in GitHub Codespaces</a><a class="btn" href="lessons/index.html">Read the lessons</a><a class="btn" href="{TREE}">Source on GitHub</a></div></section>
+<div class="buttons"><a class="btn primary" href="playground/index.html">Try it now: Circuit Playground</a><a class="btn" href="{CODESPACES}">Run the full lab in GitHub Codespaces</a><a class="btn" href="lessons/index.html">Read the lessons</a><a class="btn" href="{TREE}">Source on GitHub</a></div></section>
 <div class="grid">{grid}</div>
 <div class="note"><strong>Honest limits.</strong> Everything quantum runs on a classical simulator (Qiskit Aer). No quantum advantage is claimed: at these toy sizes the classical method usually wins, and every result sits next to an honestly counted classical baseline. Real-attack resource estimates are quoted from published papers with sources and years.</div>
 <h2>Run it yourself</h2>
-<p>The interactive dashboard (Circuit Playground, Bell Lab, Security Lab) needs Python, so it is not on this static site. Open it in a codespace with the button above: GitHub builds the environment and opens the dashboard in your browser, private to you. Or run it locally:</p>
+<p>The <a href="playground/index.html">Circuit Playground</a> and the Mosca calculator run right here in your browser. The rest of the dashboard (Bell Lab, the Security Lab's simulations on Aer) needs Python: open it in a codespace with the button above (GitHub builds the environment and opens the dashboard in your browser, private to you), or run it locally:</p>
 <pre><code>git clone {TREE}.git && cd {REPO.split("/")[1]}
 python3.12 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 .venv/bin/python -m praxis_quantum_lab.dashboard_server --port 8765</code></pre>"""
@@ -200,6 +274,11 @@ def build(out: Path) -> list[str]:
         write(site_path, render(source, site_path, mapping_resolved, extra))
     for rel, source in REPORTS.items():
         write(rel, source.read_text(encoding="utf-8"))
+    write("playground/index.html", playground_page())
+    presets = json.dumps(playground_presets(), ensure_ascii=False).replace("</", "<\\/")
+    write("playground/presets.js", f"// Exported from praxis_quantum_lab.circuit_playground.PRESETS by tools/build_site.py.\nwindow.PLAYGROUND_PRESETS = {presets};\n")
+    for rel, source in PLAYGROUND_FILES.items():
+        write(f"playground/{rel}", source.read_text(encoding="utf-8"))
     write(".nojekyll", "")
     return written
 

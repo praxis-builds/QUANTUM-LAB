@@ -254,6 +254,11 @@ entry point in a fresh interpreter and sends repeated requests.
 
 What the tests cover:
 
+- Public-site Playground: `circuit_sim.js` (the JavaScript port used at
+  `/playground/` on the Pages site) matches the server's states to 1e-12 for every
+  preset and 50 random circuits, and refuses the same requests with the same
+  messages; the built page runs the real `playground.js` with the browser backend
+  on the DOM stand-in, with any network call failing the test.
 - Server: request limits, route/host/origin restrictions, saved-result
   failures, Bell stages and channel limits, and every circuit validation rule.
   NumPy states match Qiskit for random 1–3 qubit circuits. Presets reach their

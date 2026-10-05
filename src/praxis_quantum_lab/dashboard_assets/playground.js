@@ -1,8 +1,10 @@
 "use strict";
 
-// Circuit Playground. The server computes every state (NumPy) and every shot (local Aer);
-// this file only keeps the gate list and draws what the server returns. The one exception
-// is the empty circuit, whose state |0...0> is drawn directly so the first load simulates nothing.
+// Circuit Playground. The backend computes every state and every shot; this file only keeps the
+// gate list and draws what the backend returns. On the dashboard the backend is the Python server
+// (NumPy states, local Aer shots). On the static site, tools/build_site.py installs
+// window.PlaygroundBackend, which answers the same requests in the browser (circuit_sim.js). The one
+// exception is the empty circuit, whose state |0...0> is drawn directly so the first load simulates nothing.
 // PlaygroundCore holds pure helpers so they can be unit-tested with Node, without a browser.
 const PlaygroundCore = (() => {
   const MAX_QUBITS = 3, MAX_GATES = 30, MAX_SHOTS = 8192, MAX_SEED = 2147483647;
@@ -165,6 +167,17 @@ if (typeof module !== "undefined" && module.exports) module.exports = Playground
 if (typeof document !== "undefined") (() => {
   const C = PlaygroundCore;
   const SVG_NS = "http://www.w3.org/2000/svg";
+  async function fetchJson(url, options) {
+    const response = await fetch(url, options);
+    let data = null;
+    try { data = await response.json(); } catch (error) { data = null; }
+    return {status: response.status, ok: response.ok, data};
+  }
+  const backend = (typeof window !== "undefined" && window.PlaygroundBackend) || {
+    label: "local Aer",
+    simulate: (body) => fetchJson("/api/circuit", {method: "POST", headers: {"Content-Type": "application/json"}, body, cache: "no-store"}),
+    presets: () => fetchJson("/api/circuit-presets", {cache: "no-store"})
+  };
   const $ = (id) => document.getElementById(id);
   const state = {
     qubits: 2, gates: [], history: [], presetId: null, presets: [],
@@ -305,9 +318,8 @@ if (typeof document !== "undefined") (() => {
     const circuitKey = C.circuitKey(state.qubits, state.gates);
     state.inFlight = true; setBusy(true);
     try {
-      const response = await fetch("/api/circuit", {method: "POST", headers: {"Content-Type": "application/json"}, body, cache: "no-store"});
-      let data = null;
-      try { data = await response.json(); } catch (error) { data = null; }
+      const response = await backend.simulate(body);
+      const data = response.data;
       if (response.status === 429 && state.retries < 8) {
         state.retries += 1; state.queued = true; await wait(250);
       } else if (!response.ok || !data || !Array.isArray(data.steps)) {
@@ -728,7 +740,7 @@ if (typeof document !== "undefined") (() => {
     root.setAttribute("aria-label", `Sampled histogram. ${parts.join("; ")}.`);
     const measured = result.measured_qubits.map((q) => `q${q}`).join(", ");
     const gap = C.largestGap(result.counts, labels, result.measured_probabilities, result.shots);
-    $("pg-histogram-caption").textContent = `${result.shots.toLocaleString("en-US")} shots · seed ${result.seed} · measured ${measured} (labels list the highest qubit first; without M gates every qubit is measured) · largest gap |sampled − exact| = ${gap.toFixed(3)}. More shots shrink the gap roughly like 1/√shots.`;
+    $("pg-histogram-caption").textContent = `${result.shots.toLocaleString("en-US")} shots · seed ${result.seed} · measured ${measured} (labels list the highest qubit first; without M gates every qubit is measured) · largest gap |sampled − exact| = ${gap.toFixed(3)}. More shots shrink the gap roughly like 1/√shots. Shots: ${result.sampler || backend.label}.`;
   }
   function setShots(value, fromRange = false) {
     if (value === null) { showError("Shots must be a whole number from 1 to 8,192."); renderMeasure(); return; }
@@ -765,14 +777,13 @@ if (typeof document !== "undefined") (() => {
   $("pg-shots-range").addEventListener("input", (event) => setShots(C.shotsFromSlider(Number(event.target.value)), true));
   $("pg-shots").addEventListener("change", (event) => setShots(C.parseBoundedInt(event.target.value, 1, C.MAX_SHOTS)));
   $("pg-seed").addEventListener("change", (event) => setSeed(C.parseBoundedInt(event.target.value, 0, C.MAX_SEED)));
-  $("pg-sample").addEventListener("click", () => { setStatus("Sampling shots on local Aer…"); scheduleRequest(0); });
+  $("pg-sample").addEventListener("click", () => { setStatus(`Sampling shots (${backend.label})…`); scheduleRequest(0); });
   document.addEventListener("praxis-theme-change", () => { drawPhaseWheel(); renderViews(); });
 
   async function loadPresets() {
     try {
-      const response = await fetch("/api/circuit-presets", {cache: "no-store"});
-      const data = await response.json();
-      if (!response.ok || !Array.isArray(data.presets)) throw new Error("bad response");
+      const {ok, data} = await backend.presets();
+      if (!ok || !data || !Array.isArray(data.presets)) throw new Error("bad response");
       state.presets = data.presets;
       renderPresets();
     } catch (error) {
