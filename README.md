@@ -70,6 +70,15 @@ Exit codes (the same for `scan` and `diff`):
 
 Read-only and offline: no network code, nothing written outside `--out`, symlinks never followed, private keys reported by type and size only, and no source text in any output. Details, risk classes, rule format and honest accuracy numbers: [`docs/pq-inventory.md`](docs/pq-inventory.md). Every non-obvious choice in this build is logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); the final review is [`docs/REVIEW.md`](docs/REVIEW.md).
 
+
+## Is this website quantum-safe? (`pq_tls`)
+
+```bash
+python -m pq_tls check example.com github.com              # key exchange, TLS version, certificate, one recommendation
+python -m pq_tls check example.com --json results.json     # also the full results as JSON
+```
+
+It sends one TLS 1.3 ClientHello offering the hybrid group X25519MLKEM768 (RFC 10024) and reports which group the server picks, then makes one normal TLS connection for the version and certificate: the same traffic a browser makes. At most 20 hosts, single names or addresses only, 10-second timeouts. Needs an ML-KEM implementation for the post-quantum check (the `[pqc]` extra's `cryptography`); without one it says the check was skipped. Details: [`docs/pq-tls.md`](docs/pq-tls.md); a recorded run: [`examples/pq-tls/`](examples/pq-tls/README.md).
 ## Completed study: classical vs quantum-kernel classification (frozen)
 
 The lab began as a kernel study: a classical RBF classifier against a quantum-kernel classifier on one small data set, followed by finite-shot and PSD-repair experiments. That study is **complete and frozen**: its code, results, tests and docs stay as they are and are not extended. The index is [`docs/studies/README.md`](docs/studies/README.md). The sections below describe it and the shared foundations.

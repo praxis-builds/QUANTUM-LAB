@@ -1,0 +1,158 @@
+{
+  "recorded": "Recorded on 2026-10-05 with pq_tls 0.1.0 from one machine. A snapshot, not a live status: servers change their TLS configuration, and a CDN can answer differently by region.",
+  "tool": "pq_tls",
+  "version": "0.1.0",
+  "checked_at": "2026-10-05T22:32:51+00:00",
+  "ml_kem": "cryptography 50.0.2",
+  "pq_check": "performed",
+  "hosts": [
+    {
+      "host": "google.com",
+      "port": 443,
+      "verdict": {
+        "key_exchange": "PQ-HYBRID",
+        "key_exchange_detail": "The server chose X25519MLKEM768 (ML-KEM-768 + X25519, RFC 10024).",
+        "certificate": "ECDSA P-256: Quantum-vulnerable (Shor's algorithm breaks RSA and elliptic-curve signatures). This is true of essentially every web certificate today: post-quantum certificates are not yet issued by public CAs or accepted by browsers, so there is nothing to switch to yet.",
+        "tls_version": "TLSv1.3",
+        "recommendation": "Key exchange is already post-quantum hybrid; keep it, and plan certificate migration once PQ certificates exist."
+      },
+      "key_exchange_probe": {
+        "outcome": "server_hello",
+        "offered_groups": [
+          "X25519MLKEM768",
+          "x25519",
+          "secp256r1"
+        ],
+        "pq_offered": true,
+        "selected_group": "X25519MLKEM768",
+        "server_share_bytes": 1120,
+        "tls_version": "TLS 1.3",
+        "alert": null,
+        "error": null,
+        "notes": []
+      },
+      "connection": {
+        "ok": true,
+        "tls_version": "TLSv1.3",
+        "cipher": "TLS_AES_256_GCM_SHA384",
+        "certificate_key": "ECDSA P-256",
+        "certificate_signature": "sha256WithRSAEncryption",
+        "certificate_verified": true,
+        "certificate_subject": "CN=*.google.com",
+        "certificate_expires": "2026-12-03",
+        "error": null
+      }
+    },
+    {
+      "host": "cloudflare.com",
+      "port": 443,
+      "verdict": {
+        "key_exchange": "PQ-HYBRID",
+        "key_exchange_detail": "The server chose X25519MLKEM768 (ML-KEM-768 + X25519, RFC 10024).",
+        "certificate": "ECDSA P-256: Quantum-vulnerable (Shor's algorithm breaks RSA and elliptic-curve signatures). This is true of essentially every web certificate today: post-quantum certificates are not yet issued by public CAs or accepted by browsers, so there is nothing to switch to yet.",
+        "tls_version": "TLSv1.3",
+        "recommendation": "Key exchange is already post-quantum hybrid; keep it, and plan certificate migration once PQ certificates exist."
+      },
+      "key_exchange_probe": {
+        "outcome": "server_hello",
+        "offered_groups": [
+          "X25519MLKEM768",
+          "x25519",
+          "secp256r1"
+        ],
+        "pq_offered": true,
+        "selected_group": "X25519MLKEM768",
+        "server_share_bytes": 1120,
+        "tls_version": "TLS 1.3",
+        "alert": null,
+        "error": null,
+        "notes": []
+      },
+      "connection": {
+        "ok": true,
+        "tls_version": "TLSv1.3",
+        "cipher": "TLS_AES_256_GCM_SHA384",
+        "certificate_key": "ECDSA P-256",
+        "certificate_signature": "ecdsa-with-SHA256",
+        "certificate_verified": true,
+        "certificate_subject": "CN=cloudflare.com",
+        "certificate_expires": "2026-12-04",
+        "error": null
+      }
+    },
+    {
+      "host": "praxis-builds.github.io",
+      "port": 443,
+      "verdict": {
+        "key_exchange": "PQ-HYBRID",
+        "key_exchange_detail": "The server chose X25519MLKEM768 (ML-KEM-768 + X25519, RFC 10024).",
+        "certificate": "RSA 2048: Quantum-vulnerable (Shor's algorithm breaks RSA and elliptic-curve signatures). This is true of essentially every web certificate today: post-quantum certificates are not yet issued by public CAs or accepted by browsers, so there is nothing to switch to yet.",
+        "tls_version": "TLSv1.3",
+        "recommendation": "Key exchange is already post-quantum hybrid; keep it, and plan certificate migration once PQ certificates exist."
+      },
+      "key_exchange_probe": {
+        "outcome": "server_hello",
+        "offered_groups": [
+          "X25519MLKEM768",
+          "x25519",
+          "secp256r1"
+        ],
+        "pq_offered": true,
+        "selected_group": "X25519MLKEM768",
+        "server_share_bytes": 1120,
+        "tls_version": "TLS 1.3",
+        "alert": null,
+        "error": null,
+        "notes": []
+      },
+      "connection": {
+        "ok": true,
+        "tls_version": "TLSv1.3",
+        "cipher": "TLS_AES_128_GCM_SHA256",
+        "certificate_key": "RSA 2048",
+        "certificate_signature": "sha256WithRSAEncryption",
+        "certificate_verified": true,
+        "certificate_subject": "CN=*.github.io",
+        "certificate_expires": "2026-10-31",
+        "error": null
+      }
+    },
+    {
+      "host": "github.com",
+      "port": 443,
+      "verdict": {
+        "key_exchange": "CLASSICAL",
+        "key_exchange_detail": "Offered X25519MLKEM768 first; the server chose x25519. Traffic recorded today could be decrypted by a future quantum computer.",
+        "certificate": "ECDSA P-256: Quantum-vulnerable (Shor's algorithm breaks RSA and elliptic-curve signatures). This is true of essentially every web certificate today: post-quantum certificates are not yet issued by public CAs or accepted by browsers, so there is nothing to switch to yet.",
+        "tls_version": "TLSv1.3",
+        "recommendation": "Enable the hybrid group X25519MLKEM768 (RFC 10024) on the TLS endpoint or CDN to stop harvest-now-decrypt-later."
+      },
+      "key_exchange_probe": {
+        "outcome": "server_hello",
+        "offered_groups": [
+          "X25519MLKEM768",
+          "x25519",
+          "secp256r1"
+        ],
+        "pq_offered": true,
+        "selected_group": "x25519",
+        "server_share_bytes": 32,
+        "tls_version": "TLS 1.3",
+        "alert": null,
+        "error": null,
+        "notes": []
+      },
+      "connection": {
+        "ok": true,
+        "tls_version": "TLSv1.3",
+        "cipher": "TLS_AES_128_GCM_SHA256",
+        "certificate_key": "ECDSA P-256",
+        "certificate_signature": "ecdsa-with-SHA256",
+        "certificate_verified": true,
+        "certificate_subject": "CN=github.com",
+        "certificate_expires": "2026-11-29",
+        "error": null
+      }
+    }
+  ]
+}

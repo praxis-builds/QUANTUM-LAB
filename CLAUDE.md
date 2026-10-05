@@ -47,6 +47,7 @@ kept, not moved, not extended.
 - `circuit_playground.py` – Playground request validation, 1–3 qubit NumPy states, Bloch vectors, presets
 - `observatory.py` – read-only raw/clipped/Higham comparison for the Observatory
 - `security_lab.py` – Security Lab routes (BB84, toy RSA break, Grover key search); reuses lesson modules via one loader, preloaded at start-up
+- `tools/pq_tls/` – website key-exchange check (`python -m pq_tls check <host>`): hand-built TLS 1.3 ClientHello offering X25519MLKEM768, never completes the handshake; docs in `docs/pq-tls.md`, recorded run in `examples/pq-tls/`
 - `tools/pq_inventory/` – read-only crypto-inventory scanner (`python -m pq_inventory scan|diff`); rules in `rules/default_rules.json`; docs in `docs/pq-inventory.md`
 - `examples/warehouse-demo/` – fictional case-study app (before/after) and committed reports; `docs/case-study.md`
 - `lessons/` (outside `src/`) – lessons 01–06 (foundations), 07–10 (oracles, DJ, BV, Simon), 11–12 (QFT, phase estimation), 13–16 (Shor, toy RSA), 17–20 (Grover in depth), 21–25 (noise, error correction) 26–29 (BB84, randomness) and 30–33 (post-quantum crypto; C demo in `lessons/c/`); script + .md + test each; shared helpers `_grover.py`, `_grover_n.py`, `_oracles.py`, `_pqc.py`, `_qec.py`, `_qft.py`, `_qkd.py`, `_shor.py` (checked in `tests/test_grover_n.py`, `tests/test_oracles.py`, `tests/test_qec.py`, `tests/test_qft.py`, `tests/test_qkd.py`, `tests/test_shor.py`); see `lessons/README.md`
