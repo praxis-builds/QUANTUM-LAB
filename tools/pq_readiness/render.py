@@ -28,7 +28,7 @@ h3{font-size:1.02rem;margin:1.4em 0 .4em}
 .cover{border-bottom:1px solid var(--line);padding-bottom:18px}
 .summary li{margin:.35em 0}
 table{width:100%;border-collapse:collapse;font-size:.86rem;margin:.6em 0 1em}
-th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top;overflow-wrap:break-word}
 th{background:var(--soft)}
 .num{text-align:right;white-space:nowrap}
 .pill{display:inline-block;padding:0 7px;border-radius:9px;color:#fff;font-size:.74rem;font-weight:600;white-space:nowrap}

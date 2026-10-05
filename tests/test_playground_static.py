@@ -26,10 +26,22 @@ def _module(name: str, path: Path):
     return module
 
 
+def _close(a, b, tol=1e-12) -> bool:
+    if isinstance(a, float) or isinstance(b, float):
+        return isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(a - b) <= tol
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() == b.keys() and all(_close(a[k], b[k], tol) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) == len(b) and all(_close(x, y, tol) for x, y in zip(a, b))
+    return a == b
+
+
 def test_cross_check_fixture_is_what_python_computes_now():
     generator = _module("generate_playground_states", ROOT / "tests" / "fixtures" / "generate_playground_states.py")
     current = json.loads(json.dumps(generator.build(), ensure_ascii=False))
-    assert json.loads(FIXTURE.read_text(encoding="utf-8")) == current, \
+    # Same structure and gates exactly; floats to 1e-12, because NumPy/BLAS builds on different
+    # machines differ in the last bits (an exact comparison failed off the machine that wrote it).
+    assert _close(json.loads(FIXTURE.read_text(encoding="utf-8")), current), \
         "stale: run tests/fixtures/generate_playground_states.py"
     assert len(current["random"]) == 50 and set(current["presets"]) == {p["id"] for p in generator.cp.PRESETS}
     assert {g["gate"] for r in current["random"] for g in r["gates"]} >= {"h", "x", "y", "z", "s", "t", "rx", "ry", "rz", "cx",
@@ -76,3 +88,14 @@ def test_built_playground_page_runs_on_the_dom_stub_without_network(site):
                          capture_output=True, text=True, timeout=120)
     assert run.returncode == 0, run.stderr + run.stdout
     assert run.stdout.endswith("SITE-PLAYGROUND-OK")
+
+
+def test_site_scripts_never_assign_the_window_global(site):
+    # Regression: `globalThis.window = ...` passed the Node DOM stub but throws in every real
+    # browser ("Cannot set property window of #<Window> which has only a getter"), which left the
+    # public Playground with no presets and no simulator.
+    import re
+
+    for script in (site / "playground").glob("*.js"):
+        text = script.read_text(encoding="utf-8")
+        assert not re.search(r"(?<![\w.])(globalThis\.|self\.)?window\s*=(?!=)", text), script.name

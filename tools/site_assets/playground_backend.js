@@ -7,8 +7,10 @@
 // Nothing leaves the browser.
 (() => {
   const Sim = typeof PlaygroundSim !== "undefined" ? PlaygroundSim : globalThis.PlaygroundSim;
-  globalThis.window = globalThis.window || globalThis;
-  window.PlaygroundBackend = {
+  // Browsers expose `window` as a read-only global (assigning it throws in strict mode),
+  // and Node tests have no `window` at all, so attach to whichever global exists.
+  const root = typeof window !== "undefined" ? window : globalThis;
+  root.PlaygroundBackend = {
     label: Sim.SAMPLER,
     async simulate(body) {
       try {
@@ -19,7 +21,7 @@
       }
     },
     async presets() {
-      const presets = window.PLAYGROUND_PRESETS;
+      const presets = root.PLAYGROUND_PRESETS;
       return Array.isArray(presets) ? {status: 200, ok: true, data: {presets}} : {status: 500, ok: false, data: null};
     }
   };
