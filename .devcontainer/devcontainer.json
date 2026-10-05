@@ -18,7 +18,7 @@
     "codespaces": { "openFiles": ["README.md", "lessons/README.md"] },
     "vscode": {
       "extensions": ["ms-python.python"],
-      "settings": { "python.defaultInterpreterPath": ".venv/bin/python" }
+      "settings": { "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python" }
     }
   }
 }

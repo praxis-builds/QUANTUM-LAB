@@ -1,6 +1,8 @@
 # Resolved in the local WSL Python 3.12.3 environment on 2026-09-28.
 # Install the project and its development extra with: pip install -e '.[dev]'
+# 2026-10-05: added the dev extra's markdown and jsonschema with their resolved dependencies.
 -e .
+attrs==26.1.0
 cloudpickle==3.1.2
 contourpy==1.4.0
 cycler==0.12.1
@@ -8,7 +10,10 @@ dill==0.4.1
 fonttools==4.66.0
 iniconfig==2.3.0
 joblib==1.6.0
+jsonschema-specifications==2025.9.1
+jsonschema==4.26.0
 kiwisolver==1.5.1
+Markdown==3.11
 matplotlib==3.11.2
 narwhals==2.26.0
 numpy==2.5.3
@@ -21,8 +26,10 @@ Pygments==2.21.0
 pyparsing==3.3.3
 pytest==9.1.1
 python-dateutil==2.9.0.post0
-qiskit==2.5.2
 qiskit-aer==0.17.2
+qiskit==2.5.2
+referencing==0.37.0
+rpds-py==2026.9.1
 rustworkx==0.18.1
 scikit-learn==1.9.1
 scipy==1.18.1

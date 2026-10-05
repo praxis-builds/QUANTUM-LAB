@@ -19,7 +19,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest==9.1.1"]
+# markdown builds the Pages site (tools/build_site.py); jsonschema checks the CBOM against the CycloneDX schema.
+dev = ["pytest==9.1.1", "markdown==3.11", "jsonschema==4.26.0"]
 # Post-quantum lessons 30-33 and the scanner's key parsing. liboqs-python also needs the liboqs C
 # library (0.16.0, shared) in ~/_oqs or OQS_INSTALL_PATH; see docs/DECISIONS.md (D1).
 pqc = ["liboqs-python==0.16.0.1", "cryptography==50.0.2"]

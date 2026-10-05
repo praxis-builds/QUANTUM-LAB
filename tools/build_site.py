@@ -6,7 +6,7 @@ Nothing is simulated: the live dashboard needs Python and runs locally or in a c
 
     python tools/build_site.py --out _site
 
-Needs the third-party `markdown` package (installed only in the Pages workflow).
+Needs the third-party `markdown` package (in the `dev` extra, and installed by the Pages workflow).
 """
 
 from __future__ import annotations

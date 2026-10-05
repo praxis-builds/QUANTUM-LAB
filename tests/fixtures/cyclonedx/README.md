@@ -1,7 +1,7 @@
 # CycloneDX 1.6 JSON schema (unmodified copies)
 
-Used by `tests/test_cbom_schema.py` to validate the scanner's CBOM output. The test runs only when the
-`jsonschema` package happens to be installed; it is not a dependency of this project.
+Used by `tests/test_cbom_schema.py` to validate the scanner's CBOM output (`jsonschema` is pinned in
+the `dev` extra since 2026-10-05).
 
 Source: <https://github.com/CycloneDX/specification>, directory `schema/`, commit
 `1ce97b2a7b8cf2429da248560d2aa671c6bce74a`, downloaded on 2026-10-01 from

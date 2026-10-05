@@ -1,7 +1,7 @@
 """The scanner's CBOM against the official CycloneDX 1.6 JSON schema (tests/fixtures/cyclonedx/).
 
-Runs only where `jsonschema` is already installed; it is not a dependency of this project
-(CLAUDE.md: no new dependencies without asking), so elsewhere these tests skip.
+`jsonschema` is pinned in the `dev` extra (approved 2026-10-05), so this runs in every standard
+environment, CI included. The import guard only keeps a bare install from failing on import.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-jsonschema = pytest.importorskip("jsonschema", reason="jsonschema is not installed (optional; not a project dependency)")
+jsonschema = pytest.importorskip("jsonschema", reason="jsonschema is not installed: pip install -e '.[dev]'")
 referencing = pytest.importorskip("referencing", reason="referencing is not installed (comes with jsonschema 4.18+)")
 
 from pq_inventory import reports  # noqa: E402

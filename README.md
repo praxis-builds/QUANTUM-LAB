@@ -154,7 +154,7 @@ python3.12 -m venv .venv
 .venv/bin/python -m pip install -e '.[dev]'
 ```
 
-Direct pins live in `pyproject.toml`: NumPy 2.5.3, scikit-learn 1.9.1, Qiskit 2.5.2, Qiskit Aer 0.17.2, matplotlib 3.11.2, and pytest 9.1.1 (development extra). `requirements.lock` records the resolved local environment used for the first run.
+Direct pins live in `pyproject.toml`: NumPy 2.5.3, scikit-learn 1.9.1, Qiskit 2.5.2, Qiskit Aer 0.17.2, matplotlib 3.11.2, and, in the development extra, pytest 9.1.1, Markdown 3.11 (the Pages site builder) and jsonschema 4.26.0 (the CBOM schema test). `requirements.lock` records the resolved local environment used for the first run.
 
 ## Run and verify
 
